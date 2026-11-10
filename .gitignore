@@ -4,6 +4,6 @@ site/.astro/
 .shots/
 .DS_Store
 # Interne werkdocumenten blijven lokaal (app-analyse, copy-review, wireframes, scripts)
-docs/
-wireframes/
-scripts/
+/docs/
+/wireframes/
+/scripts/
