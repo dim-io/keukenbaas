@@ -183,7 +183,7 @@ const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-
     const stage = q('[data-rw-stage]'), src = q('[data-src]'), tgt = q('[data-tgt]'), held = q('[data-held]');
     const mail = q('[data-mail]'), cur = q('[data-cur]'), ring = q('.rw__ring'), card = q('[data-card]'), cardIcon = q('[data-card-icon]');
     const cs = getComputedStyle(el);
-    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const ms = (n: string) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(n)) || 0;
     let gen = 0, timers: number[] = [], started = false, cooling = false;
     const later = (fn: () => void, t: number, g: number) => { timers.push(window.setTimeout(() => { if (g === gen) fn(); }, t)); };
     const phase = (p: string) => el.setAttribute('data-phase', p);
@@ -201,43 +201,70 @@ const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-
 
     function reset() {
       src.dataset.state = 'here'; tgt.dataset.state = 'empty';
-      held.classList.remove('is-on'); mail.classList.remove('is-on');
+      held.classList.remove('is-on', 'is-lift'); mail.classList.remove('is-on');
+      src.classList.remove('is-hover'); tgt.classList.remove('is-in'); tgtCol()?.classList.remove('is-over');
       card.setAttribute('data-off', '');
       const s = stage.getBoundingClientRect();
       put(cur, s.width * 0.9, s.height * 0.62, 0);
     }
+    const EASE = 'cubic-bezier(0.45, 0, 0.2, 1)';
+    const glide = (n: HTMLElement, x: number, y: number, dur: number, extra = '') => {
+      n.style.transition = `transform ${dur}ms ${EASE}`;
+      n.style.transform = `translate(${x}px, ${y}px) ${extra}`;
+    };
+    const tgtCol = () => tgt.closest('.rw__col') as HTMLElement | null;
     const steps: Array<[string, () => void, number]> = [
-      ['reach', () => curTo(src, 0.3, 0.45, ms('--rw-reach')), ms('--rw-reach') + 60],
-      ['carry', () => {
+      // 1. muis glijdt rustig naar de dienst van Lotte
+      ['reach', () => { const r = rel(src); glide(cur, r.x + r.w * 0.35, r.y + r.h * 0.5, ms('--rw-reach')); }, ms('--rw-reach') + 150],
+      // 2. vakje licht op onder de muis
+      ['hover', () => { src.classList.add('is-hover'); }, 450],
+      // 3. indrukken en oppakken: de dienst komt een stukje omhoog
+      ['grab', () => {
+        tap();
         const o = rel(src);
         held.style.width = o.w + 'px'; held.style.height = o.h + 'px';
-        put(held, o.x, o.y, 0, 'rotate(-2deg)');
+        held.style.transition = 'none';
+        held.style.transform = `translate(${o.x}px, ${o.y}px)`;
         held.classList.add('is-on');
+        src.classList.remove('is-hover');
         src.dataset.state = 'lifted';
         void held.offsetWidth;
-        const c = rel(tgt);
-        put(held, c.x, c.y, ms('--rw-carry'), 'rotate(-2deg)');
-        put(cur, c.x + c.w * 0.3, c.y + c.h * 0.45, ms('--rw-carry'));
-      }, ms('--rw-carry') + 40],
+        glide(held, o.x - 3, o.y - 5, 380, 'rotate(-2deg) scale(1.05)');
+        held.classList.add('is-lift');
+      }, 520],
+      // 4. slepen naar vrijdag, de kolom kleurt op als je erboven bent
+      ['carry', () => {
+        const c = rel(tgt), d = ms('--rw-carry');
+        glide(held, c.x - 3, c.y - 5, d, 'rotate(-2deg) scale(1.05)');
+        glide(cur, c.x + c.w * 0.35, c.y + c.h * 0.5 - 5, d);
+        later(() => tgtCol()?.classList.add('is-over'), d * 0.55, gen);
+      }, ms('--rw-carry') + 120],
+      // 5. loslaten: de dienst zakt zacht op zijn plek
       ['drop', () => {
-        tap();
-        src.dataset.state = 'gone'; tgt.dataset.state = 'filled'; pop(tgt);
-        held.classList.remove('is-on');
         const c = rel(tgt);
-        put(cur, c.x + c.w * 0.7, c.y + c.h * 1.05, ms('--rw-drop'));
-      }, ms('--rw-drop') + 40],
+        glide(held, c.x, c.y, 320);
+        held.classList.remove('is-lift');
+        later(() => {
+          tgt.dataset.state = 'filled'; tgt.classList.add('is-in');
+          held.classList.remove('is-on');
+          src.dataset.state = 'gone';
+          tgtCol()?.classList.remove('is-over');
+        }, 330, gen);
+        later(() => { const r = rel(tgt); glide(cur, r.x + r.w * 0.8, r.y + r.h * 1.15, 600); }, 380, gen);
+      }, ms('--rw-drop') + 450],
+      // 6. de mail vliegt naar Lotte
       ['mail', () => {
         const a = rel(tgt), b = rel(cardIcon), s = stage.getBoundingClientRect();
         const d = ms('--rw-mail');
         mail.classList.add('is-on');
         mail.animate([
-          { transform: `translate(${a.x + a.w / 2}px, ${a.y + a.h}px) rotate(-10deg)` },
-          { transform: `translate(${(a.x + b.x) / 2 + s.width * 0.04}px, ${(a.y + a.h + b.y) / 2 - s.width * 0.03}px) rotate(8deg)`, offset: 0.5 },
-          { transform: `translate(${b.x}px, ${b.y}px) rotate(0deg)` },
-        ], { duration: d, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
+          { transform: `translate(${a.x + a.w / 2}px, ${a.y + a.h}px) rotate(-8deg) scale(0.6)`, opacity: 0 },
+          { transform: `translate(${a.x + a.w / 2}px, ${a.y + a.h + s.width * 0.01}px) rotate(-8deg) scale(1)`, opacity: 1, offset: 0.15 },
+          { transform: `translate(${(a.x + b.x) / 2 + s.width * 0.04}px, ${(a.y + a.h + b.y) / 2 - s.width * 0.03}px) rotate(6deg)`, opacity: 1, offset: 0.6 },
+          { transform: `translate(${b.x}px, ${b.y}px) rotate(0deg)`, opacity: 1 },
+        ], { duration: d, easing: EASE, fill: 'forwards' });
         later(() => { mail.classList.remove('is-on'); card.removeAttribute('data-off'); }, d, gen);
-        put(cur, s.width * 0.9, s.height * 0.3, d);
-      }, ms('--rw-mail') + 200],
+      }, ms('--rw-mail') + 300],
     ];
     function play() {
       timers.forEach(clearTimeout); timers = [];
@@ -323,11 +350,11 @@ const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-
 
 <style>
   .rw {
-    --rw-reach: 1100ms;
-    --rw-carry: 1400ms;
-    --rw-drop: 600ms;
-    --rw-mail: 1300ms;
-    --rw-pause: 700ms;
+    --rw-reach: 1300ms;
+    --rw-carry: 1700ms;
+    --rw-drop: 400ms;
+    --rw-mail: 1500ms;
+    --rw-pause: 1000ms;
     width: min(100%, 36rem);
   }
   .rw--dag, .rw--ass { width: min(100%, 28rem); }
@@ -365,9 +392,15 @@ const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-
   .rw__slot[data-state="lifted"] { border-color: var(--orange); }
   .rw__hint { display: none; margin: 0; padding: 1.2cqw; font-size: 2.4cqw; color: var(--muted); line-height: 1.3; }
   .rw[data-phase] .rw__slot[data-state="empty"] .rw__hint { display: block; }
-  .rw__slot.is-pop { animation: rw-pop 450ms var(--ease-out); }
-  @keyframes rw-pop { from { transform: scale(0.85); } to { transform: scale(1); } }
-  .rw__held { position: absolute; left: 0; top: 0; z-index: 4; visibility: hidden; pointer-events: none; box-shadow: var(--shadow); transform-origin: 0 0; }
+  .rw__slot { transition: border-color 400ms var(--ease-out), background-color 400ms var(--ease-out); }
+  .rw__slot.is-hover { border-color: var(--orange); }
+  .rw__slot.is-hover .rw__chip { box-shadow: 0 0 0 2px var(--orange); }
+  .rw__slot.is-in .rw__chip { animation: rw-in 450ms var(--ease-out); }
+  @keyframes rw-in { from { opacity: 0.4; } to { opacity: 1; } }
+  .rw__col { transition: background-color 400ms var(--ease-out), box-shadow 400ms var(--ease-out); }
+  .rw__col.is-over { background: var(--tape); box-shadow: inset 0 0 0 2px var(--orange); }
+  .rw__held { position: absolute; left: 0; top: 0; z-index: 4; visibility: hidden; pointer-events: none; box-shadow: 2px 2px 0 var(--navy); transform-origin: 50% 50%; transition: box-shadow 300ms var(--ease-out); }
+  .rw__held.is-lift { box-shadow: 6px 8px 0 var(--navy); }
   .rw__held.is-on { visibility: visible; }
   .rw__mailcard {
     display: flex; gap: 2cqw; align-items: flex-start; margin-top: 2.6cqw; padding: 1.8cqw 2.4cqw;
@@ -381,7 +414,8 @@ const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-
   .rw__mail { position: absolute; left: 0; top: 0; width: 4.6cqw; height: auto; z-index: 5; visibility: hidden; pointer-events: none; }
   .rw__mail.is-on { visibility: visible; }
   .rw__cur { position: absolute; left: 0; top: 0; z-index: 6; width: 4.8cqw; pointer-events: none; opacity: 0; }
-  .rw[data-phase="reach"] .rw__cur, .rw[data-phase="carry"] .rw__cur, .rw[data-phase="drop"] .rw__cur, .rw[data-phase="mail"] .rw__cur { opacity: 1; }
+  .rw__cur { transition: opacity 500ms var(--ease-out); }
+  .rw[data-phase="reach"] .rw__cur, .rw[data-phase="hover"] .rw__cur, .rw[data-phase="grab"] .rw__cur, .rw[data-phase="carry"] .rw__cur, .rw[data-phase="drop"] .rw__cur, .rw[data-phase="mail"] .rw__cur { opacity: 1; }
   .rw__cur svg { display: block; width: 100%; height: auto; filter: drop-shadow(2px 2px 0 var(--navy)); }
   .rw__ring { position: absolute; left: -2cqw; top: -2cqw; width: 4.4cqw; height: 4.4cqw; border: 2px solid var(--orange); border-radius: 50%; visibility: hidden; }
   .rw__ring.is-tap { animation: rw-tap 500ms var(--ease-out); }

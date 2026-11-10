@@ -98,7 +98,7 @@ const cols = ['Medewerker', 'Dienst', 'Gepland', 'Gewerkt', 'Pauze', 'Uren', 'St
     const rows = [...el.querySelectorAll('[data-approve]')];
 
     const cs = getComputedStyle(el);
-    const ms = (n) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const ms = (n) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(n)) || 0;
 
     let pending = [], started = false, busy = false;
     const later = (fn, t) => pending.push(setTimeout(fn, t));

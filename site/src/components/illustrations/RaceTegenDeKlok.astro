@@ -82,7 +82,7 @@ const snips = Array.from({ length: 22 }, (_, i) => {
     const cnt = el.querySelector('[data-rk-count]') as HTMLElement;
     const bar = el.querySelector('[data-rk-bar]') as HTMLElement;
     const cs = getComputedStyle(el);
-    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const ms = (n: string) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(n)) || 0;
     let gen = 0, cooling = false, started = false;
     let timers: number[] = [];
 

@@ -77,7 +77,7 @@ const avail = [
     const save = q('[data-save]');
 
     const cs = getComputedStyle(el);
-    const ms = (n) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const ms = (n) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(n)) || 0;
 
     let gen = 0, timers = [], started = false, cooling = false;
     const later = (fn, t, g) => timers.push(setTimeout(() => { if (g === gen) fn(); }, t));

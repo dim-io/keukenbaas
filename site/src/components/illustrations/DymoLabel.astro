@@ -102,7 +102,7 @@ const first = itemsProp?.[0] ?? { title: 'FOCACCIA', tht: 'THT: 11-11', made: 'G
       { title: 'AIOLI', tht: 'THT: 13-11', made: 'Gemaakt door: Sanne op 09-11 (11:58u)', batch: 'Batch: 1,2 kg' },
     ];
     const cs = getComputedStyle(el);
-    const ms = (name) => parseFloat(cs.getPropertyValue(name)) || 0;
+    const ms = (name) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(name)) || 0;
 
     let index = 0, busy = false, timer = 0, started = false;
     el.setAttribute('data-js', '');

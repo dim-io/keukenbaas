@@ -236,7 +236,7 @@ const tiles = [
     again.addEventListener('click', restart);
     again.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') { e.preventDefault(); restart(); } });
   }
-  function msOf(el: HTMLElement) { const cs = getComputedStyle(el); return (n: string) => parseFloat(cs.getPropertyValue(n)) || 0; }
+  function msOf(el: HTMLElement) { const cs = getComputedStyle(el); return (n: string) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(n)) || 0; }
 
   function phoneInit(el: HTMLElement) {
     const rows = [...el.querySelectorAll('[data-vp-row]')] as HTMLElement[];

@@ -118,7 +118,7 @@ const defaultCalc = `Verdeeld naar rato van ${sumHours} goedgekeurde uren`;
 
     const eur = (c) => '€ ' + (c / 100).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const cs = getComputedStyle(el);
-    const ms = (n) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const ms = (n) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(n)) || 0;
     const ease = (t) => 1 - Math.pow(1 - t, 3);
 
     let started = false;

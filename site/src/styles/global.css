@@ -37,17 +37,16 @@ p { text-wrap: pretty; max-width: 62ch; }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .marker { font-family: var(--font-marker); }
 
-/* Links: onderstreept; bij hover wordt de tekst doorgestreept als een afgevinkte bon */
+/* Links: onderstreept; bij hover wordt de onderstreping dikker. Geen doorhaling. */
 a {
   color: var(--navy);
   text-decoration: underline;
   text-decoration-color: var(--orange);
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
-  background: linear-gradient(var(--navy), var(--navy)) no-repeat 0 58% / 0% 2px;
-  transition: background-size var(--dur-3) var(--ease-out);
+  transition: text-decoration-thickness var(--dur-2) var(--ease-out), text-underline-offset var(--dur-2) var(--ease-out);
 }
-a:hover { background-size: 100% 2px; }
+a:hover { text-decoration-thickness: 3px; text-underline-offset: 5px; }
 /* Componenten die zelf een vorm hebben (knoppen, nav, logo) zetten dit uit met .bare */
 a.bare { text-decoration: none; background: none; transition: none; }
 
@@ -127,3 +126,5 @@ a.bare { text-decoration: none; background: none; transition: none; }
 .sec-head { display: grid; gap: var(--space-4); justify-items: start; margin-bottom: var(--space-7); }
 .sec-head--center { justify-items: center; text-align: center; }
 .sec-head--center p { margin-inline: auto; }
+
+html { scroll-padding-top: 5.5rem; }

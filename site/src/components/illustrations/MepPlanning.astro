@@ -82,7 +82,7 @@ const days = [
     const copyBtn = q('[data-mp-copy]'), replay = q('[data-mp-replay]');
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const cs = getComputedStyle(el);
-    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const ms = (n: string) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(n)) || 0;
     let gen = 0, started = false, busy = false;
 
     const sleep = (t: number, g: number) =>

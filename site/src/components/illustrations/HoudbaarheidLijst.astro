@@ -48,7 +48,7 @@ const rows = [
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const cs = getComputedStyle(el);
-    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const ms = (n: string) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(n)) || 0;
     const rows = Array.from(el.querySelectorAll<HTMLElement>('[data-hl-row]'));
     const card = el.querySelector<HTMLElement>('[data-hl-card]')!;
     const target = rows[rows.length - 1];

@@ -74,7 +74,7 @@ const ticks = [10, 20, 30, 50, 60, 80, 90];
     const pct = el.querySelector('[data-rm-pct]') as HTMLElement;
     const tag = el.querySelector('[data-rm-tag]') as HTMLElement;
     const cs = getComputedStyle(el);
-    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const ms = (n: string) => ((v) => (parseFloat(v) || 0) * (/[^m]s\s*$/.test(v.trim()) ? 1000 : 1))(cs.getPropertyValue(n)) || 0;
     let gen = 0, cooling = false, started = false, shown = 0, raf = 0;
     let timers: number[] = [];
 

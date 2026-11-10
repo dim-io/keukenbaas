@@ -1,5 +1,5 @@
 ---
-// Knop met bon-perforatie rechts. Zonder href wordt het een <button>.
+// Knop. Zonder href wordt het een <button>.
 const { href, variant = 'primary', type = 'button', class: cls = '', ...rest } = Astro.props;
 const Tag = href ? 'a' : 'button';
 ---
@@ -17,7 +17,7 @@ const Tag = href ? 'a' : 'button';
     align-items: center;
     justify-content: center;
     min-height: 3rem;
-    padding: 0.7rem 2.6rem 0.7rem 1.4rem;
+    padding: 0.7rem 1.4rem;
     border: 2px solid var(--navy);
     border-radius: var(--radius);
     font-family: var(--font-display);
@@ -32,17 +32,7 @@ const Tag = href ? 'a' : 'button';
   }
   .btn--primary { background: var(--orange); }
   .btn--secondary { background: var(--white); }
-  /* perforatie: stippellijn waar de bon wordt afgescheurd */
-  .btn::after {
-    content: "";
-    position: absolute;
-    top: 6px; bottom: 6px; right: 1.7rem;
-    border-left: 2px dotted currentColor;
-    opacity: 0.55;
-    transition: opacity var(--dur-2), right var(--dur-2) var(--ease-out);
-  }
   .btn:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--navy); }
-  .btn:hover::after { opacity: 1; right: 1.6rem; }
   .btn--primary:hover { background: var(--orange-dark); color: var(--white); }
   .btn--secondary:hover { background: var(--tape); }
   .btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--navy); }
