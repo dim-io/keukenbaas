@@ -93,7 +93,7 @@ const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-
       <svg viewBox="0 0 20 24" focusable="false"><path d="M2 2v17l5-4.5 3.5 7.5 3.5-1.5-3.5-7.5H17z" fill="#fffdf8" stroke="#0a0d22" stroke-width="2" stroke-linejoin="round"/></svg>
     </span>
   </div>
-  <figcaption class="rw__cap mono">Klik op het rooster om het nog een keer te zien.</figcaption>
+  <figcaption class="rw__cap visually-hidden">Klik op het rooster om het nog een keer te zien.</figcaption>
   <p class="visually-hidden">
     Het rooster van week 46, van 9 tot en met 15 november. Op maandag werken Sanne en Mehmet de avond in de keuken en Fatima doet de kassa.
     Lotte's dienst Bediening van donderdag, 17:00 tot 23:00, wordt naar de lege vrijdag gesleept. Zaterdag staat de open dienst Bezorgdienst
@@ -122,7 +122,7 @@ const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-
       </div>
     </div>
   </div>
-  <figcaption class="rw__cap mono">Ga op een beschikbare naam staan om de open dienst te vullen.</figcaption>
+  <figcaption class="rw__cap visually-hidden">Ga op een beschikbare naam staan om de open dienst te vullen.</figcaption>
   <p class="visually-hidden">
     Vrijdag 13 november. Lotte staat ingeroosterd, Mehmet en Joris zijn beschikbaar en staan groen. De open dienst Bezorgdienst van 17:00 tot 22:00
     valt op in oranje. Met een klik op een beschikbare naam zet je die persoon op de dienst; in het voorbeeld staat Mehmet erop.
@@ -159,7 +159,7 @@ const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-
       </div>
     </div>
   </div>
-  <figcaption class="rw__cap mono">Het voorstel is een voorbeeld tot jij op Toepassen drukt.</figcaption>
+  <figcaption class="rw__cap visually-hidden">Het voorstel is een voorbeeld tot jij op Toepassen drukt.</figcaption>
   <p class="visually-hidden">
     Voorstel van de assistent voor week 47. Maandag 16 november: Avond keuken met Sanne en Mehmet, Bezorgdienst met Joris, Kassa dienst met Fatima.
     Dinsdag 17 november: Avond keuken met Sanne en Lotte, omdat Mehmet vrij heeft. Met Toepassen komt het voorstel in het rooster.
@@ -323,11 +323,11 @@ const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-
 
 <style>
   .rw {
-    --rw-reach: 600ms;
-    --rw-carry: 750ms;
-    --rw-drop: 350ms;
-    --rw-mail: 800ms;
-    --rw-pause: 250ms;
+    --rw-reach: 1100ms;
+    --rw-carry: 1400ms;
+    --rw-drop: 600ms;
+    --rw-mail: 1300ms;
+    --rw-pause: 700ms;
     width: min(100%, 36rem);
   }
   .rw--dag, .rw--ass { width: min(100%, 28rem); }

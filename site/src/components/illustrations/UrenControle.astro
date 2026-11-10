@@ -53,7 +53,7 @@ const cols = ['Medewerker', 'Dienst', 'Gepland', 'Gewerkt', 'Pauze', 'Uren', 'St
       <svg viewBox="0 0 20 24" focusable="false"><path d="M2 2v17l5-4.5 3.5 7.5 3.5-1.5-3.5-7.5H17z" fill="#fffdf8" stroke="#0a0d22" stroke-width="2" stroke-linejoin="round"/></svg>
     </span>
   </div>
-  <figcaption class="uc__cap mono">Klik op de tabel om het nog een keer te zien.</figcaption>
+  <figcaption class="uc__cap visually-hidden">Klik op de tabel om het nog een keer te zien.</figcaption>
   <p class="visually-hidden">
     Uren goedkeuren voor maandag 9 november. Sanne, kok, werkte de avond in de keuken van 15:55 tot 23:20, met 0:30 pauze: 6,92 uur, goedgekeurd.
     Joris, bezorger, werkte de bezorgdienst van 17:00 tot 22:15 zonder pauze: 5,25 uur, nog concept. Met de knop Dagcontrole uren keur je een dag in één keer goed.
@@ -190,7 +190,7 @@ const cols = ['Medewerker', 'Dienst', 'Gepland', 'Gewerkt', 'Pauze', 'Uren', 'St
   .uc__u { font-weight: 600; }
 
   /* Smal: alleen medewerker, gewerkt, uren en status; de rest staat in de verborgen beschrijving */
-  @container (max-width: 30rem) {
+  @container (max-width: 40rem) {
     .uc__table { grid-template-columns: 8fr 9fr 5fr 11fr; font-size: 4.2cqw; column-gap: 2cqw; }
     .uc__th { font-size: 3.6cqw; }
     .uc__table > .uc__th:nth-child(2), .uc__table > .uc__th:nth-child(3), .uc__table > .uc__th:nth-child(5),

@@ -375,7 +375,7 @@ const tiles = [
   .vs__screen {
     --u: 1cqw;
     container-type: inline-size;
-    aspect-ratio: 16 / 10;
+    min-height: 56cqw; /* geen vaste verhouding: het scherm groeit mee met de inhoud */
     overflow: visible;
     background: var(--paper);
     border-radius: var(--radius-s);
@@ -397,7 +397,7 @@ const tiles = [
   .vs__tab { padding: calc(0.8 * var(--u)) calc(1.3 * var(--u)); border-radius: var(--radius-s); font-weight: 600; font-size: calc(1.5 * var(--u)); color: var(--ink); white-space: nowrap; }
   .vs__tab.is-on { background: var(--orange-soft); color: var(--orange-dark); }
   .vs__me { font-weight: 700; font-size: calc(1.5 * var(--u)); padding: calc(0.7 * var(--u)) calc(1.3 * var(--u)); border: 2px solid var(--line); border-radius: 99px; }
-  .vs__body { flex: 1; padding: calc(2 * var(--u)) calc(2.4 * var(--u)) 0; min-height: 0; }
+  .vs__body { flex: 1; padding: calc(2 * var(--u)) calc(2.4 * var(--u)) calc(2.4 * var(--u)); }
   .vs__head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: calc(1.6 * var(--u)); }
   .vs__eyebrow { font-weight: 800; font-size: calc(1.3 * var(--u)); letter-spacing: 0.1em; color: var(--orange-dark); }
   .vs__date { font-family: var(--font-display); font-weight: 800; font-size: calc(3.6 * var(--u)); line-height: 1.05; letter-spacing: -0.02em; }
@@ -450,31 +450,31 @@ const tiles = [
 
   /* Telefoon */
   .vs__phone {
-    position: absolute; right: 0; bottom: 0; width: 24cqw;
+    position: absolute; right: 0; bottom: 0; width: 27cqw;
     background: var(--navy); border: 2px solid var(--navy); border-radius: 3.4cqw; padding: 0.9cqw;
     box-shadow: var(--shadow-l);
   }
   .vs__pscreen {
     container-type: inline-size; background: var(--paper); border-radius: 2.6cqw; padding: 0 5cqw 5cqw;
     font-family: var(--font-body); font-size: 5.6cqw; color: var(--navy);
+    aspect-ratio: 9 / 16; /* staand formaat; groeit mee als de inhoud langer is */
   }
-  .vs__pscreen { min-height: 33cqw; }
   .vs__pscreen p { margin: 0; }
   .vs__speaker { width: 14cqw; height: 1.8cqw; margin: 3cqw auto 4cqw; background: var(--line); border-radius: 1cqw; }
-  .vs__hoi { font-family: var(--font-display); font-weight: 800; font-size: 11cqw; line-height: 1; letter-spacing: -0.02em; }
-  .vs__psub { font-size: 5cqw; color: var(--muted); margin: 1.5cqw 0 4cqw; }
-  .vs__days { display: grid; gap: 1.8cqw; }
-  .vs__day { display: flex; justify-content: space-between; align-items: center; background: var(--white); border: 2px solid var(--line); border-radius: var(--radius-s); padding: 2.2cqw 3cqw; }
-  .vs__dd { font-weight: 700; font-size: 6cqw; }
-  .vs__dd b { font-weight: 600; color: var(--muted); margin-left: 1cqw; font-size: 5.2cqw; }
-  .vs__ds { font-size: 4.8cqw; font-weight: 600; color: var(--green-dark); }
+  .vs__hoi { font-family: var(--font-display); font-weight: 800; font-size: 14cqw; line-height: 1; letter-spacing: -0.02em; }
+  .vs__psub { font-size: 6.4cqw; color: var(--muted); margin: 2cqw 0 6cqw; }
+  .vs__days { display: grid; gap: 3cqw; }
+  .vs__day { display: flex; justify-content: space-between; align-items: center; background: var(--white); border: 2px solid var(--line); border-radius: var(--radius-s); padding: 4cqw 4cqw; flex-wrap: wrap; gap: 1cqw 3cqw; }
+  .vs__dd { font-weight: 700; font-size: 7.6cqw; }
+  .vs__dd b { font-weight: 600; color: var(--muted); margin-left: 1cqw; font-size: 6.4cqw; }
+  .vs__ds { font-size: 6.4cqw; font-weight: 600; color: var(--green-dark); }
   .vs__day.is-shift { background: var(--orange-soft); border-color: var(--orange); }
   .vs__day.is-shift .vs__ds { color: var(--navy); }
   .vs__day.is-off .vs__ds { color: var(--muted); }
   .vs__save {
     position: relative; margin-top: 4cqw; text-align: center; background: var(--orange); color: var(--navy);
     border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s);
-    padding: 3cqw 2cqw; font-weight: 800; font-size: 5.6cqw; transition: transform var(--dur-1), box-shadow var(--dur-1);
+    padding: 4cqw 2cqw; font-weight: 800; font-size: 7cqw; transition: transform var(--dur-1), box-shadow var(--dur-1);
   }
   .vs__save-b { display: none; }
   .vs__save[data-saved] { background: var(--green); }
@@ -539,7 +539,7 @@ const tiles = [
   @container (max-width: 46rem) {
     .vs--phone .vs__laptop { width: 100%; }
     .vs--phone .vs__phone { position: static; width: 80cqw; margin: 5cqw 0 0 auto; }
-    .vs__screen { --u: 1.7cqw; aspect-ratio: auto; }
+    .vs__screen { --u: 1.7cqw; min-height: 0; }
     .vs__row { gap: calc(0.9 * var(--u)); padding-inline: calc(0.6 * var(--u)); margin-inline: calc(-0.6 * var(--u)); }
     .vs__box { width: calc(2.6 * var(--u)); height: calc(2.6 * var(--u)); }
     .vs__name { min-width: 0; }

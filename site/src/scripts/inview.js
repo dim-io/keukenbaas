@@ -2,7 +2,8 @@
 // Het attribuut blijft daarna staan: een animatie speelt één keer en blijft in de eindstaat.
 // Uit beeld scrollen zet niets terug. Opnieuw afspelen gebeurt alleen op verzoek van de bezoeker (klik).
 // Stuurt één keer een bubbling event "inviewchange" ({ detail: { inview: true } }).
-const targets = document.querySelectorAll('[data-animate]');
+// Elementen binnen [data-defer] (bijv. tabbladen die nog niet open staan) start het eigen component zelf.
+const targets = [...document.querySelectorAll('[data-animate]')].filter((el) => !el.closest('[data-defer]'));
 
 function activate(el) {
   if (el.hasAttribute('data-inview')) return;

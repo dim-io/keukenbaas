@@ -82,7 +82,7 @@ const first = itemsProp?.[0] ?? { title: 'FOCACCIA', tht: 'THT: 11-11', made: 'G
     </svg>
   </div>
   {buttons.length > 0 && <div class="dymo__btns" aria-hidden="true">{buttons.map((b) => <span class="dymo__btn mono">{b}</span>)}</div>}
-  <figcaption class="dymo__cap mono">{caption}</figcaption>
+  <figcaption class="dymo__cap visually-hidden">{caption}</figcaption>
   <p class="visually-hidden">Een labelprinter print THT-labels met productnaam, houdbaarheidsdatum, wie het maakte en de batchgrootte.</p>
 </figure>
 

@@ -64,8 +64,8 @@ a.bare { text-decoration: none; background: none; transition: none; }
 
 .container { width: min(100% - 2 * var(--gutter), var(--maxw)); margin-inline: auto; }
 .visually-hidden {
-  position: absolute !important; width: 1px; height: 1px; overflow: hidden;
-  clip-path: inset(50%); white-space: nowrap;
+  position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important;
+  clip-path: inset(50%) !important; white-space: nowrap !important; margin: 0 !important; padding: 0 !important;
 }
 .skip-link {
   position: absolute; left: var(--space-3); top: -4rem; z-index: 100;

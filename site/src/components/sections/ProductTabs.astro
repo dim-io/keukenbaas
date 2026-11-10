@@ -21,7 +21,7 @@ const panels = await Promise.all(tabs.map((_, i) => (Astro.slots.has(`panel-${i}
         </div>
         <div class="pt__body">
           {tabs.map((t, i) => (
-            <div class="pt__panel" role="tabpanel" id={`${id}-panel-${i}`} aria-labelledby={`${id}-tab-${i}`} hidden={i !== 0} tabindex="0">
+            <div class="pt__panel" role="tabpanel" id={`${id}-panel-${i}`} aria-labelledby={`${id}-tab-${i}`} hidden={i !== 0} data-defer={i !== 0 ? '' : undefined} tabindex="0">
               <div class="pt__text">
                 <ul class="pt__checks" role="list">
                   {t.checks.map((c) => (
@@ -56,12 +56,19 @@ const panels = await Promise.all(tabs.map((_, i) => (Astro.slots.has(`panel-${i}
           const stage = panels[j].querySelector('.pt__stage');
           // Zachte overgang alleen bij de eerste keer; de illustratie start dan zijn verhaal en blijft staan.
           if (!stage.hasAttribute('data-feed')) stage.setAttribute('data-feed', '');
-          panels[j].querySelectorAll('[data-animate]').forEach((a) => {
-            if (!a.hasAttribute('data-inview')) {
-              a.setAttribute('data-inview', '');
-              a.dispatchEvent(new CustomEvent('inviewchange', { bubbles: true, detail: { inview: true } }));
-            }
-          });
+          // Eerst rustig in beeld, dan pas het verhaal starten.
+          const p = panels[j];
+          if (p.hasAttribute('data-defer')) {
+            p.removeAttribute('data-defer');
+            setTimeout(() => {
+              p.querySelectorAll('[data-animate]').forEach((a) => {
+                if (!a.hasAttribute('data-inview')) {
+                  a.setAttribute('data-inview', '');
+                  a.dispatchEvent(new CustomEvent('inviewchange', { bubbles: true, detail: { inview: true } }));
+                }
+              });
+            }, 700);
+          }
         }
       });
       if (focus) tabs[i].focus();
@@ -97,7 +104,10 @@ const panels = await Promise.all(tabs.map((_, i) => (Astro.slots.has(`panel-${i}
   .pt__tab[aria-selected="true"] .pt__num { color: var(--orange); }
   .pt__body { border: 2px solid var(--navy); background: var(--paper); box-shadow: var(--shadow-l); border-radius: 0 var(--radius) var(--radius) var(--radius); }
   .pt__panel { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: var(--space-6); align-items: center; padding: var(--space-6); }
-  .pt__panel[hidden] { display: none; }
+  /* Alle panelen in dezelfde cel: het vak is zo hoog als het hoogste paneel, dus niets verspringt bij wisselen. */
+  .pt__body { display: grid; }
+  .pt__panel { grid-area: 1 / 1; transition: opacity 350ms var(--ease-out); }
+  .pt__panel[hidden] { display: grid; visibility: hidden; opacity: 0; pointer-events: none; }
   .pt__text { display: grid; gap: var(--space-5); justify-items: start; }
   .pt__checks { list-style: none; padding: 0; display: grid; gap: var(--space-4); }
   .pt__checks li { display: flex; gap: var(--space-3); align-items: flex-start; font-size: var(--step-1); color: var(--navy); line-height: 1.3; }
