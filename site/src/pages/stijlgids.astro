@@ -1,0 +1,96 @@
+---
+// Stijlgids: toont alle componenten en tokens (noindex).
+import Base from '../layouts/Base.astro';
+import Section from '../components/Section.astro';
+import Eyebrow from '../components/Eyebrow.astro';
+import Button from '../components/Button.astro';
+import InlineSignup from '../components/InlineSignup.astro';
+import Logo from '../components/Logo.astro';
+import DymoLabel from '../components/illustrations/DymoLabel.astro';
+import HeroSplit from '../components/sections/HeroSplit.astro';
+import FixCards from '../components/sections/FixCards.astro';
+import FeatureBlock from '../components/sections/FeatureBlock.astro';
+import MoreTiles from '../components/sections/MoreTiles.astro';
+import RelatedStrip from '../components/sections/RelatedStrip.astro';
+import KoelcelMeting from '../components/illustrations/KoelcelMeting.astro';
+
+const colors = [
+  ['paper', '#f6f1e7'], ['white', '#fffdf8'], ['navy', '#0a0d22'], ['ink', '#31344a'], ['muted', '#686b7a'],
+  ['line', '#d9d2c3'], ['orange', '#e06633'], ['orange-dark', '#b34519'], ['orange-soft', '#fee6dc'],
+  ['green', '#40ac83'], ['green-dark', '#207657'], ['green-soft', '#dff5ec'], ['red', '#fb5531'], ['tape', '#efe0a8'],
+];
+---
+<Base title="Stijlgids" description="Stijlgids met alle componenten." noindex>
+  <Section tone="grid">
+    <Eyebrow>Stylegids</Eyebrow>
+    <h1>Keukenbaas</h1>
+    <p>Placeholdertekst. Hier staan alle componenten onder elkaar.</p>
+  </Section>
+
+  <Section tone="white">
+    <h2>Kleur</h2>
+    <ul class="swatches" role="list">
+      {colors.map(([n, v]) => (
+        <li><span class="sw" style={`background:${v}`}></span><span class="mono">{n}<br />{v}</span></li>
+      ))}
+    </ul>
+  </Section>
+
+  <Section>
+    <h2>Type</h2>
+    <p class="marker" style="font-size:var(--step-2)">Permanent Marker, spaarzaam</p>
+    <h1 style="font-size:var(--step-4)">Kop 1, extra condensed</h1>
+    <h2>Kop 2 voor een sectie</h2>
+    <h3>Kop 3 voor een blok</h3>
+    <p>Lopende tekst in Archivo. Een <a href="#links">link met streep</a> erdoor bij hover.</p>
+    <p class="mono">IBM Plex Mono 0123456789 THT: 12-11 (10:42u)</p>
+  </Section>
+
+  <Section tone="grid" id="links">
+    <h2>Logo, labels en knoppen</h2>
+    <div class="row"><Logo /></div>
+    <div class="row">
+      <Eyebrow>Tape-label</Eyebrow>
+      <Eyebrow variant="marker">Stift op tape</Eyebrow>
+    </div>
+    <div class="row">
+      <Button href="#links">Primair</Button>
+      <Button href="#links" variant="secondary">Secundair</Button>
+      <Button type="button">Knop (button)</Button>
+    </div>
+    <div class="row"><InlineSignup /></div>
+  </Section>
+
+  <Section tone="white">
+    <h2>Bon</h2>
+    <div class="receipt-shadow" style="max-width:22rem">
+      <div class="receipt">
+        <p>KEUKENBAAS</p>
+        <p>Dienst 09-11</p>
+        <p>Sanne ........ 7,5 u</p>
+        <p>Mehmet ....... 8,0 u</p>
+        <p>Fooi ....... EUR 64,20</p>
+      </div>
+    </div>
+  </Section>
+
+  <Section tone="navy">
+    <Eyebrow>Illustratie</Eyebrow>
+    <h2>DYMO-label</h2>
+    <DymoLabel />
+  </Section>
+  <HeroSplit eyebrow="Voorbeeld HeroSplit" title="Voorbeeldkop voor een productpagina" lead="Voorbeeldtekst voor de subkop van een productpagina." checks={['Eerste voordeel', 'Tweede voordeel']} placeholder="je@jouwzaak.nl" button="Zet me op de wachtlijst" note="Voorbeeldregel onder het veld.">
+    <KoelcelMeting />
+  </HeroSplit>
+  <FixCards title="Voorbeeld FixCards" problemLabel="Nu" fixLabel="Straks" cards={[{ problem: 'Uren overtikken van briefjes', fix: 'Uren per dag goedkeuren, alles in één keer' }, { problem: 'De fooi op een bierviltje', fix: 'De fooi verdeeld naar uren' }, { problem: 'Tape en stift', fix: 'Een label uit je DYMO' }]} />
+  <FeatureBlock eyebrow="Voorbeeld" title="Voorbeeld FeatureBlock" text="Voorbeeldtekst naast een illustratie." items={['Eerste punt', 'Tweede punt', 'Derde punt']} link={{ href: '#', label: 'Voorbeeldlink' }} tone="paper"><DymoLabel /></FeatureBlock>
+  <FeatureBlock title="Voorbeeld FeatureBlock omgekeerd" text="Illustratie links, tekst rechts." items={['Eerste punt', 'Tweede punt']} reverse tone="white"><KoelcelMeting /></FeatureBlock>
+  <MoreTiles title="Voorbeeld MoreTiles" tiles={[{ title: 'Eerste', text: 'Korte voorbeeldtekst.' }, { title: 'Tweede', text: 'Korte voorbeeldtekst.' }, { title: 'Derde', text: 'Korte voorbeeldtekst.' }, { title: 'Vierde', text: 'Korte voorbeeldtekst.' }]} />
+  <RelatedStrip title="Voorbeeld RelatedStrip" links={[{ href: '#', label: 'Uren en fooi', text: 'Voorbeeldregel.' }, { href: '#', label: 'Keuken', text: 'Voorbeeldregel.' }]} />
+</Base>
+<style>
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: var(--space-4); margin-top: var(--space-5); padding: 0; }
+  .swatches li { display: grid; gap: var(--space-2); font-size: var(--step--1); }
+  .sw { height: 3.5rem; border: 2px solid var(--navy); box-shadow: var(--shadow-s); }
+  .row { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: center; margin-top: var(--space-5); }
+</style>

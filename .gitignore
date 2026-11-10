@@ -1,0 +1,9 @@
+node_modules/
+site/dist/
+site/.astro/
+.shots/
+.DS_Store
+# Interne werkdocumenten blijven lokaal (app-analyse, copy-review, wireframes, scripts)
+docs/
+wireframes/
+scripts/

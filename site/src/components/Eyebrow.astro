@@ -1,0 +1,27 @@
+---
+// Klein label boven een kop. variant "tape" = mono op malerstape, "marker" = stiftlabel (spaarzaam gebruiken).
+const { variant = 'tape', class: cls = '' } = Astro.props;
+---
+<span class:list={['eyebrow', `eyebrow--${variant}`, cls]}><slot /></span>
+<style>
+  .eyebrow { display: inline-block; color: var(--navy); }
+  .eyebrow--tape {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--tape);
+    padding: 0.2rem 0.6rem;
+    transform: rotate(-1deg);
+    clip-path: polygon(0 0, 100% 0, 98% 50%, 100% 100%, 0 100%, 2% 50%);
+    padding-inline: 0.9rem;
+  }
+  .eyebrow--marker {
+    font-family: var(--font-marker);
+    font-size: var(--step-1);
+    background: var(--tape);
+    padding: 0.15rem 0.9rem;
+    transform: rotate(-2deg);
+  }
+</style>

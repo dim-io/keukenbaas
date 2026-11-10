@@ -1,0 +1,70 @@
+---
+// 404: de bon valt van de rail, zwiept en blijft op de vloer liggen. Eindstaat (zonder animatie): op de vloer.
+// Klik of Enter op de bon laat hem opnieuw vallen.
+---
+<figure class="bv" data-bv style="margin:0">
+  <div class="bv__scene" aria-hidden="true">
+    <div class="bv__rail"><i></i><i></i><i></i><i></i></div>
+    <div class="bv__clip"></div>
+    <div class="bv__fall" data-bv-fall>
+      <div class="bv__swing">
+        <div class="receipt-shadow">
+          <div class="receipt bv__bon mono">
+            <b>BON 404</b>
+            <span>1x pagina</span>
+            <span>Tafel: onbekend</span>
+            <span class="bv__status">Status: kwijt</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bv__floor"></div>
+  </div>
+  <button type="button" class="bv__again bare" data-bv-again aria-label="Laat de bon opnieuw vallen"><span class="visually-hidden">Laat de bon opnieuw vallen</span></button>
+  <p class="visually-hidden">Een bon met de tekst BON 404, 1x pagina, tafel onbekend, status kwijt ligt op de vloer.</p>
+</figure>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-bv]').forEach((el) => {
+    const fall = el.querySelector<HTMLElement>('[data-bv-fall]')!;
+    const replay = () => { el.removeAttribute('data-play'); void el.offsetWidth; el.setAttribute('data-play', ''); };
+    el.querySelector('[data-bv-again]')!.addEventListener('click', replay);
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) setTimeout(replay, 300);
+    void fall;
+  });
+</script>
+<style>
+  .bv { --drop: 15rem; width: min(100%, 22rem); position: relative; }
+  .bv__scene { position: relative; height: 26rem; }
+  .bv__rail { position: absolute; left: 0; right: 0; top: 0.8rem; height: 8px; background: var(--navy); border-radius: 4px; }
+  .bv__rail i { position: absolute; top: 100%; width: 3px; height: 1rem; background: var(--navy); }
+  .bv__rail i:nth-child(1) { left: 12%; } .bv__rail i:nth-child(2) { left: 38%; } .bv__rail i:nth-child(3) { left: 64%; } .bv__rail i:nth-child(4) { left: 88%; }
+  .bv__clip { position: absolute; left: 50%; top: 0.35rem; width: 1.6rem; height: 1.7rem; margin-left: -0.8rem; background: var(--tape); border: 2px solid var(--navy); border-radius: 3px; z-index: 3; }
+  .bv__floor { position: absolute; left: -4%; right: -4%; bottom: 0; height: 6px; background: var(--navy); border-radius: 3px; }
+  /* Eindstaat: de bon ligt op de vloer, een beetje scheef */
+  .bv__fall { position: absolute; left: 50%; bottom: 6px; width: 12rem; margin-left: -6rem; transform: rotate(-7deg); transform-origin: bottom center; z-index: 2; }
+  .bv__swing { transform-origin: top center; }
+  .bv__bon { display: grid; gap: 0.35rem; padding: var(--space-4) var(--space-4) calc(var(--space-4) + 8px); color: var(--navy); font-size: var(--step--1); }
+  .bv__bon b { font-family: var(--font-display); font-weight: 900; font-stretch: 70%; font-size: var(--step-3); line-height: 1; margin-bottom: var(--space-2); }
+  .bv__status { font-weight: 600; background: var(--tape); padding: 0 0.4rem; justify-self: start; }
+  .bv__again { position: absolute; inset: 0; background: transparent; border: 0; cursor: pointer; }
+  .bv__again:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .bv[data-play] .bv__fall { animation: bv-fall 2600ms both; }
+    .bv[data-play] .bv__swing { animation: bv-swing 2600ms both; }
+  }
+  /* Hangt aan de rail (0-20%), schudt los (20-34%), valt en zwiept (34-82%), landt (82-100%) */
+  @keyframes bv-fall {
+    0%, 20% { transform: translateY(calc(var(--drop) * -1)) rotate(0); animation-timing-function: linear; }
+    34% { transform: translateY(calc(var(--drop) * -1)) rotate(0); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.4); }
+    78% { transform: translateY(0) rotate(-14deg); animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+    90% { transform: translateY(-0.6rem) rotate(-3deg); }
+    100% { transform: translateY(0) rotate(-7deg); }
+  }
+  @keyframes bv-swing {
+    0%, 20% { transform: rotate(0); }
+    24% { transform: rotate(4deg); } 28% { transform: rotate(-4deg); } 32% { transform: rotate(3deg); }
+    42% { transform: rotate(-16deg); } 54% { transform: rotate(14deg); } 66% { transform: rotate(-8deg); } 78% { transform: rotate(3deg); }
+    100% { transform: rotate(0); }
+  }
+  @media (max-width: 36rem) { .bv { --drop: 12rem; } .bv__scene { height: 22rem; } .bv__fall { width: 10.5rem; margin-left: -5.25rem; } }
+</style>

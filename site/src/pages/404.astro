@@ -1,0 +1,36 @@
+---
+// 404. Copy letterlijk uit docs/copy/404.md. Niet indexeren.
+import Base from '../layouts/Base.astro';
+import Reveal from '../components/sections/Reveal.astro';
+import Eyebrow from '../components/Eyebrow.astro';
+import Button from '../components/Button.astro';
+import BonVanDeRail from '../components/pages/BonVanDeRail.astro';
+import { href } from '../lib/url.js';
+---
+<Base noindex title="Pagina niet gevonden · Keukenbaas" titleRaw description="Deze pagina bestaat niet, of niet meer. Ga terug naar de homepage van Keukenbaas, of zet je zaak op de wachtlijst.">
+  <section class="nf grid-paper">
+    <div class="container nf__in">
+      <Reveal class="nf__copy">
+        <div style="--i:0"><Eyebrow>404</Eyebrow></div>
+        <h1 style="--i:1">Deze bon is van de rail gevallen.</h1>
+        <p class="nf__lead" style="--i:2">De pagina die je zoekt, ligt niet op de pass. Misschien is hij verhuisd, of heeft hij nooit bestaan.</p>
+        <div class="nf__links" style="--i:3">
+          <Button href={href('/')}>Terug naar de homepage</Button>
+          <a href={href('/wachtlijst')}>Of zet je zaak op de wachtlijst</a>
+        </div>
+      </Reveal>
+      <div class="nf__art"><BonVanDeRail /></div>
+    </div>
+  </section>
+</Base>
+<style>
+  .nf { padding-block: var(--space-8) var(--space-9); }
+  .nf__in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); gap: var(--space-7); align-items: center; }
+  .nf :global(.nf__copy) { display: grid; gap: var(--space-5); justify-items: start; }
+  h1 { font-size: var(--step-4); }
+  .nf__lead { font-size: var(--step-1); }
+  .nf__links { display: flex; gap: var(--space-5); align-items: center; flex-wrap: wrap; }
+  .nf__links a:not(.btn) { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; }
+  .nf__art { display: flex; justify-content: center; overflow: hidden; padding-inline: var(--space-4); }
+  @media (max-width: 56rem) { .nf__in { grid-template-columns: 1fr; } }
+</style>

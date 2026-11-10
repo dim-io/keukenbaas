@@ -1,0 +1,122 @@
+---
+// Toegankelijke tabs (role=tablist, pijltjestoetsen, Home/End). Per tab een benoemde slot "panel-<index>" met de illustratie.
+// tabs: [{ label, checks: string[], link: { href, label } }]
+import Reveal from './Reveal.astro';
+import FigScroll from './FigScroll.astro';
+import SectionHead from './SectionHead.astro';
+const { id = 'kiezer', title, eyebrow, tabs = [], figMin = '30rem' } = Astro.props;
+const panels = await Promise.all(tabs.map((_, i) => (Astro.slots.has(`panel-${i}`) ? Astro.slots.render(`panel-${i}`) : '')));
+---
+<section class="pt on-light" aria-labelledby={`${id}-h`}>
+  <div class="container">
+    <SectionHead title={title} eyebrow={eyebrow} id={`${id}-h`} />
+    <Reveal>
+      <div class="pt__box" data-tabs style="--i:0">
+        <div class="pt__list" role="tablist" aria-label={title}>
+          {tabs.map((t, i) => (
+            <button type="button" role="tab" class="pt__tab bare" id={`${id}-tab-${i}`} aria-controls={`${id}-panel-${i}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
+              <span class="pt__num mono" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>{t.label}
+            </button>
+          ))}
+        </div>
+        <div class="pt__body">
+          {tabs.map((t, i) => (
+            <div class="pt__panel" role="tabpanel" id={`${id}-panel-${i}`} aria-labelledby={`${id}-tab-${i}`} hidden={i !== 0} tabindex="0">
+              <div class="pt__text">
+                <ul class="pt__checks" role="list">
+                  {t.checks.map((c) => (
+                    <li>
+                      <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="17" height="17" rx="3" fill="#dff5ec" stroke="#0a0d22" stroke-width="2"/><path d="M5.5 10.5l3 3 6-7" fill="none" stroke="#207657" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      <span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+                {t.link && <a class="pt__link" href={t.link.href}>{t.link.label}<span aria-hidden="true"> →</span></a>}
+              </div>
+              <div class="pt__art"><div class="pt__stage"><FigScroll min={figMin}><Fragment set:html={panels[i]} /></FigScroll></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Reveal>
+  </div>
+</section>
+<noscript><style>.pt__panel[hidden] { display: grid !important; }</style></noscript>
+<script>
+  document.querySelectorAll('[data-tabs]').forEach((root) => {
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+    const panels = [...root.querySelectorAll('[role="tabpanel"]')];
+    const select = (i, focus) => {
+      tabs.forEach((t, j) => {
+        const on = i === j;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        panels[j].hidden = !on;
+        if (on) {
+          const stage = panels[j].querySelector('.pt__stage');
+          // Zachte overgang alleen bij de eerste keer; de illustratie start dan zijn verhaal en blijft staan.
+          if (!stage.hasAttribute('data-feed')) stage.setAttribute('data-feed', '');
+          panels[j].querySelectorAll('[data-animate]').forEach((a) => {
+            if (!a.hasAttribute('data-inview')) {
+              a.setAttribute('data-inview', '');
+              a.dispatchEvent(new CustomEvent('inviewchange', { bubbles: true, detail: { inview: true } }));
+            }
+          });
+        }
+      });
+      if (focus) tabs[i].focus();
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(i, false));
+      t.addEventListener('keydown', (e) => {
+        const n = tabs.length;
+        let j = null;
+        if (e.key === 'ArrowRight') j = (i + 1) % n;
+        else if (e.key === 'ArrowLeft') j = (i - 1 + n) % n;
+        else if (e.key === 'Home') j = 0;
+        else if (e.key === 'End') j = n - 1;
+        if (j !== null) { e.preventDefault(); select(j, true); }
+      });
+    });
+  });
+</script>
+<style>
+  .pt { background: var(--white); padding-block: var(--space-9); }
+  .pt__list { display: flex; flex-wrap: wrap; gap: var(--space-2); position: relative; z-index: 1; }
+  .pt__tab {
+    display: inline-flex; align-items: baseline; gap: var(--space-2);
+    padding: 0.7rem 1.1rem; min-height: 3rem;
+    font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: var(--step-1); color: var(--navy);
+    background: var(--paper); border: 2px solid var(--navy); border-bottom-color: var(--navy); border-radius: var(--radius) var(--radius) 0 0;
+    margin-bottom: -2px;
+    transition: background-color var(--dur-2), transform var(--dur-2) var(--ease-out);
+  }
+  .pt__tab:hover { background: var(--tape); }
+  .pt__tab[aria-selected="true"] { background: var(--navy); color: var(--paper); }
+  .pt__num { font-size: var(--step--1); font-weight: 500; color: var(--orange-dark); }
+  .pt__tab[aria-selected="true"] .pt__num { color: var(--orange); }
+  .pt__body { border: 2px solid var(--navy); background: var(--paper); box-shadow: var(--shadow-l); border-radius: 0 var(--radius) var(--radius) var(--radius); }
+  .pt__panel { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: var(--space-6); align-items: center; padding: var(--space-6); }
+  .pt__panel[hidden] { display: none; }
+  .pt__text { display: grid; gap: var(--space-5); justify-items: start; }
+  .pt__checks { list-style: none; padding: 0; display: grid; gap: var(--space-4); }
+  .pt__checks li { display: flex; gap: var(--space-3); align-items: flex-start; font-size: var(--step-1); color: var(--navy); line-height: 1.3; }
+  .pt__checks svg { width: 1.4rem; height: 1.4rem; flex: none; margin-top: 0.1rem; }
+  .pt__link { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: var(--step-0); }
+  .pt__art { display: flex; justify-content: center; min-width: 0; }
+  .pt__stage { width: 100%; display: flex; justify-content: center; }
+  .pt__stage > :global(.figscroll) { width: 100%; }
+  /* Doorschuiven als een bon uit de printer */
+  .pt__stage[data-feed] { animation: pt-feed 400ms var(--ease-out) both; }
+  @keyframes pt-feed { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (max-width: 56rem) {
+    .pt__panel { grid-template-columns: 1fr; padding: var(--space-5) var(--space-4); }
+    .pt__checks li { font-size: var(--step-0); }
+  }
+  @media (max-width: 40rem) {
+    .pt__list { gap: 6px; }
+    .pt__tab { font-size: var(--step-0); padding: 0.55rem 0.8rem; border-radius: var(--radius); margin-bottom: 0; }
+    .pt__body { border-radius: var(--radius); margin-top: var(--space-3); }
+    .pt__num { display: none; }
+  }
+</style>

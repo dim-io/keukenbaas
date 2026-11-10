@@ -1,0 +1,209 @@
+---
+/*
+ * KostprijsRecept: receptkaart "Tomaten-courgettesoep · batch 10 l" (Recepten, Ingrediënten, Inkoop & Calculatie).
+ * Ingrediënten vallen één voor één in, de kostprijs per batch telt mee en eindigt op de kostprijs per portie.
+ * Stijl volgens STIJLREGELS in DymoLabel.astro.
+ * Props: geen. Eindstaat (zonder JS of bij reduced motion): alle regels staan er, € 16,85 per batch, daarna gerecht met focaccia: verkoop € 7,50, kosten € 1,02.
+ * Het verhaal speelt één keer en blijft in de eindstaat staan. Klik of Enter op de kaart speelt het opnieuw af.
+ * Rekenwerk in centen: 840 + 360 + 95 + 240 + 150 = 1685. De kosten van het gerecht (102 cent) komen uit docs/copy/inkoop.md.
+ */
+const rows = [
+  { name: 'Tomaten', qty: '4 kg', price: '€ 2,10/kg', cents: 840 },
+  { name: 'Courgette', qty: '2 kg', price: '€ 1,80/kg', cents: 360 },
+  { name: 'Ui', qty: '1 kg', price: '€ 0,95/kg', cents: 95 },
+  { name: 'Groentebouillon', qty: '4 l', price: '€ 0,60/l', cents: 240 },
+  { name: 'Olijfolie', qty: '0,2 l', price: '€ 7,50/l', cents: 150 },
+];
+const total = rows.reduce((s, r) => s + r.cents, 0);
+const per = 102; // kosten van het gerecht met focaccia (docs/copy/inkoop.md), in centen
+const eur = (c: number) => '€ ' + (c / 100).toFixed(2).replace('.', ',');
+---
+<figure class="kr" data-kr data-animate style="margin:0">
+  <div class="kr__card" role="button" tabindex="0" aria-label="Laat het recept opnieuw invallen" data-kr-card>
+    <div class="kr__head" aria-hidden="true">
+      <b>Tomaten-courgettesoep</b><span class="mono">batch 10 l</span>
+    </div>
+    <div class="kr__list" aria-hidden="true">
+      {rows.map((r, i) => (
+        <div class="kr__row mono" data-kr-row data-cents={r.cents} style={`--i:${i}`}>
+          <span class="kr__name">{r.name}</span>
+          <span class="kr__cost">{eur(r.cents)}</span>
+          <span class="kr__sub">{r.qty}</span>
+        </div>
+      ))}
+    </div>
+    <div class="kr__total mono" aria-hidden="true">
+      <span>Kostprijs per batch</span><b data-kr-sum>{eur(total)}</b>
+    </div>
+    <div class="kr__prices" aria-hidden="true">
+      <div class="kr__box kr__box--cost">
+        <small class="mono">Kosten</small>
+        <b class="mono" data-kr-por>{eur(per)}</b>
+        <i class="mono">Tomaten-courgettesoep met focaccia</i>
+      </div>
+      <div class="kr__box">
+        <small class="mono">Verkoopprijs</small>
+        <b class="mono">€ 7,50</b>
+        <i class="mono">Tomaten-courgettesoep met focaccia</i>
+      </div>
+    </div>
+  </div>
+  <figcaption class="kr__cap mono">Klik op de kaart om de ingrediënten opnieuw te laten vallen.</figcaption>
+  <p class="visually-hidden">Receptkaart Tomaten-courgettesoep, batch van 10 liter. Tomaten 4 kilo 8 euro 40, courgette 2 kilo 3 euro 60, ui 1 kilo 95 cent, groentebouillon 4 liter 2 euro 40 en olijfolie 0,2 liter 1 euro 50. Kostprijs per batch 16,85 euro. Daarna het gerecht Tomaten-courgettesoep met focaccia: verkoopprijs 7,50 euro, kosten 1,02 euro.</p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-kr]').forEach((el) => init(el as HTMLElement));
+
+  function init(el: HTMLElement) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const cs = getComputedStyle(el);
+    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const rows = Array.from(el.querySelectorAll<HTMLElement>('[data-kr-row]'));
+    const sum = el.querySelector<HTMLElement>('[data-kr-sum]')!;
+    const por = el.querySelector<HTMLElement>('[data-kr-por]')!;
+    const card = el.querySelector<HTMLElement>('[data-kr-card]')!;
+    const eur = (c: number) => '€ ' + (c / 100).toFixed(2).replace('.', ',');
+    const per = 102; // kosten van het gerecht met focaccia (docs/copy/inkoop.md), in centen
+
+    let run = 0, started = false;
+    const sleep = (t: number, id: number) => new Promise<void>((ok, no) => {
+      setTimeout(() => (id !== run ? no() : ok()), t);
+    });
+
+    // telt vloeiend met ease-out
+    function count(node: HTMLElement, from: number, to: number, d: number, id: number) {
+      const t0 = performance.now();
+      return new Promise<void>((ok, no) => {
+        (function frame(now: number) {
+          if (id !== run) return no();
+          const t = Math.min(1, (now - t0) / d);
+          node.textContent = eur(Math.round(from + (to - from) * (1 - Math.pow(1 - t, 3))));
+          if (t < 1) requestAnimationFrame(frame); else ok();
+        })(t0);
+      });
+    }
+
+    // Beginstaat: leeg. De eindstaat staat in de HTML.
+    function reset() {
+      el.dataset.phase = 'idle';
+      rows.forEach((r) => (r.dataset.in = ''));
+      sum.textContent = eur(0);
+      por.textContent = eur(0);
+    }
+
+    async function cycle(id: number) {
+      reset();
+      await sleep(ms('--kr-idle'), id);
+      el.dataset.phase = 'drop';
+      let acc = 0;
+      const step = ms('--kr-step');
+      for (const r of rows) {
+        r.dataset.in = '1';
+        const c = Number(r.dataset.cents);
+        await count(sum, acc, acc + c, step, id);
+        acc += c;
+      }
+      el.dataset.phase = 'calc';
+      await count(por, 0, per, ms('--kr-count'), id);
+      await sleep(ms('--kr-pop'), id);
+      el.dataset.phase = 'hold';
+    }
+
+    async function play() {
+      const id = ++run;
+      try { await cycle(id); } catch { /* onderbroken door een nieuwe ronde */ }
+    }
+
+    reset();
+    const start = () => { if (!started) { started = true; play(); } };
+    el.addEventListener('inviewchange', (e) => { if ((e as CustomEvent).target === el) start(); });
+    if (el.hasAttribute('data-inview')) start();
+
+    card.addEventListener('click', () => started && play());
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); started && play(); }
+    });
+  }
+</script>
+
+<style>
+  .kr {
+    --kr-idle: 300ms;
+    --kr-fall: 500ms;
+    --kr-step: 330ms;
+    --kr-count: 500ms;
+    --kr-pop: 400ms;
+    width: min(100%, 30rem);
+  }
+  .kr__card {
+    container-type: inline-size;
+    background: var(--white);
+    border: 2px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    cursor: pointer;
+    color: var(--navy);
+  }
+  .kr__head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw; flex-wrap: wrap;
+    background: var(--paper); border-bottom: 2px solid var(--navy);
+    padding: 3cqw 4cqw;
+  }
+  .kr__head b { font-family: var(--font-display); font-size: 5cqw; }
+  .kr__head span { font-size: 3.2cqw; background: var(--tape); border: 2px solid var(--navy); border-radius: var(--radius-s); padding: 0.4cqw 1.8cqw; font-weight: 600; }
+
+  .kr__list { display: grid; gap: 2.2cqw; padding: 3.4cqw 4cqw; overflow: hidden; background: var(--paper); border-bottom: 2px solid var(--navy); }
+  .kr__row {
+    display: grid; grid-template-columns: 1fr auto; row-gap: 0.6cqw; align-items: baseline;
+    background: var(--white);
+    border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s);
+    padding: 1.8cqw 3cqw;
+    position: relative;
+  }
+  .kr__name { font-weight: 600; font-size: 3.8cqw; }
+  .kr__cost { font-weight: 600; font-size: 3.6cqw; text-align: right; }
+  .kr__sub { grid-column: 1 / -1; font-size: 2.8cqw; color: var(--ink); }
+
+  .kr__total {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw;
+    padding: 3cqw 4cqw; font-size: 3.2cqw;
+    border-bottom: 2px solid var(--navy);
+  }
+  .kr__total b { font-size: 5cqw; }
+
+  .kr__prices { display: grid; grid-template-columns: 1fr 1fr; gap: 3cqw; padding: 4cqw; }
+  .kr__box {
+    display: grid; gap: 0.8cqw; align-content: start;
+    border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s);
+    padding: 2.6cqw 3cqw; background: var(--white);
+  }
+  .kr__box--cost { background: var(--orange-soft); }
+  .kr__box small { font-size: 2.7cqw; color: var(--ink); line-height: 1.25; }
+  .kr__box b { font-size: 7cqw; line-height: 1.1; }
+  .kr__box i { font-style: normal; font-size: 2.5cqw; color: var(--muted); }
+
+  /* Toestanden */
+  .kr__row[data-in=""] { visibility: hidden; }
+  .kr__row[data-in="1"] { animation: kr-drop var(--kr-fall) var(--ease-out) both; z-index: 1; }
+  .kr[data-phase="idle"] .kr__box,
+  .kr[data-phase="drop"] .kr__box { visibility: hidden; }
+  .kr[data-phase="calc"] .kr__box--cost { animation: kr-pop 400ms var(--ease-out) both; }
+  .kr[data-phase="calc"] .kr__box:not(.kr__box--cost) { animation: kr-pop 400ms var(--ease-out) 150ms both; }
+
+  @keyframes kr-drop { from { opacity: 0; transform: translateY(-40%); } to { opacity: 1; transform: none; } }
+  @keyframes kr-pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+  /* Smal: iets grotere kleine letters */
+  @container (max-width: 26rem) {
+    .kr__sub { font-size: 3.4cqw; }
+    .kr__head span { font-size: 3.5cqw; }
+    .kr__total { font-size: 3.6cqw; }
+    .kr__box small { font-size: 3.4cqw; }
+    .kr__box i { font-size: 3.3cqw; }
+  }
+
+  .kr__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

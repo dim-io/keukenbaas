@@ -1,0 +1,43 @@
+---
+// Drie bonnen: probleem (doorgestreept) naar oplossing. cards: [{ problem, fix }]. Geen icoontjes; het verschil zit in de bon.
+import Reveal from './Reveal.astro';
+import SectionHead from './SectionHead.astro';
+const { id = 'fix', title, eyebrow, cards = [], problemLabel, fixLabel, tone = 'paper' } = Astro.props;
+---
+<section class:list={['fx', `fx--${tone}`]} aria-labelledby={`${id}-h`}>
+  <div class="container">
+    <SectionHead title={title} eyebrow={eyebrow} id={`${id}-h`} />
+    <Reveal>
+      <ul class="fx__list" role="list">
+        {cards.map((c, i) => (
+          <li class="fx__card" style={`--i:${i};--r:${[-1.2, 0.8, -0.6][i % 3]}deg`}>
+            <div class="receipt-shadow">
+              <div class="receipt">
+                {problemLabel && <p class="fx__label mono">{problemLabel}</p>}
+                <p class="fx__problem">{c.problem}</p>
+                <svg class="fx__arrow" viewBox="0 0 48 28" aria-hidden="true" focusable="false"><path d="M4 14h36M30 5l11 9-11 9" fill="none" stroke="#e06633" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                {fixLabel && <p class="fx__label fx__label--ok mono">{fixLabel}</p>}
+                <p class="fx__fix">{c.fix}</p>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Reveal>
+  </div>
+</section>
+<style>
+  .fx { padding-block: var(--space-9); }
+  .fx--paper { background: var(--paper); }
+  .fx--white { background: var(--white); }
+  .fx__list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); align-items: start; }
+  .fx__card { transform: rotate(var(--r)); }
+  .fx__card:nth-child(2) { margin-top: var(--space-6); }
+  .fx .receipt { display: grid; gap: var(--space-3); padding: var(--space-6) var(--space-5) calc(var(--space-6) + 8px); }
+  .fx__label { font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .fx__label--ok { color: var(--green-dark); }
+  .fx__problem { font-family: var(--font-display); font-weight: 700; font-stretch: 85%; font-size: var(--step-1); color: var(--muted); text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 3px; line-height: 1.2; }
+  .fx__arrow { width: 3rem; height: 1.75rem; transform: rotate(90deg); margin-block: 0.25rem; }
+  .fx__fix { font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: var(--step-2); color: var(--navy); line-height: 1.05; background: linear-gradient(transparent 62%, var(--green-soft) 62%); width: fit-content; }
+  @media (max-width: 56rem) { .fx__list { grid-template-columns: 1fr; } .fx__card:nth-child(2) { margin-top: 0; } }
+</style>

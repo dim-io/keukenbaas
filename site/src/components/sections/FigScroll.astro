@@ -1,0 +1,16 @@
+---
+// Grote illustratie op mobiel: houdt een leesbare breedte en scrolt zijdelings binnen het eigen vak.
+const { min = '32rem', label = 'Illustratie' } = Astro.props;
+---
+<div class="figscroll" style={`--fig-min:${min}`} role="group" aria-label={label} data-figscroll><slot /></div>
+<script>
+  document.querySelectorAll('[data-figscroll]').forEach((el) => {
+    const check = () => { if (el.scrollWidth > el.clientWidth + 2) el.setAttribute('tabindex', '0'); else el.removeAttribute('tabindex'); };
+    check();
+    addEventListener('resize', check);
+  });
+</script>
+<style>
+  /* Onderschrift blijft binnen het zichtbare vak als de illustratie zijwaarts scrolt. */
+  .figscroll :global(figcaption) { position: sticky; left: 0; max-width: min(100%, calc(100vw - 2.5rem)); }
+</style>

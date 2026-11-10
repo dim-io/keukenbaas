@@ -1,0 +1,328 @@
+---
+/*
+ * KoelcelMeting: thermometer naast het kaartje "Nieuwe metingen" (HACCP, Koelingen & vriezers).
+ * Stijl volgens STIJLREGELS in DymoLabel.astro.
+ * Props: geen. Eindstaat (zonder JS of bij reduced motion): drie metingen, koelkast in afwijking, actieregel zichtbaar.
+ * Toestanden op data-phase: idle, m0, m1, m2 (meten per rij), flag (afwijking), hold.
+ * Klik of Enter op de thermometer = nieuwe meting (andere waarden, zelfde uitkomst).
+ */
+const { variant = 'home' } = Astro.props; // home (standaard) | hero | full | groen: hero en full volgen docs/copy/haccp.md, groen = alleen koelcel en vriezer, beide goed (homepage 14:00)
+const home = [
+  { name: 'Koelcel 1', norm: 'max 7 °C', val: '3,8', tone: 'ok', pill: 'Goed' },
+  { name: 'Vriezer', norm: 'max −18 °C', val: '−19,5', tone: 'ok', pill: 'Goed' },
+  { name: 'Koelkast pass', norm: 'max 7 °C', val: '7,4', tone: 'bad', pill: 'Afwijking' },
+];
+const koel = { name: 'Koelcel 1', norm: 'max 7 °C', val: '3,8', tone: 'ok', pill: 'Goed' };
+const pass = { name: 'Koelkast pass', norm: 'max 7 °C', val: '7,4', tone: 'bad', pill: 'Afwijking' };
+const vries = { name: 'Vriezer', norm: 'max −18 °C', val: '−19,5', tone: 'ok', pill: 'Goed' };
+const groen = variant === 'groen';
+const rows = groen ? [koel, vries]
+  : variant === 'hero' ? [koel, pass]
+  : variant === 'full' ? [koel, pass,
+    { name: 'Vriezer', norm: 'max −18 °C', val: '−19,5', tone: 'ok', pill: 'Goed' },
+    { name: 'Vaatwasser wassen', norm: 'min 60 °C', val: '62', tone: 'ok', pill: 'Goed' },
+    { name: 'Vaatwasser naspoelen', norm: 'min 80 °C', val: '82', tone: 'ok', pill: 'Goed' }]
+  : home;
+const copyMode = variant === 'hero' || variant === 'full';
+const temps = groen ? [[3.8, -19.5], [3.6, -18.8], [4.1, -19.6]]
+  : variant === 'hero' ? [[3.8, 7.4], [3.6, 7.8], [4.1, 7.2]]
+  : variant === 'full' ? [[3.8, 7.4, -19.5, 62, 82], [3.6, 7.8, -18.8, 63, 83], [4.1, 7.2, -19.6, 61, 81]]
+  : [[3.8, -19.5, 7.4], [3.6, -18.8, 7.8], [4.1, -19.6, 7.2]];
+const badRow = rows.find((r) => r.tone === 'bad');
+const finalRow = badRow ?? rows[rows.length - 1];
+const finalTone = finalRow.tone;
+const finalLvl = Math.min(1, Math.max(0, (parseFloat(finalRow.val.replace('−', '-').replace(',', '.')) + 25) / 35));
+const dateText = copyMode ? 'maandag 9 november' : groen ? '09-11 · 14:00' : '09-11 · 14:58';
+const action = copyMode ? 'Afwijking: Koelkast pass is 7,4 °C, de norm is max 7 °C. Gemeten door Mehmet om 14:02.' : 'Actie: product verplaatst, opnieuw meten om 15:30';
+const hidden = groen
+  ? 'Een thermometer en het scherm Nieuwe metingen. Koelcel 1 meet 3,8 graden en is goed. De vriezer meet min 19,5 graden en is goed.'
+  : copyMode
+  ? 'Een thermometer en het scherm Nieuwe metingen van maandag 9 november. Koelcel 1 meet 3,8 graden en is goed. De koelkast pass meet 7,4 graden, boven de norm van maximaal 7 graden, en geeft een afwijking. ' + (variant === 'full' ? 'De vriezer meet min 19,5 graden en is goed. De vaatwasser wast op 62 graden en spoelt na op 82 graden, beide goed. ' : '') + 'Afwijking: Koelkast pass is 7,4 °C, de norm is max 7 °C. Gemeten door Mehmet om 14:02.'
+  : 'Een thermometer en het scherm Nieuwe metingen. Koelcel 1 meet 3,8 graden en is goed. De vriezer meet min 19,5 graden en is goed. De koelkast pass meet 7,4 graden, boven de norm van maximaal 7 graden, en geeft een afwijking. De actie: product verplaatst, opnieuw meten om 15:30.';
+---
+<figure class="km" data-km data-temps={JSON.stringify(temps)} data-tone={finalTone} data-animate style={`margin:0;--lvl:${finalLvl}`}>
+  <div class="km__stage">
+    <div class="km__thermo" role="button" tabindex="0" aria-label="Doe een nieuwe meting" data-km-thermo>
+      <svg viewBox="0 0 90 250" aria-hidden="true" focusable="false">
+        <g stroke="#0a0d22" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+          <circle cx="48" cy="218" r="24" fill="#0a0d22"/>
+          <rect x="33" y="13" width="30" height="196" rx="15" fill="#0a0d22"/>
+          <circle cx="45" cy="215" r="24" fill="#fffdf8"/>
+          <rect x="30" y="10" width="30" height="196" rx="15" fill="#fffdf8"/>
+          <rect x="33" y="190" width="24" height="16" fill="#fffdf8" stroke="none"/>
+          <!-- kwik -->
+          <rect class="km__hg" x="39" y="22" width="12" height="183" stroke="none" data-km-hg/>
+          <circle class="km__hg km__bulb" cx="45" cy="215" r="16" stroke="none"/>
+          <!-- schaal -->
+          <path d="M60 22h8M60 74h8M60 127h8M60 179h8" fill="none"/>
+          <path d="M22 38h8" fill="none" stroke="#b34519" stroke-width="3"/>
+          <path d="M60 38h8" fill="none" stroke="#b34519" stroke-width="3"/>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" font-size="10" font-weight="500" fill="#31344a">
+          <text x="71" y="26">10</text>
+          <text x="71" y="42" fill="#b34519" font-weight="600">7</text>
+          <text x="71" y="78">0</text>
+          <text x="71" y="131">−10</text>
+          <text x="71" y="183">−20</text>
+        </g>
+      </svg>
+      <div class="km__read">
+        <span class="km__where" data-km-where>{groen ? rows[rows.length - 1].name : rows[1]?.tone === "bad" ? rows[1].name : rows[rows.length - 1].name}</span>
+        <span class="km__num mono" data-km-num>{groen ? '−19,5 °C' : '7,4 °C'}</span>
+      </div>
+    </div>
+
+    <div class="km__card" aria-hidden="true">
+      <div class="km__head"><b>Nieuwe metingen</b><span class="mono">{dateText}</span></div>
+      {rows.map((r, i) => (
+        <div class={`km__row km__row--${r.tone}`} data-km-row={i}>
+          <span class="km__name">{r.name}</span>
+          <span class="km__val mono"><span data-v>{r.val}</span> °C</span>
+          <span class="km__norm mono">{r.norm}</span>
+          <span class={`km__pill km__pill--${r.tone} mono`}>{r.pill}</span>
+        </div>
+      ))}
+      {!groen && <div class="km__action mono" data-km-action>{action}</div>}
+      {copyMode && <div class="km__by mono">Door: Mehmet</div>}
+    </div>
+  </div>
+  <figcaption class="km__cap mono">Klik op de thermometer voor een nieuwe meting.</figcaption>
+  <p class="visually-hidden">{hidden}</p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-km]').forEach((el) => init(el as HTMLElement));
+  function init(el: HTMLElement) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const cs = getComputedStyle(el);
+    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const rows = Array.from(el.querySelectorAll<HTMLElement>('[data-km-row]'));
+    const where = el.querySelector<HTMLElement>('[data-km-where]')!;
+    const num = el.querySelector<HTMLElement>('[data-km-num]')!;
+    const thermo = el.querySelector<HTMLElement>('[data-km-thermo]')!;
+    const names = rows.map((r) => r.querySelector('.km__name')!.textContent!);
+    const variants: number[][] = JSON.parse(el.dataset.temps!);
+    const badIdx = rows.findIndex((r) => r.classList.contains('km__row--bad'));
+    const lvl = (v: number) => Math.min(1, Math.max(0, (v + 25) / 35));
+    const fmt = (v: number) => v.toFixed(1).replace('.', ',').replace('-', '−');
+    const many = rows.length > 3;
+    const COUNT = many ? 350 : ms('--km-count');
+    const GAP = many ? 100 : ms('--km-gap');
+    let run = 0, started = false, variant = 0, cur = -9;
+    const sleep = (t: number, id: number) => new Promise<void>((ok, no) => {
+      setTimeout(() => (id !== run ? no() : ok()), t);
+    });
+    const live = () => el.querySelector<HTMLElement>('[data-km-row][data-s="active"] [data-v]');
+    function show(v: number, label: string) {
+      cur = v;
+      el.style.setProperty('--lvl', String(lvl(v)));
+      num.textContent = fmt(v) + ' °C';
+      where.textContent = label;
+      const l = live();
+      if (l) l.textContent = fmt(v);
+    }
+    // glijdt met ease-out van de huidige stand naar de nieuwe
+    function tween(to: number, label: string, id: number, d: number) {
+      const from = cur, t0 = performance.now();
+      return new Promise<void>((ok, no) => {
+        (function frame(now: number) {
+          if (id !== run) return no();
+          const t = Math.min(1, (now - t0) / d);
+          show(from + (to - from) * (1 - Math.pow(1 - t, 3)), label);
+          if (t < 1) requestAnimationFrame(frame); else { show(to, label); ok(); }
+        })(t0);
+      });
+    }
+    function reset() {
+      rows.forEach((r) => { r.dataset.s = 'empty'; r.querySelector('[data-v]')!.textContent = '—'; });
+      el.dataset.tone = '';
+      el.dataset.phase = 'idle';
+      show(-9, 'wacht op meting');
+      num.textContent = '— °C';
+    }
+    async function cycle(id: number) {
+      const temps = variants[variant % variants.length];
+      reset();
+      await sleep(ms('--km-idle'), id);
+      for (let i = 0; i < rows.length; i++) {
+        el.dataset.phase = 'm' + i;
+        el.dataset.tone = '';
+        rows[i].dataset.s = 'active';
+        await tween(temps[i], names[i], id, COUNT);
+        el.dataset.tone = i === badIdx ? 'bad' : 'ok';
+        rows[i].dataset.s = 'done';
+        rows[i].querySelector('[data-v]')!.textContent = fmt(temps[i]);
+        if (i < rows.length - 1) await sleep(GAP, id);
+      }
+      if (badIdx >= 0) {
+        // eindstaat: de thermometer wijst de afwijking aan
+        if (badIdx !== rows.length - 1) await tween(temps[badIdx], names[badIdx], id, 450);
+        el.dataset.phase = 'flag';
+        el.dataset.tone = 'bad';
+        await sleep(ms('--km-flag'), id);
+      }
+      el.dataset.phase = 'hold';
+    }
+    async function play() {
+      const id = ++run;
+      try { await cycle(id); } catch { /* onderbroken door een nieuwe meting */ }
+    }
+    function again() {
+      if (!started) return;
+      variant += 1;
+      play();
+    }
+    // Begin leeg; de eindstaat staat in de HTML en komt terug na het afspelen.
+    reset();
+    const start = () => { if (!started) { started = true; play(); } };
+    el.addEventListener('inviewchange', (e) => { if ((e as CustomEvent).target === el) start(); });
+    if (el.hasAttribute('data-inview')) start();
+    thermo.addEventListener('click', again);
+    thermo.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); again(); }
+    });
+  }
+</script>
+
+<style>
+  .km {
+    --km-count: 600ms;
+    --km-gap: 200ms;
+    --km-flag: 500ms;
+    --km-idle: 300ms;
+    --km-pop: 350ms;
+    --lvl: 0.926;
+    --tone: var(--red);
+    width: min(100%, 34rem);
+  }
+  .km[data-tone=""] { --tone: var(--orange); }
+  .km[data-tone="ok"] { --tone: var(--green); }
+  .km[data-tone="bad"] { --tone: var(--red); }
+
+  .km__stage {
+    container-type: inline-size;
+    display: grid;
+    grid-template-columns: 27fr 70fr;
+    gap: 3cqw;
+    align-items: start;
+    font-size: 3.7cqw;
+  }
+  @supports (font-size: 1cqw) { .km__stage { font-size: 3.7cqw; } }
+
+  .km__thermo { cursor: pointer; display: grid; gap: 2cqw; border-radius: var(--radius); }
+  .km__thermo svg { width: 100%; height: auto; display: block; }
+  .km__hg { fill: var(--tone); transform-box: fill-box; transform-origin: bottom; }
+  rect.km__hg { transform: scaleY(var(--lvl)); }
+  .km__read {
+    background: var(--navy);
+    color: var(--tape);
+    border-radius: var(--radius-s);
+    padding: 1.4cqw 1.6cqw;
+    display: grid;
+    gap: 0.4cqw;
+    box-shadow: var(--shadow-s);
+  }
+  .km__where { font-family: var(--font-mono); font-size: 2.6cqw; line-height: 1.2; min-height: 2.4em; overflow-wrap: anywhere; }
+  .km__num { font-size: 3.8cqw; font-weight: 600; white-space: nowrap; }
+
+  .km__card {
+    background: var(--white);
+    border: 2px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .km__head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw;
+    background: var(--paper);
+    border-bottom: 2px solid var(--navy);
+    padding: 2.2cqw 3cqw;
+    font-family: var(--font-display);
+    color: var(--navy);
+  }
+  .km__head b { font-size: 4cqw; }
+  .km__head span { font-size: 2.7cqw; color: var(--muted); white-space: nowrap; }
+
+  .km__row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "n v" "m p";
+    align-items: center;
+    row-gap: 1cqw;
+    padding: 2.4cqw 3cqw;
+    border-bottom: 2px solid var(--line);
+    color: var(--navy);
+    border-left: 0.9cqw solid transparent;
+  }
+  .km__name { grid-area: n; font-family: var(--font-body); font-weight: 700; font-size: 3.8cqw; }
+  .km__val { grid-area: v; font-weight: 600; font-size: 3.9cqw; text-align: right; white-space: nowrap; }
+  .km__norm { grid-area: m; font-size: 2.7cqw; color: var(--muted); padding: 0.3cqw 1cqw; justify-self: start; }
+  .km__pill {
+    grid-area: p; justify-self: end;
+    font-size: 2.8cqw; font-weight: 600;
+    padding: 0.5cqw 2cqw;
+    border: 2px solid var(--navy);
+    border-radius: var(--radius-s);
+    box-shadow: 2px 2px 0 var(--navy);
+    color: var(--navy);
+  }
+  .km__pill--ok { background: var(--green-soft); }
+  .km__pill--bad { background: var(--red); color: var(--white); }
+
+  /* Norm licht op bij de afwijking (standaard en in de fases flag en hold) */
+  .km__row--bad .km__norm { background: var(--orange-soft); color: var(--orange-dark); font-weight: 600; box-shadow: inset 0 0 0 2px var(--orange); }
+
+  .km__action {
+    margin: 2.4cqw 3cqw;
+    padding: 2cqw 2.6cqw;
+    border: 2px solid var(--navy);
+    border-left: 1.2cqw solid var(--red);
+    border-radius: var(--radius-s);
+    background: var(--paper);
+    font-size: 2.9cqw;
+    line-height: 1.35;
+    color: var(--navy);
+  }
+
+  /* Toestanden */
+  .km__row[data-s="empty"] .km__pill { visibility: hidden; }
+  .km__row[data-s="empty"] .km__val { color: var(--muted); }
+  .km__row[data-s="active"] { background: var(--orange-soft); border-left-color: var(--orange); }
+  .km__row[data-s="active"] .km__pill { visibility: hidden; }
+  .km__row[data-s="done"] .km__pill { animation: km-pop var(--km-pop) var(--ease-out) both; }
+
+  .km[data-phase="idle"] .km__row--bad .km__norm,
+  .km[data-phase="m0"] .km__row--bad .km__norm,
+  .km[data-phase="m1"] .km__row--bad .km__norm,
+  .km[data-phase="m2"] .km__row--bad .km__norm { background: none; color: var(--muted); font-weight: 400; box-shadow: none; }
+  .km[data-phase="flag"] .km__row--bad .km__norm { animation: km-flash 700ms var(--ease-out); }
+
+  .km[data-phase="idle"] .km__action,
+  .km[data-phase="m0"] .km__action,
+  .km[data-phase="m1"] .km__action,
+  .km[data-phase="m2"] .km__action { display: none; }
+  .km[data-phase="flag"] .km__action { animation: km-type var(--km-flag) var(--ease-out) both; }
+
+
+  @keyframes km-pop { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+  @keyframes km-flash { 0% { background: var(--red); color: var(--white); } 100% { background: var(--orange-soft); color: var(--orange-dark); } }
+  @keyframes km-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+  .km__by { margin: 0 3cqw 2.4cqw; font-size: 2.7cqw; color: var(--muted); }
+  /* Smal: grotere letters, zodat niets kleiner dan ~10px wordt */
+  @container (max-width: 26rem) {
+    .km__stage { grid-template-columns: 30fr 67fr; }
+    .km__where { font-size: 3.4cqw; }
+    .km__num { font-size: 4.4cqw; }
+    .km__head b { font-size: 4.6cqw; }
+    .km__head span { font-size: 3.4cqw; }
+    .km__name { font-size: 4.2cqw; }
+    .km__val { font-size: 4.2cqw; }
+    .km__norm { font-size: 3.4cqw; }
+    .km__pill { font-size: 3.4cqw; }
+    .km__action { font-size: 3.5cqw; }
+    .km__by { font-size: 3.4cqw; }
+  }
+
+  .km__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

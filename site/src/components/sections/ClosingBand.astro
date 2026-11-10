@@ -1,0 +1,29 @@
+---
+// Afsluitende band: kop links, aanmelding rechts. tone: 'orange' | 'navy'. Slot "after": extra regel onder het veld (bijv. teller).
+import Reveal from './Reveal.astro';
+import InlineSignup from '../InlineSignup.astro';
+const { title, note, tone = 'orange', placeholder, button, signupId = 'closing' } = Astro.props;
+---
+<section class:list={['cb', `cb--${tone}`, tone === 'navy' && 'on-dark']}>
+  <div class="container">
+    <Reveal class="cb__in">
+      <h2 style="--i:0">{title}</h2>
+      <div class="cb__form" style="--i:1">
+        <InlineSignup id={signupId} placeholder={placeholder} button={button} variant={tone === 'orange' ? 'secondary' : 'primary'} />
+        {note && <p class="cb__note">{note}</p>}
+        <slot name="after" />
+      </div>
+    </Reveal>
+  </div>
+</section>
+<style>
+  .cb { padding-block: var(--space-9); }
+  .cb--orange { background: var(--orange); color: var(--navy); }
+  .cb--navy { background: var(--navy); color: var(--paper); }
+  .cb--navy h2 { color: var(--paper); }
+  .cb :global(.cb__in) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-7); align-items: center; }
+  .cb__form { display: grid; gap: var(--space-4); }
+  .cb__form :global(.signup) { max-width: none; }
+  .cb__note { font-family: var(--font-mono); font-size: var(--step--1); }
+  @media (max-width: 56rem) { .cb :global(.cb__in) { grid-template-columns: 1fr; gap: var(--space-6); } }
+</style>

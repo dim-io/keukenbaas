@@ -1,0 +1,90 @@
+---
+// Wachtlijst: advertentie-landingspagina. Copy letterlijk uit docs/copy/wachtlijst.md; markeringen staan als HTML-commentaar.
+import Base from '../layouts/Base.astro';
+import Reveal from '../components/sections/Reveal.astro';
+import FigScroll from '../components/sections/FigScroll.astro';
+import ProofQuote from '../components/sections/ProofQuote.astro';
+import MoreTiles from '../components/sections/MoreTiles.astro';
+import Steps from '../components/sections/Steps.astro';
+import FaqAccordion from '../components/sections/FaqAccordion.astro';
+import Eyebrow from '../components/Eyebrow.astro';
+import WachtlijstForm from '../components/pages/WachtlijstForm.astro';
+import VandaagScherm from '../components/illustrations/VandaagScherm.astro';
+
+const checks = [
+  'Rooster, uren en fooi op de telefoon van je team',
+  'HACCP-metingen en THT-labels uit je DYMO',
+  'Kostprijs per gerecht en één bestelmail per leverancier',
+];
+const tiles = [
+  { title: 'Je begint eerder', text: 'We gaan op volgorde van de lijst.' },
+  { title: 'Je praat mee', text: 'Wat mist er voor jouw keuken? Wie vroeg is, praat mee over wat er als eerste bij komt.' },
+];
+const stappen = [
+  { title: 'Zet je zaak op de lijst', text: 'Dat doe je hierboven.' },
+  { title: 'Kennismaken', text: 'Een gesprek over hoe jouw keuken nu draait, en wat je als eerste wilt regelen.' },
+  { title: 'We zetten je zaak samen klaar', text: 'Je medewerkers, je producten en je meetpunten.' },
+  { title: 'Je team logt in', text: 'Iedereen logt in met een eigen code, op de eigen telefoon.' },
+];
+const faq = [
+  { q: 'Hoe lang duurt het voordat ik kan beginnen?', a: 'Dat weten we nog niet precies. We gaan op volgorde van de lijst, en je hoort het van ons zodra jouw zaak aan de beurt is.' },
+  { q: 'Wat doen jullie met mijn gegevens?', a: 'We gebruiken ze alleen om contact met je op te nemen over de wachtlijst. We delen ze met niemand, behalve de dienst die het formulier verwerkt. Wil je eraf, dan stuur je een mail en halen we je gegevens weg. Meer in de privacyverklaring.' },
+  { q: 'Werkt het voor mijn zaak?', a: 'Keukenbaas is gemaakt voor zelfstandige restaurants met een keuken, een team en een rooster. Ook met bezorging, want daar komt het vandaan. Twijfel je, zet je zaak op de lijst en vraag het bij de kennismaking.' },
+];
+---
+<Base nav="minimal" title="Wachtlijst · Keukenbaas voor je restaurant" titleRaw description="Zet je zaak op de wachtlijst van Keukenbaas: rooster, uren en fooi, prep, HACCP en inkoop in één webapp. Je begint eerder en praat mee.">
+  <!-- W2 · Hero met formulier -->
+  <section class="wl grid-paper">
+    <div class="container wl__in">
+      <Reveal class="wl__copy">
+        <div style="--i:0"><Eyebrow>Wachtlijst</Eyebrow></div>
+        <h1 style="--i:1">Rooster, uren, HACCP en prep in één app. Zet je zaak op de lijst.</h1>
+        <p class="wl__lead" style="--i:2">Keukenbaas is gemaakt in de keuken van Pumpkin, voor zelfstandige restaurants. Wie op de lijst staat, begint eerder dan wie later komt.</p>
+        <ul class="wl__checks" role="list" style="--i:3">
+          {checks.map((c) => (
+            <li>
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="17" height="17" rx="3" fill="#dff5ec" stroke="#0a0d22" stroke-width="2"/><path d="M5.5 10.5l3 3 6-7" fill="none" stroke="#207657" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>{c}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="wl__price mono" style="--i:4">Een prijs hebben we nog niet. Je hoort hem als eerste, voordat je iets besluit, en inschrijven verplicht je tot niets.</p>
+        <div class="wl__form" style="--i:5"><WachtlijstForm /></div>
+      </Reveal>
+      <Reveal class="wl__art"><div style="--i:2"><FigScroll min="40rem" label="Het scherm Vandaag op een laptop en het rooster op een telefoon"><VandaagScherm withPhone /></FigScroll></div></Reveal>
+    </div>
+  </section>
+
+  <!-- W3 · Cijfers: vervalt -->
+
+  <!-- W4 · Citaat -->
+  <ProofQuote
+    placeholder="Citaat volgt"
+    note="CITAAT TE ONTVANGEN: eigenaar of chef van Pumpkin, over wat er in de keuken anders ging sinds ze met Keukenbaas werken. Liefst iets concreets: het rooster, de HACCP-lijst of de fooi. Onder het citaat: [naam], [rol] bij Pumpkin, Haarlem"
+  />
+
+  <!-- W5 · Wat je krijgt als vroege gebruiker -->
+  <MoreTiles id="vroeg" title="Wat je krijgt als je vroeg bent" tiles={tiles} tone="paper" />
+
+  <!-- W6 · Zo begin je -->
+  <Steps id="stappen" title="Zo begin je" steps={stappen} />
+
+  <!-- W7 · Korte vragen -->
+  <FaqAccordion id="faq" title="Korte vragen" items={faq} />
+</Base>
+<style>
+  .wl { padding-block: var(--space-8) var(--space-9); }
+  .wl__in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-7); align-items: start; }
+  .wl :global(.wl__copy) { display: grid; gap: var(--space-5); justify-items: start; min-width: 0; }
+  h1 { font-size: var(--step-4); }
+  .wl__lead { font-size: var(--step-1); }
+  .wl__checks { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
+  .wl__checks li { display: flex; gap: var(--space-2); align-items: flex-start; font-weight: 500; color: var(--navy); }
+  .wl__checks svg { width: 1.3rem; height: 1.3rem; flex: none; margin-top: 0.2rem; }
+  .wl__price { font-size: var(--step--1); color: var(--navy); padding: var(--space-3) var(--space-4); background: var(--tape); border: 2px solid var(--navy); border-radius: var(--radius-s); max-width: 36rem; }
+  .wl__form { width: 100%; max-width: 38rem; padding: var(--space-5); background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .wl :global(.wl__art) { display: flex; justify-content: center; position: sticky; top: var(--space-6); min-width: 0; }
+  .wl :global(.wl__art) > :global(div) { width: 100%; }
+  @media (max-width: 64rem) { .wl__in { grid-template-columns: 1fr; } .wl :global(.wl__art) { position: static; } }
+  @media (max-width: 36rem) { .wl__form { padding: var(--space-4); } }
+</style>

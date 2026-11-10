@@ -1,0 +1,261 @@
+---
+/*
+ * Bestellijst: winkelmandje per leverancier (Inkoop & Calculatie) met tabbladen Molenaar, Brandmeesters en
+ * Jules Bakery. De regels vullen zich en de aantallen lopen op; "Bestelmail versturen" laat een envelop wegvliegen
+ * en toont "Recente bestelmail: Molenaar, 09-11 14:02".
+ * Stijl volgens STIJLREGELS in DymoLabel.astro.
+ * Props: geen. Eindstaat (zonder JS of bij reduced motion): tab Molenaar, vier regels, recente bestelmail zichtbaar.
+ * Het verhaal speelt één keer: regels vullen zich, Bestelmail versturen, de mail vliegt weg en blijft op "verstuurd" staan.
+ * Interactie: de tabs en de knop zijn echte knoppen; de knop laat de mail opnieuw wegvliegen.
+ */
+const suppliers = [
+  { name: 'Groente en fruit', lines: [['Tomaten', 4, 'kg', 'graag rijpe'], ['Courgette', 2, 'kg'], ['Bloem tipo 00', 10, 'kg']] },
+];
+---
+<figure class="bl" data-bl data-animate style="margin:0">
+  <div class="bl__stage">
+    <div class="bl__card">
+      <div class="bl__head"><b>Inkoop</b><span class="mono">Leverancier</span></div>
+      <div class="bl__tabs" role="tablist" aria-label="Leverancier">
+        {suppliers.map((s, i) => (
+          <button type="button" role="tab" class="bl__tab" aria-selected={i === 0 ? 'true' : 'false'} data-bl-tab={i}>
+            <span>{s.name}</span><em class="mono" data-bl-count>{s.lines.length}</em>
+          </button>
+        ))}
+      </div>
+      <div class="bl__panels">
+        {suppliers.map((s, i) => (
+          <ul class="bl__panel" data-bl-panel={i} data-active={i === 0 ? '1' : '0'} aria-label={`Regels ${s.name}`}>
+            {s.lines.map((l) => (
+              <li class="bl__line" data-bl-line>
+                <span class="bl__item">{l[0]}{l[3] && <small class="bl__note mono">opmerking: {l[3]}</small>}</span>
+                <span class="bl__q mono" data-q={l[1]} data-unit={l[2]}>{l[1]} {l[2]}</span>
+              </li>
+            ))}
+          </ul>
+        ))}
+      </div>
+      <p class="bl__subject mono">Onderwerp: Bestelling dinsdag 10-11</p>
+      <div class="bl__bar">
+        <button type="button" class="bl__send" data-bl-send>Bestelmail versturen</button>
+        <svg class="bl__env" viewBox="0 0 64 46" aria-hidden="true" focusable="false" data-bl-env>
+          <g stroke="#0a0d22" stroke-width="2" stroke-linejoin="round">
+            <rect x="5" y="5" width="56" height="38" rx="4" fill="#0a0d22"/>
+            <rect x="2" y="2" width="56" height="38" rx="4" fill="#fffdf8"/>
+            <path d="M3 4l27 21L57 4" fill="#fee6dc"/>
+            <rect x="26" y="20" width="9" height="9" rx="2" fill="#e06633"/>
+          </g>
+        </svg>
+      </div>
+      <p class="bl__recent mono" data-bl-recent>Bestelmail verstuurd om 22:14</p>
+    </div>
+  </div>
+  <figcaption class="bl__cap mono">Klik een tabblad of de knop om zelf te bestellen.</figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-bl]').forEach((el) => init(el as HTMLElement));
+
+  function init(el: HTMLElement) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const cs = getComputedStyle(el);
+    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const tabs = Array.from(el.querySelectorAll<HTMLElement>('[data-bl-tab]'));
+    const panels = Array.from(el.querySelectorAll<HTMLElement>('[data-bl-panel]'));
+    const counts = Array.from(el.querySelectorAll<HTMLElement>('[data-bl-count]'));
+    const send = el.querySelector<HTMLElement>('[data-bl-send]')!;
+    const lines = (i: number) => Array.from(panels[i].querySelectorAll<HTMLElement>('[data-bl-line]'));
+
+    let run = 0, started = false, done = false;
+    const sleep = (t: number, id: number) => new Promise<void>((ok, no) => {
+      setTimeout(() => (id !== run ? no() : ok()), t);
+    });
+
+    function select(i: number) {
+      tabs.forEach((t, k) => t.setAttribute('aria-selected', String(k === i)));
+      panels.forEach((p, k) => (p.dataset.active = k === i ? '1' : '0'));
+    }
+    const qOf = (li: HTMLElement) => li.querySelector<HTMLElement>('[data-q]')!;
+    const setQ = (li: HTMLElement, v: number) => { const q = qOf(li); q.textContent = `${v} ${q.dataset.unit}`.replace('.', ','); };
+    const target = (li: HTMLElement) => Number(qOf(li).dataset.q);
+
+    // aantal loopt vloeiend op met ease-out
+    function countUp(li: HTMLElement, d: number) {
+      const t0 = performance.now(), to = target(li);
+      (function frame(now: number) {
+        const t = Math.min(1, (now - t0) / d);
+        setQ(li, Math.round(to * (1 - Math.pow(1 - t, 3))));
+        if (t < 1) requestAnimationFrame(frame); else setQ(li, to);
+      })(t0);
+    }
+
+    // Beginstaat: lege lijst, nog niets verstuurd. De eindstaat staat in de HTML.
+    function reset() {
+      el.dataset.phase = 'idle';
+      el.dataset.sent = '0';
+      el.removeAttribute('data-fly');
+      panels.forEach((_, i) => {
+        lines(i).forEach((li) => { li.dataset.in = ''; setQ(li, 0); });
+        counts[i].textContent = '0';
+      });
+      select(0);
+    }
+
+    async function doSend(id: number) {
+      el.dataset.phase = 'send';
+      await sleep(ms('--bl-press'), id);
+      el.dataset.phase = 'fly';
+      el.setAttribute('data-fly', '');
+      await sleep(ms('--bl-fly'), id);
+      el.removeAttribute('data-fly');
+      el.dataset.sent = '1';
+      el.dataset.phase = 'sent';
+      await sleep(ms('--bl-type'), id);
+      el.dataset.phase = 'hold';
+      done = true;
+    }
+
+    async function cycle(id: number) {
+      reset();
+      await sleep(ms('--bl-idle'), id);
+      el.dataset.phase = 'fill';
+      for (let i = 0; i < panels.length; i++) {
+        let n = 0;
+        for (const li of lines(i)) {
+          li.dataset.in = '1';
+          counts[i].textContent = String(++n);
+          countUp(li, ms('--bl-count'));
+          await sleep(ms('--bl-line'), id);
+        }
+      }
+      await sleep(ms('--bl-count') - ms('--bl-line') + 150, id);
+      await doSend(id);
+    }
+
+    async function play() {
+      const id = ++run;
+      done = false;
+      try { await cycle(id); } catch { /* onderbroken door een nieuwe ronde */ }
+    }
+
+    reset();
+    const start = () => { if (!started) { started = true; play(); } };
+    el.addEventListener('inviewchange', (e) => { if ((e as CustomEvent).target === el) start(); });
+    if (el.hasAttribute('data-inview')) start();
+
+    tabs.forEach((t, i) => t.addEventListener('click', () => select(i)));
+    // Nog een keer versturen mag: de lijst blijft staan, alleen de mail vliegt opnieuw weg.
+    send.addEventListener('click', () => {
+      if (!started || !done) return;
+      done = false;
+      const id = ++run;
+      el.dataset.sent = '0';
+      doSend(id).catch(() => {});
+    });
+  }
+</script>
+
+<style>
+  .bl {
+    --bl-idle: 300ms;
+    --bl-line: 250ms;
+    --bl-count: 450ms;
+    --bl-press: 300ms;
+    --bl-fly: 800ms;
+    --bl-type: 500ms;
+    width: min(100%, 30rem);
+  }
+  .bl__stage { container-type: inline-size; overflow: hidden; padding: 0 5px 5px 0; }
+  .bl__card {
+    position: relative;
+    background: var(--white);
+    border: 2px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    color: var(--navy);
+  }
+  .bl__head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw; flex-wrap: wrap;
+    background: var(--paper); border-bottom: 2px solid var(--navy); border-radius: 4px 4px 0 0;
+    padding: 3cqw 4cqw;
+  }
+  .bl__head b { font-family: var(--font-display); font-size: 5cqw; }
+  .bl__head span { font-size: 2.8cqw; color: var(--muted); }
+
+  .bl__tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--paper); border-bottom: 2px solid var(--navy); }
+  .bl__tab {
+    appearance: none; font: inherit; color: var(--navy); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 1.2cqw;
+    padding: 2.6cqw 1cqw; background: var(--paper);
+    border: 0; border-right: 2px solid var(--navy);
+    font-family: var(--font-body); font-weight: 700; font-size: 3.4cqw;
+    position: relative;
+  }
+  .bl__tab:last-child { border-right: 0; }
+  .bl__tab em { font-style: normal; font-size: 2.6cqw; font-weight: 600; background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius-s); padding: 0 1cqw; min-width: 4.2cqw; text-align: center; }
+  .bl__tab[aria-selected="true"] { background: var(--white); box-shadow: inset 0 -3px 0 var(--orange); }
+  .bl__tab[aria-selected="true"] em { background: var(--orange); }
+  .bl__tab:hover:not([aria-selected="true"]) { background: var(--orange-soft); }
+
+  .bl__panels { display: grid; padding: 2cqw 4cqw; }
+  .bl__panel { grid-area: 1 / 1; list-style: none; margin: 0; padding: 0; align-content: start; display: grid; }
+  .bl__panel[data-active="0"] { visibility: hidden; }
+  .bl__line {
+    display: flex; justify-content: space-between; align-items: center; gap: 3cqw;
+    padding: 2.4cqw 0; border-bottom: 2px solid var(--line);
+    font-family: var(--font-body); font-weight: 600; font-size: 3.9cqw;
+  }
+  .bl__line:last-child { border-bottom: 0; }
+  .bl__q {
+    min-width: 17cqw; text-align: right; font-size: 3.5cqw; font-weight: 600;
+    border: 2px solid var(--navy); border-radius: var(--radius-s); padding: 0.6cqw 2cqw; background: var(--white);
+  }
+  .bl__panels { min-height: 44cqw; }
+  .bl__item { display: grid; gap: 0.6cqw; }
+  .bl__note { font-size: 2.8cqw; font-weight: 400; color: var(--muted); }
+  .bl__subject { margin: 0; padding: 2.4cqw 4cqw; font-size: 3cqw; border-top: 2px solid var(--navy); color: var(--navy); }
+
+  .bl__bar { position: relative; padding: 3cqw 4cqw; border-top: 2px solid var(--navy); background: var(--paper); display: flex; justify-content: flex-end; }
+  .bl__send {
+    appearance: none; font-family: var(--font-mono); font-weight: 600; font-size: 3.5cqw; color: var(--navy); cursor: pointer;
+    background: var(--orange); border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s);
+    padding: 2cqw 4.4cqw;
+  }
+  .bl__send:hover { background: var(--orange-dark); color: var(--white); }
+  .bl__env { position: absolute; right: 12cqw; bottom: 3cqw; width: 14cqw; height: auto; visibility: hidden; z-index: 3; }
+  .bl__recent { margin: 0; padding: 2.6cqw 4cqw; font-size: 3cqw; border-top: 2px solid var(--navy); background: var(--green-soft); border-radius: 0 0 4px 4px; }
+
+  /* Toestanden */
+  .bl__line[data-in=""] { visibility: hidden; }
+  .bl__line[data-in="1"] { animation: bl-in 350ms var(--ease-out) both; }
+  .bl[data-phase="send"] .bl__send { animation: bl-press var(--bl-press) var(--ease-out) both; }
+  .bl[data-phase="send"] .bl__env,
+  .bl[data-fly] .bl__env { visibility: visible; }
+  .bl[data-fly] .bl__env { animation: bl-fly var(--bl-fly) var(--ease-out) both; }
+  .bl[data-sent="0"] .bl__recent { visibility: hidden; }
+  .bl[data-phase="sent"] .bl__recent { animation: bl-type var(--bl-type) var(--ease-out) both; }
+
+  @keyframes bl-in { from { opacity: 0; transform: translateX(-4cqw); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes bl-press {
+    0% { transform: translate(0, 0); box-shadow: var(--shadow-s); }
+    50% { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--navy); }
+    100% { transform: translate(0, 0); box-shadow: var(--shadow-s); }
+  }
+  @keyframes bl-fly {
+    0% { opacity: 1; transform: translate(0, 0) scale(0.3) rotate(0); }
+    25% { opacity: 1; transform: translate(0, -5cqw) scale(1) rotate(-4deg); }
+    100% { opacity: 0; transform: translate(14cqw, -34cqw) scale(0.5) rotate(14deg); }
+  }
+  @keyframes bl-type { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Smal: iets grotere kleine letters */
+  @container (max-width: 26rem) {
+    .bl__head span { font-size: 3.4cqw; }
+    .bl__note { font-size: 3.4cqw; }
+    .bl__subject, .bl__recent { font-size: 3.4cqw; }
+    .bl__tab em { font-size: 3.2cqw; }
+  }
+
+  .bl__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

@@ -1,0 +1,60 @@
+---
+// Drie statische schermkaartjes voor de inkoop-pagina (stijl volgens STIJLREGELS in illustrations/DymoLabel.astro).
+// kind: recept (Recept bewerken) | gerecht (Gerecht met kosten) | catalogus (Catalogus inlezen). Teksten uit docs/copy/inkoop.md.
+const { kind = 'recept' } = Astro.props;
+const recept = [['Zonnebloemolie', '1,6 l'], ['Eidooier', '0,24 l'], ['Knoflook', '0,1 kg'], ['Citroensap', '0,05 l'], ['Zout', '0,02 kg']];
+const opbouw = [['Tomaten-courgettesoep', '0,3 l', '€ 0,51'], ['Focaccia', '1 stuk', '€ 0,38'], ['Gepekelde ui', '20 g', '€ 0,05'], ['Olijfolie', '10 ml', '€ 0,08']];
+const cat = [['Artikelnummer', '104233'], ['Tomaten tros', ''], ['Rekeneenheid', 'kg'], ['Besteleenheid', 'doos 6 kg'], ['Prijs', '€ 12,60']];
+---
+<figure class="rk" style="margin:0">
+  <div class="rk__card">
+    {kind === 'recept' && (
+      <>
+        <div class="rk__head"><b>Recept bewerken</b><span class="mono">Aioli · batch 2 l</span></div>
+        <ul class="rk__list mono" role="list">
+          {recept.map(([n, q]) => <li><span>{n}</span><span class="rk__q">{q}</span></li>)}
+        </ul>
+        <div class="rk__bar"><span class="rk__btn mono">+ Ingrediënt toevoegen</span><span class="rk__btn rk__btn--go mono">Recept opslaan</span></div>
+      </>
+    )}
+    {kind === 'gerecht' && (
+      <>
+        <div class="rk__head"><b>Gerecht</b><span class="mono">Tomaten-courgettesoep met focaccia</span></div>
+        <div class="rk__meta mono"><span>Categorie: Voorgerecht</span><span>Verkoopprijs € 7,50</span></div>
+        <p class="rk__sub mono">Opbouw</p>
+        <ul class="rk__list mono" role="list">
+          {opbouw.map(([n, q, p]) => <li><span>{n} <i>{q}</i></span><span class="rk__q">{p}</span></li>)}
+        </ul>
+        <div class="rk__total mono"><span>Kosten</span><b>€ 1,02</b></div>
+      </>
+    )}
+    {kind === 'catalogus' && (
+      <>
+        <div class="rk__head"><b>Catalogus inlezen</b><span class="mono">Voorbeeldregels: 3 van 412</span></div>
+        <ul class="rk__list mono" role="list">
+          {cat.map(([n, q]) => <li><span>{n}</span><span class="rk__q">{q}</span></li>)}
+        </ul>
+        <div class="rk__bar"><span class="rk__btn rk__btn--go mono">Inlezen</span></div>
+      </>
+    )}
+  </div>
+</figure>
+<style>
+  .rk { width: min(100%, 30rem); container-type: inline-size; padding: 0 3px 3px 0; }
+  .rk__card { background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; color: var(--navy); }
+  .rk__head { display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw; flex-wrap: wrap; background: var(--paper); border-bottom: 2px solid var(--navy); padding: 3cqw 4cqw; font-family: var(--font-display); }
+  .rk__head b { font-size: 5cqw; }
+  .rk__head span { font-size: 3cqw; color: var(--muted); }
+  .rk__list { list-style: none; margin: 0; padding: 0; }
+  .rk__list li { display: flex; justify-content: space-between; gap: 3cqw; padding: 2.6cqw 4cqw; border-bottom: 2px solid var(--line); font-size: 3.6cqw; }
+  .rk__list li:last-child { border-bottom: 0; }
+  .rk__list i { font-style: normal; color: var(--muted); font-size: 3cqw; }
+  .rk__q { font-weight: 600; white-space: nowrap; }
+  .rk__meta { display: flex; justify-content: space-between; gap: 3cqw; flex-wrap: wrap; padding: 2.6cqw 4cqw; font-size: 3.2cqw; border-bottom: 2px solid var(--line); }
+  .rk__sub { margin: 0; padding: 2cqw 4cqw 0; font-size: 2.8cqw; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .rk__total { display: flex; justify-content: space-between; align-items: baseline; padding: 3cqw 4cqw; background: var(--orange-soft); border-top: 2px solid var(--navy); font-size: 3.4cqw; }
+  .rk__total b { font-size: 6cqw; }
+  .rk__bar { display: flex; flex-wrap: wrap; gap: 2cqw; padding: 3cqw 4cqw; background: var(--paper); border-top: 2px solid var(--navy); }
+  .rk__btn { font-size: 3.1cqw; font-weight: 600; padding: 1cqw 3cqw; border: 2px solid var(--navy); border-radius: var(--radius-s); background: var(--white); box-shadow: 2px 2px 0 var(--navy); }
+  .rk__btn--go { background: var(--orange); }
+</style>

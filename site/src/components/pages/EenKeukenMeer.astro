@@ -1,0 +1,29 @@
+---
+// "Eén keuken wordt er meer": Pumpkin, daarna twee bonnen voor jouw zaak. Eindstaat is standaard; de animatie
+// zet de bonnen één voor één neer zodra de figuur in beeld komt.
+---
+<figure class="ek" data-animate style="margin:0" aria-label="Eén keuken wordt er meer: Pumpkin, daarna jouw zaak en jouw zaak">
+  <p class="ek__title mono" aria-hidden="true">Eén keuken wordt er meer</p>
+  <div class="ek__row" aria-hidden="true">
+    <div class="ek__bon ek__bon--on" style="--n:0"><b>Pumpkin</b><svg viewBox="0 0 20 20" focusable="false"><path d="M4.5 10.5l3.5 3.5 7.5-8" fill="none" stroke="#207657" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <span class="ek__plus mono">+</span>
+    <div class="ek__bon" style="--n:1"><b>jouw zaak</b></div>
+    <span class="ek__plus mono">+</span>
+    <div class="ek__bon" style="--n:2"><b>jouw zaak</b></div>
+  </div>
+</figure>
+<style>
+  .ek { padding: var(--space-5); background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow); display: grid; gap: var(--space-4); }
+  .ek__title { margin: 0; font-size: var(--step--1); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .ek__row { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+  .ek__bon { flex: 1 1 6rem; min-height: 5rem; display: flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-3); border: 2px dashed var(--navy); border-radius: var(--radius-s); background: var(--paper); text-align: center; }
+  .ek__bon--on { border-style: solid; background: var(--orange-soft); box-shadow: var(--shadow-s); }
+  .ek__bon b { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: var(--step-1); color: var(--navy); }
+  .ek__bon svg { width: 1.4rem; height: 1.4rem; flex: none; }
+  .ek__plus { font-weight: 600; color: var(--orange-dark); font-size: var(--step-1); }
+  @media (prefers-reduced-motion: no-preference) {
+    .ek[data-animate]:not([data-inview]) .ek__bon { opacity: 0; }
+    .ek[data-inview] .ek__bon { animation: ek-in 500ms var(--ease-out) both; animation-delay: calc(var(--n) * 200ms); }
+  }
+  @keyframes ek-in { from { opacity: 0; transform: translateY(-10px); } to { transform: none; } }
+</style>

@@ -1,0 +1,119 @@
+---
+// Recepten, kostprijs en inkoop. Copy letterlijk uit docs/copy/inkoop.md; markeringen staan als HTML-commentaar.
+import Base from '../layouts/Base.astro';
+import HeroSplit from '../components/sections/HeroSplit.astro';
+import FixCards from '../components/sections/FixCards.astro';
+import FeatureBlock from '../components/sections/FeatureBlock.astro';
+import MoreTiles from '../components/sections/MoreTiles.astro';
+import RelatedStrip from '../components/sections/RelatedStrip.astro';
+import FaqAccordion from '../components/sections/FaqAccordion.astro';
+import ClosingBand from '../components/sections/ClosingBand.astro';
+import KostprijsRecept from '../components/illustrations/KostprijsRecept.astro';
+import Bestellijst from '../components/illustrations/Bestellijst.astro';
+import ReceptKaart from '../components/pages/ReceptKaart.astro';
+import { href } from '../lib/url.js';
+
+const fix = [
+  { problem: 'Wat een bord kost, schat je. Of je weet het van twee jaar geleden.', fix: 'De kostprijs staat naast de verkoopprijs, met de prijzen die je hebt ingevoerd of ingelezen.' },
+  { problem: 'Je bestelt met een appje hier en een mailtje daar.', fix: 'Per leverancier één bestelmail, vanuit Keukenbaas.' },
+  { problem: 'Elke nieuwe prijslijst tik je met de hand over.', fix: 'Je leest de catalogus van je leverancier in. Dat kan nu voor Molenaar, Brandmeesters en Jules Bakery. Bij andere leveranciers zet je de prijs zelf.' },
+];
+const tiles = [
+  { title: 'Inkooplijst versturen' },
+  { title: 'Een gedeeld boodschappenlijstje' },
+  { title: 'Productietijd aanpassen vanuit het recept' },
+  { title: 'Zoeken en filteren op categorie' },
+];
+const related = [
+  { href: href('/keuken'), label: 'Keuken en prep', text: 'Het recept bepaalt de batch en de productietijd op de daglijst.' , go: 'Naar de keuken' },
+  { href: href('/haccp'), label: 'HACCP en labels', text: 'Uit het product komt de THT op het label.' , go: 'Naar HACCP en labels' },
+];
+const faq = [
+  { q: 'Moet ik al mijn recepten zelf invoeren?', a: 'Je hoeft ze niet allemaal alleen in te tikken. Bij het klaarzetten zetten we je producten samen met je in Keukenbaas. Werk je met InOne, dan nemen we je recepten en kostprijzen daaruit over.' },
+  { q: 'Kan ik bij mijn eigen leverancier bestellen?', a: 'Ja. Je voegt de leverancier toe met de naam, je debiteurnummer en het e-mailadres voor bestellingen. De bestelmail gaat daarheen.' },
+  { q: 'Werkt het zonder InOne?', a: 'Ja. Dan zet je de prijzen bij de ingrediënten, of je leest de catalogus van je leverancier in. InOne is handig, geen voorwaarde.' },
+  { q: 'Hoe vaak worden de prijzen bijgewerkt?', a: 'Zo vaak als jij een nieuwe catalogus inleest of een prijs aanpast. Keukenbaas haalt de prijzen niet vanzelf op bij de leverancier.' },
+  { q: 'Kan ik de kostprijs van een halffabrikaat in meerdere gerechten gebruiken?', a: 'Ja. Je maakt de aioli één keer als halffabrikaat en gebruikt hem in elk gerecht waar hij in zit. Verandert de prijs van een ingrediënt, dan verandert de kostprijs overal mee.' },
+];
+---
+<Base title="Recepten, kostprijs en inkoop · Keukenbaas" titleRaw description="Bouw je recepten op uit ingrediënten, zie de kostprijs per gerecht naast de verkoopprijs en stuur per leverancier één bestelmail vanuit Keukenbaas.">
+  <!-- I2 · Hero -->
+  <HeroSplit
+    eyebrow="Recepten, kostprijs en inkoop"
+    title="Weet wat een bord kost voordat het de pass over gaat."
+    lead="Je recepten staan in Keukenbaas, met de prijzen van je leveranciers erbij. Dan zie je per batch en per gerecht wat het kost, naast de verkoopprijs. Bestellen doe je met één mail per leverancier."
+    placeholder="je@jouwzaak.nl"
+    button="Zet me op de wachtlijst"
+    figMin="28rem"
+    figLabel="Receptkaart met kostprijs"
+  >
+    <KostprijsRecept />
+  </HeroSplit>
+
+  <!-- I3 · Zo los je het op -->
+  <FixCards id="fix" title="Zo los je het op" cards={fix} problemLabel="Nu" fixLabel="Met Keukenbaas" />
+
+  <!-- I4 · Recepten en halffabrikaten -->
+  <FeatureBlock
+    id="recepten"
+    tone="white"
+    title="Het recept, met alles wat erin gaat"
+    text={'Een recept bouw je op met "+ Ingrediënt toevoegen". Je zoekt een ingrediënt of een halffabrikaat, vult de hoeveelheid in en drukt op "Recept opslaan". De aioli die in drie gerechten gaat, maak je één keer als halffabrikaat. Verandert de prijs van de knoflook, dan verandert de kostprijs van alle drie.'}
+    items={['Ingrediënten en halffabrikaten met hoeveelheid', 'Zoeken en filteren op categorie', 'Productietijd aanpassen vanuit het recept']}
+    figMin="18rem"
+  >
+    <ReceptKaart kind="recept" />
+  </FeatureBlock>
+
+  <!-- I5 · Kostprijs per gerecht -->
+  <FeatureBlock
+    id="kostprijs"
+    tone="paper"
+    reverse
+    title="Wat een gerecht kost, naast wat je ervoor vraagt"
+    text="Een gerecht heeft een categorie, een verkoopprijs en een opbouw uit onderdelen: halffabrikaten en losse ingrediënten met hun hoeveelheid. Keukenbaas telt de kosten op en zet ze naast de verkoopprijs. Werk je met InOne, dan staat de kostprijs uit InOne ernaast."
+    items={['Categorie en verkoopprijs', 'Opbouw uit halffabrikaten en ingrediënten', 'Kosten per gerecht', 'Kostprijs uit InOne ernaast, met een link']}
+    figMin="18rem"
+  >
+    <ReceptKaart kind="gerecht" />
+  </FeatureBlock>
+
+  <!-- I6 · Bestellijst per leverancier -->
+  <FeatureBlock
+    id="bestellen"
+    tone="white"
+    title="Eén mail per leverancier, en klaar"
+    text={'Per leverancier vul je een winkelmandje met wat je nodig hebt. Bij een regel zet je een opmerking, zoals "graag rijpe tomaten". Je typt een onderwerp en drukt op "Bestelmail versturen". De mail gaat naar het adres waar de leverancier bestellingen ontvangt. Daarna zie je hem terug onder "Recente bestelmail".'}
+    items={['Leveranciers met debiteurnummer en bestel-e-mailadres', 'Winkelmandje per leverancier', 'Opmerking per regel', 'Recente bestelmails terug te vinden']}
+    figMin="20rem"
+  >
+    <Bestellijst />
+  </FeatureBlock>
+
+  <!-- I7 · Catalogi en InOne -->
+  <FeatureBlock
+    id="catalogus"
+    tone="paper"
+    reverse
+    title="Prijzen inlezen in plaats van overtikken"
+    text="De prijzen van je leverancier lees je in uit de catalogus, met artikelnummer, rekeneenheid, besteleenheid en prijs. Voordat je opslaat, zie je een paar voorbeeldregels om te controleren of alles goed staat. Werk je met InOne, dan neem je je recepten en gerechten met kostprijs daaruit over. Dat kan nu voor Molenaar, Brandmeesters en Jules Bakery."
+    items={['Catalogus inlezen met artikelnummer, eenheden en prijs', 'Voorbeeldregels om te controleren', 'Recepten en kostprijs uit InOne overnemen']}
+    figMin="18rem"
+  >
+    <ReceptKaart kind="catalogus" />
+  </FeatureBlock>
+
+  <!-- I8 · En verder -->
+  <MoreTiles id="verder" title="En verder" tiles={tiles} />
+
+  <!-- I9 · Vergelijking: vervalt -->
+
+  <!-- I10 · Hoort bij -->
+  <RelatedStrip id="verwant" title="Dit werkt samen met" links={related} />
+
+  <!-- I11 · Veelgestelde vragen -->
+  <FaqAccordion id="faq" title="Vragen over recepten en inkoop" items={faq} />
+
+  <!-- I12 · Afsluitende band -->
+  <ClosingBand title="Benieuwd wat je soep kost?" placeholder="je@jouwzaak.nl" button="Zet me op de wachtlijst" />
+</Base>

@@ -1,0 +1,49 @@
+---
+// Knop met bon-perforatie rechts. Zonder href wordt het een <button>.
+const { href, variant = 'primary', type = 'button', class: cls = '', ...rest } = Astro.props;
+const Tag = href ? 'a' : 'button';
+---
+<Tag
+  class:list={['btn bare', `btn--${variant}`, cls]}
+  {...(href ? { href } : { type })}
+  {...rest}
+>
+  <span class="btn__label"><slot /></span>
+</Tag>
+<style>
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
+    padding: 0.7rem 2.6rem 0.7rem 1.4rem;
+    border: 2px solid var(--navy);
+    border-radius: var(--radius);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-stretch: 85%;
+    font-size: var(--step-0);
+    line-height: 1.1;
+    color: var(--navy);
+    text-decoration: none;
+    box-shadow: var(--shadow);
+    transition: transform var(--dur-1) var(--ease-snap), box-shadow var(--dur-1) var(--ease-snap), background-color var(--dur-2);
+  }
+  .btn--primary { background: var(--orange); }
+  .btn--secondary { background: var(--white); }
+  /* perforatie: stippellijn waar de bon wordt afgescheurd */
+  .btn::after {
+    content: "";
+    position: absolute;
+    top: 6px; bottom: 6px; right: 1.7rem;
+    border-left: 2px dotted currentColor;
+    opacity: 0.55;
+    transition: opacity var(--dur-2), right var(--dur-2) var(--ease-out);
+  }
+  .btn:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--navy); }
+  .btn:hover::after { opacity: 1; right: 1.6rem; }
+  .btn--primary:hover { background: var(--orange-dark); color: var(--white); }
+  .btn--secondary:hover { background: var(--tape); }
+  .btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--navy); }
+</style>

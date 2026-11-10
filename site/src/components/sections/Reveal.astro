@@ -1,0 +1,6 @@
+---
+// Wrapper die zijn kinderen één voor één laat inschuiven zodra hij in beeld komt.
+// Geef kinderen eventueel style="--i:n" mee voor een eigen volgorde. De wrapper zelf blijft altijd zichtbaar.
+const { class: cls = '', ...rest } = Astro.props;
+---
+<div class:list={['reveal', cls]} data-animate="once" {...rest}><slot /></div>

@@ -1,0 +1,47 @@
+---
+// Ongelijke tegels. tiles: [{ size: 'wide' | 'tall' | 'half' | 'small' | 'full', tone?: 'white' | 'soft' | 'dashed',
+//   label?, title, text, link?: { href, label } }]. Per tegel een optionele slot "tile-<index>" met een illustratie.
+import Reveal from './Reveal.astro';
+import Eyebrow from '../Eyebrow.astro';
+import SectionHead from './SectionHead.astro';
+const { id = 'bento', title, eyebrow, tiles = [] } = Astro.props;
+---
+<section class="bento grid-paper" aria-labelledby={`${id}-h`}>
+  <div class="container">
+    <SectionHead title={title} eyebrow={eyebrow} id={`${id}-h`} />
+    <Reveal class="bento__grid">
+      {tiles.map((t, i) => (
+        <article class:list={['tile', `tile--${t.size ?? 'half'}`, `tile--${t.tone ?? 'white'}`]} style={`--i:${i}`}>
+          <div class="tile__text">
+            {t.label && <Eyebrow>{t.label}</Eyebrow>}
+            <h3>{t.title}</h3>
+            <p>{t.text}</p>
+            {t.link && <a class="tile__link" href={t.link.href}>{t.link.label}<span aria-hidden="true"> →</span></a>}
+          </div>
+          {Astro.slots.has(`tile-${i}`) && <div class="tile__art"><slot name={`tile-${i}`} /></div>}
+        </article>
+      ))}
+    </Reveal>
+  </div>
+</section>
+<style>
+  .bento { padding-block: var(--space-9); }
+  .bento :global(.bento__grid) { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-5); }
+  .tile { display: grid; gap: var(--space-5); align-content: start; padding: var(--space-6); border: 2px solid var(--navy); border-radius: var(--radius); min-width: 0; }
+  .tile--white { background: var(--white); box-shadow: var(--shadow-l); }
+  .tile--soft { background: var(--orange-soft); box-shadow: var(--shadow-l); }
+  .tile--dashed { background: var(--paper); border-style: dashed; }
+  .tile--wide { grid-column: span 4; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); align-items: center; }
+  .tile--tall { grid-column: span 2; grid-row: span 2; align-content: space-between; }
+  .tile--half { grid-column: span 3; }
+  .tile--small { grid-column: span 2; }
+  .tile--full { grid-column: 1 / -1; }
+  .tile__text { display: grid; gap: var(--space-3); justify-items: start; }
+  .tile h3 { font-size: var(--step-2); }
+  .tile__link { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; }
+  .tile__art { display: flex; justify-content: center; min-width: 0; }
+  @media (max-width: 56rem) {
+    .bento :global(.bento__grid) { grid-template-columns: 1fr; }
+    .tile, .tile--wide, .tile--tall, .tile--half, .tile--small, .tile--full { grid-column: 1; grid-row: auto; grid-template-columns: 1fr; padding: var(--space-5); }
+  }
+</style>

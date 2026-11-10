@@ -1,0 +1,141 @@
+---
+import Logo from './Logo.astro';
+import Button from './Button.astro';
+import { href, functies } from '../lib/url.js';
+const { variant = 'full' } = Astro.props;
+---
+<header class="nav" data-nav>
+  <div class="container nav__bar">
+    <Logo />
+    {variant === 'full' && (
+      <>
+        <button class="nav__burger bare" type="button" aria-expanded="false" aria-controls="nav-menu" data-nav-burger>
+          <span class="visually-hidden">Menu</span>
+          <span class="nav__burger-lines" aria-hidden="true"></span>
+        </button>
+        <nav id="nav-menu" class="nav__menu" aria-label="Hoofdmenu" data-nav-menu>
+          <div class="nav__group" data-nav-group>
+            <button class="nav__item nav__trigger" type="button" aria-expanded="false" aria-controls="nav-functies" data-nav-trigger>
+              Functies <span class="nav__caret" aria-hidden="true"></span>
+            </button>
+            <ul id="nav-functies" class="nav__sub" role="list" data-nav-sub>
+              {functies.map((f, i) => (
+                <li><a class="bare" href={href(f.href)}><span class="mono">{String(i + 1).padStart(2, '0')}</span><span class="nav__sub-text"><b>{f.label}</b><small>{f.text}</small></span></a></li>
+              ))}
+            </ul>
+          </div>
+          <a class="nav__item bare" href={href('/verhaal')}>Ons verhaal</a>
+          <Button href={href('/wachtlijst')} class="nav__cta">Zet me op de wachtlijst</Button>
+        </nav>
+      </>
+    )}
+  </div>
+</header>
+<script>
+  const nav = document.querySelector('[data-nav]');
+  if (nav) {
+    const burger = nav.querySelector('[data-nav-burger]');
+    const menu = nav.querySelector('[data-nav-menu]');
+    const group = nav.querySelector('[data-nav-group]');
+    const trigger = nav.querySelector('[data-nav-trigger]');
+    const sub = nav.querySelector('[data-nav-sub]');
+    const hoverMq = window.matchMedia('(hover: hover) and (min-width: 56rem)');
+
+    const setSub = (open) => {
+      trigger.setAttribute('aria-expanded', String(open));
+      sub.toggleAttribute('data-open', open);
+    };
+    const setMenu = (open) => {
+      burger.setAttribute('aria-expanded', String(open));
+      menu.toggleAttribute('data-open', open);
+      if (!open) setSub(false);
+    };
+
+    trigger.addEventListener('click', () => setSub(trigger.getAttribute('aria-expanded') !== 'true'));
+    burger.addEventListener('click', () => setMenu(burger.getAttribute('aria-expanded') !== 'true'));
+
+    group.addEventListener('mouseenter', () => { if (hoverMq.matches) setSub(true); });
+    group.addEventListener('mouseleave', () => { if (hoverMq.matches) setSub(false); });
+    group.addEventListener('focusout', (e) => {
+      if (!group.contains(e.relatedTarget)) setSub(false);
+    });
+    document.addEventListener('click', (e) => { if (!group.contains(e.target)) setSub(false); });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (sub.hasAttribute('data-open')) { setSub(false); trigger.focus(); }
+      else if (menu.hasAttribute('data-open')) { setMenu(false); burger.focus(); }
+    });
+  }
+</script>
+<style>
+  .nav { position: relative; z-index: 20; background: var(--paper); border-bottom: 2px solid var(--navy); }
+  .nav__bar { display: flex; align-items: center; justify-content: space-between; min-height: 4.25rem; gap: var(--space-4); }
+  .nav__menu { display: flex; align-items: center; gap: var(--space-5); }
+  .nav__item {
+    font-family: var(--font-display); font-weight: 700; font-stretch: 90%;
+    background: none; border: 0; padding: var(--space-2) 0; color: var(--navy); text-decoration: none;
+  }
+  .nav__item:hover { text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+  .nav__caret { display: inline-block; width: 0; height: 0; margin-left: 4px; vertical-align: 2px;
+    border: 5px solid transparent; border-top-color: currentColor; border-bottom: 0; }
+  .nav__trigger[aria-expanded="true"] .nav__caret { transform: rotate(180deg); }
+  .nav__group { position: relative; }
+
+  /* Uitklapmenu: een DYMO-strook die uitrolt */
+  .nav__sub {
+    display: none;
+    position: absolute; top: calc(100% + 6px); left: -0.75rem; min-width: 23rem;
+    padding: var(--space-3) 0; margin: 0;
+    background: var(--navy); color: var(--paper);
+    box-shadow: var(--shadow); border-radius: var(--radius-s);
+  }
+  .nav__sub[data-open] { display: block; animation: nav-roll var(--dur-3) var(--ease-snap) both; }
+  .nav__sub a {
+    display: flex; gap: var(--space-3); align-items: baseline;
+    padding: 0.55rem var(--space-4);
+    color: var(--paper);
+    font-family: var(--font-display); font-weight: 700; font-stretch: 90%;
+    text-decoration: none;
+  }
+  .nav__sub a .mono { font-size: var(--step--1); color: var(--tape); letter-spacing: 0.05em; }
+  .nav__sub-text { display: grid; line-height: 1.25; }
+  .nav__sub-text small { font-family: var(--font-body); font-weight: 400; font-stretch: 100%; font-size: var(--step--1); opacity: 0.8; }
+  .nav__sub a:hover, .nav__sub a:focus-visible { background: var(--orange); color: var(--navy); }
+  .nav__sub a:hover .mono, .nav__sub a:focus-visible .mono { color: var(--navy); }
+  .nav__sub :focus-visible { outline-color: var(--tape); outline-offset: -3px; box-shadow: none; }
+  @keyframes nav-roll {
+    from { clip-path: inset(0 0 100% 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+
+  .nav__burger {
+    display: none; width: 3rem; height: 3rem; padding: 0; background: var(--white);
+    border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow-s); position: relative;
+  }
+  .nav__burger-lines, .nav__burger-lines::before, .nav__burger-lines::after {
+    position: absolute; left: 50%; width: 20px; height: 2px; background: var(--navy);
+    transform: translateX(-50%); transition: transform var(--dur-2) var(--ease-out), opacity var(--dur-1);
+  }
+  .nav__burger-lines { top: 50%; margin-top: -1px; }
+  .nav__burger-lines::before, .nav__burger-lines::after { content: ""; left: 50%; }
+  .nav__burger-lines::before { top: -7px; }
+  .nav__burger-lines::after { top: 7px; }
+  .nav__burger[aria-expanded="true"] .nav__burger-lines { background: transparent; }
+  .nav__burger[aria-expanded="true"] .nav__burger-lines::before { transform: translateX(-50%) translateY(7px) rotate(45deg); }
+  .nav__burger[aria-expanded="true"] .nav__burger-lines::after { transform: translateX(-50%) translateY(-7px) rotate(-45deg); }
+
+  @media (max-width: 56rem) {
+    .nav__burger { display: block; }
+    .nav__menu {
+      display: none; position: absolute; left: 0; right: 0; top: 100%;
+      flex-direction: column; align-items: stretch; gap: var(--space-2);
+      padding: var(--space-4) var(--gutter) var(--space-5);
+      background: var(--paper); border-bottom: 2px solid var(--navy);
+    }
+    .nav__menu[data-open] { display: flex; }
+    .nav__item { padding: var(--space-3) 0; text-align: left; width: 100%; font-size: var(--step-1); }
+    .nav__sub { position: static; box-shadow: none; min-width: 0; margin-bottom: var(--space-3); }
+    .nav__menu :global(.nav__cta) { align-self: flex-start; margin-top: var(--space-3); }
+  }
+</style>

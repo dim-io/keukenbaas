@@ -1,0 +1,9 @@
+---
+// Lege pagina: alleen Nav, titel en Footer. Wordt later per pagina uitgewerkt.
+import Base from './Base.astro';
+import Section from '../components/Section.astro';
+const { title, nav = 'full' } = Astro.props;
+---
+<Base title={title} nav={nav} noindex>
+  <Section tone="grid"><h1>{title}</h1></Section>
+</Base>

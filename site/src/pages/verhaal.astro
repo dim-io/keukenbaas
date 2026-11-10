@@ -1,0 +1,114 @@
+---
+// Ons verhaal. Copy letterlijk uit docs/copy/verhaal.md; markeringen staan als HTML-commentaar.
+import Base from '../layouts/Base.astro';
+import Section from '../components/Section.astro';
+import Reveal from '../components/sections/Reveal.astro';
+import MoreTiles from '../components/sections/MoreTiles.astro';
+import ClosingBand from '../components/sections/ClosingBand.astro';
+import Eyebrow from '../components/Eyebrow.astro';
+import BonnenRail from '../components/pages/BonnenRail.astro';
+import BonnenRol from '../components/pages/BonnenRol.astro';
+import PortretPlaceholder from '../components/pages/PortretPlaceholder.astro';
+import EenKeukenMeer from '../components/pages/EenKeukenMeer.astro';
+
+const rol = [
+  { title: 'De prep-lijst', text: 'Wat moet er vandaag gemaakt worden, en wie doet het? Het antwoord staat op een scherm in plaats van op een briefje bij de pass.' },
+  { title: 'Labels uit de DYMO', text: 'Een afgevinkte productie geeft een label met THT, naam en batch. De tape en de stift blijven in de la.' },
+  { title: 'HACCP', text: 'De temperatuurlijst verhuisde van de koelcel naar de telefoon, met een melding als de koelkast te warm is.' },
+  { title: 'Het rooster', text: 'Wie werkt wanneer, en wie kan er invallen? Bij elke wijziging een mail, zodat niemand apart geappt hoeft te worden.' },
+  { title: 'Uren en fooi', text: 'De goedgekeurde uren bepalen de fooi. Het bierviltje met de rekensom is niet meer nodig.' },
+  { title: 'Recepten en inkoop', text: 'De kostprijs per gerecht en één bestelmail per leverancier.' },
+  { title: 'Nu: Keukenbaas', text: 'Wat bij Pumpkin werkt, kan ook in andere keukens werken. Daarom krijgt het een eigen naam.', now: true },
+];
+const nog = [
+  { title: 'Meerdere zaken in één account', text: 'Heb je twee of drie vestigingen? Nu werkt Keukenbaas per zaak. Meerdere zaken in één account staat op de planning.' },
+];
+---
+<Base title="Ons verhaal · Gebouwd in de keuken van Pumpkin · Keukenbaas" titleRaw description="Keukenbaas begon als prep-lijst in de keuken van Pumpkin. Nu staan het rooster, de uren, de fooi, HACCP en de inkoop erin. Dit is hoe dat ging.">
+  <!-- V2 · Kop -->
+  <section class="vh grid-paper">
+    <div class="container">
+      <Reveal class="vh__copy">
+        <div style="--i:0"><Eyebrow>Ons verhaal</Eyebrow></div>
+        <h1 style="--i:1">Het begon met een prep-lijst in de keuken van Pumpkin.</h1>
+        <p class="vh__lead" style="--i:2">Wat begon als een lijstje voor de eigen keuken, is nu de webapp waarmee die keuken werkt. Het rooster, de uren, de fooi, HACCP, de labels en de inkoop staan erin. En er komt nog steeds iets bij, want er wordt elke dag mee gewerkt.</p>
+      </Reveal>
+      <div class="vh__rail"><BonnenRail /></div>
+    </div>
+  </section>
+
+  <!-- V3 · Cijfers: vervalt -->
+
+  <!-- V4 · Tijdlijn -->
+  <Section tone="white" id="tijdlijn">
+    <div class="vt">
+      <Reveal class="vt__head">
+        <h2 style="--i:0">Van een lijstje naar Keukenbaas</h2>
+        <p style="--i:1">Pumpkin is een restaurant met bezorging in Haarlem en Amsterdam. Wie daar in de keuken staat, kent het werk naast het koken. Dat werk is stukje bij beetje in één webapp terechtgekomen, steeds als de keuken ergens last van had.</p>
+        <h3 style="--i:2">Wat er nu in zit</h3>
+        <Fragment set:html="<!-- TE BEVESTIGEN: volgorde waarin de onderdelen erbij kwamen, en het jaar waarin het begon. Tijdlijn pas tonen als de volgorde bevestigd is; tot die tijd staat het zonder volgorde of jaartal. -->" />
+      </Reveal>
+      <BonnenRol items={rol} />
+    </div>
+  </Section>
+
+  <!-- V5 · De mensen -->
+  <Section tone="paper" id="mensen">
+    <Reveal class="vm">
+      <h2 style="--i:0">Wie erachter zit</h2>
+      <div class="vm__person" style="--i:1">
+        <PortretPlaceholder />
+        <div class="vm__txt">
+          <h3>David van Bilderbeek</h3>
+          <p class="vm__role mono">Maker van Keukenbaas</p>
+          <p>David bouwde Keukenbaas voor de keuken van Pumpkin.</p>
+          <Fragment set:html="<!-- TE BEVESTIGEN: achtergrond van David en zijn band met Pumpkin, in één of twee zinnen. Portret: foto of getekend portret. Meer mensen: zit er nog iemand achter Keukenbaas? Zo niet, dan is dit blok één portret breed. -->" />
+        </div>
+      </div>
+    </Reveal>
+  </Section>
+
+  <!-- V6 · Waarom buiten Pumpkin -->
+  <Section tone="white" id="waarom">
+    <Reveal class="vw">
+      <div class="vw__txt" style="--i:0">
+        <h2>Waarom we dit ook aan andere keukens aanbieden</h2>
+        <p>In bijna elke zelfstandige zaak gaat het zo. Na sluit begint het rooster, de fooi en de bestellijst, en de HACCP-lijst hangt half ingevuld aan de koelcel. Bij Pumpkin staat dat werk op één plek en hangt het aan elkaar. Dat kan in andere keukens ook.</p>
+        <p>Het is gemaakt in een keuken, en daar wordt het elke dag gebruikt. Wie op de wachtlijst staat, praat mee over wat erbij komt.</p>
+      </div>
+      <div class="vw__art" style="--i:1"><EenKeukenMeer /></div>
+    </Reveal>
+  </Section>
+
+  <!-- V7 · Wat er nog komt -->
+  <MoreTiles id="nog" title="Wat er nog komt" tiles={nog} tone="grid" />
+
+  <!-- V8 · Wachtlijst -->
+  <ClosingBand title="Zet je zaak op de wachtlijst" placeholder="je@jouwzaak.nl" button="Zet me op de wachtlijst" note="De rest van de vragen stellen we op de wachtlijstpagina." />
+</Base>
+<style>
+  .vh { padding-block: var(--space-8) var(--space-8); }
+  .vh :global(.vh__copy) { display: grid; gap: var(--space-5); justify-items: start; max-width: 52rem; }
+  .vh h1 { font-size: var(--step-4); }
+  .vh__lead { font-size: var(--step-1); }
+  .vh__rail { margin-top: var(--space-7); }
+  .vt { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: var(--space-8); align-items: start; }
+  .vt :global(.vt__head) { display: grid; gap: var(--space-4); position: sticky; top: var(--space-7); }
+  .vt h2 { font-size: var(--step-3); }
+  .vt h3 { font-size: var(--step-1); margin-top: var(--space-3); }
+  :global(.vm) { display: grid; gap: var(--space-6); }
+  .vm h2 { font-size: var(--step-3); }
+  .vm__person { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-6); align-items: center; max-width: 44rem; }
+  .vm__txt { display: grid; gap: var(--space-2); }
+  .vm__txt h3 { font-size: var(--step-2); }
+  .vm__role { font-size: var(--step--1); color: var(--orange-dark); font-weight: 600; margin: 0; }
+  :global(.vw) { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: var(--space-8); align-items: center; }
+  .vw__txt { display: grid; gap: var(--space-4); }
+  .vw h2 { font-size: var(--step-3); }
+  .vw__art { min-width: 0; }
+  @media (max-width: 56rem) {
+    .vt, :global(.vw) { grid-template-columns: 1fr; gap: var(--space-6); }
+    .vt :global(.vt__head) { position: static; }
+  }
+  @media (max-width: 36rem) { .vm__person { grid-template-columns: 1fr; justify-items: start; } }
+</style>

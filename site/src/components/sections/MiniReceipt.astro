@@ -1,0 +1,31 @@
+---
+// Kleine bon voor in tegels en tijdlijn. rows: [{ label, value?, done? }]
+const { title, rows = [], footer, rotate = 0 } = Astro.props;
+---
+<div class="mr receipt-shadow" style={`--r:${rotate}deg`}>
+  <div class="receipt">
+    {title && <p class="mr__title">{title}</p>}
+    <ul role="list">
+      {rows.map((r) => (
+        <li class:list={{ 'is-done': r.done }}>
+          <i class="mr__box" aria-hidden="true">{r.done && <svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.5" fill="none" stroke="#0a0d22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>}</i>
+          <span class="mr__l">{r.label}</span>
+          {r.value && <span class="mr__v">{r.value}</span>}
+        </li>
+      ))}
+    </ul>
+    {footer && <p class="mr__foot">{footer}</p>}
+  </div>
+</div>
+<style>
+  .mr { width: min(100%, 22rem); transform: rotate(var(--r)); }
+  .mr .receipt { background: var(--paper); padding: var(--space-5) var(--space-4) calc(var(--space-5) + 8px); }
+  .mr__title { font-family: var(--font-display); font-weight: 900; font-stretch: 70%; font-size: var(--step-2); color: var(--navy); line-height: 1; margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 2px dotted var(--line); }
+  ul { list-style: none; padding: 0; display: grid; gap: var(--space-3); }
+  li { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; font-size: var(--step--1); color: var(--navy); }
+  .mr__box { width: 1.2rem; height: 1.2rem; border: 2px solid var(--navy); border-radius: 3px; background: var(--white); display: grid; place-items: center; }
+  .is-done .mr__box { background: var(--green); }
+  .mr__box svg { width: 0.8rem; height: 0.8rem; }
+  .mr__v { color: var(--muted); }
+  .mr__foot { margin-top: var(--space-4); font-size: var(--step--1); font-weight: 600; color: var(--orange-dark); }
+</style>

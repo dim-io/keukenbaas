@@ -1,0 +1,27 @@
+---
+// PLACEHOLDER-woordmerk: vervangen zodra de echte huisstijl er is.
+// Archivo extra-condensed zwaar, met een klein oranje DYMO-strookje erachter.
+import { href } from '../lib/url.js';
+const { class: cls = '' } = Astro.props;
+---
+<a class:list={['logo bare', cls]} href={href('/')} aria-label="Keukenbaas, naar de voorpagina">
+  <span class="logo__word">Keukenbaas</span>
+  <svg class="logo__strip" viewBox="0 0 26 12" width="26" height="12" aria-hidden="true">
+    <path d="M1 1h24v10H1l2-5z" fill="#e06633" stroke="#0a0d22" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M9 4v4M12.5 4v4M16 4v4" stroke="#fffdf8" stroke-width="1.5"/>
+  </svg>
+</a>
+<style>
+  .logo { display: inline-flex; align-items: center; gap: 6px; color: var(--navy); }
+  .logo__word {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-stretch: 62%;
+    font-size: 1.75rem;
+    letter-spacing: 0;
+    line-height: 1;
+    text-transform: none;
+  }
+  .logo__strip { transform: rotate(-3deg); transition: transform var(--dur-2) var(--ease-out); }
+  .logo:hover .logo__strip { transform: rotate(2deg) translateX(2px); }
+</style>

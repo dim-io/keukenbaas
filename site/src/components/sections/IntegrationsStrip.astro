@@ -1,0 +1,31 @@
+---
+// Strook met tekst-woordmerken in mono (geen logo's). overlap: extra ruimte bovenin voor een hero die erover valt.
+import Reveal from './Reveal.astro';
+const { eyebrow, items = [], overlap = false } = Astro.props;
+---
+<section class:list={['strip', 'on-dark', { 'strip--overlap': overlap }]}>
+  <div class="container">
+    <Reveal class="strip__in">
+      {eyebrow && <p class="strip__eyebrow mono" style="--i:0">{eyebrow}</p>}
+      <ul class="strip__list" role="list">
+        {items.map((it, i) => <li class="mono" style={`--i:${i + 1}`}>{it}</li>)}
+      </ul>
+    </Reveal>
+  </div>
+</section>
+<style>
+  .strip { position: relative; z-index: 1; background: var(--navy); color: var(--paper); padding-block: var(--space-7); }
+  .strip--overlap { padding-top: calc(var(--space-7) + clamp(4rem, 11vw, 10rem)); }
+  .strip :global(.strip__in) { display: grid; gap: var(--space-5); justify-items: center; text-align: center; }
+  .strip__eyebrow { font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.1em; color: var(--tape); }
+  .strip__list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3) 0; }
+  .strip__list li {
+    font-size: var(--step-1); font-weight: 600; letter-spacing: 0.04em; padding-inline: var(--space-5);
+    border-left: 2px dotted color-mix(in srgb, var(--paper) 45%, transparent);
+  }
+  .strip__list li:first-child { border-left: 0; }
+  @media (max-width: 40rem) {
+    .strip__list { gap: var(--space-3) var(--space-5); }
+    .strip__list li { padding-inline: 0; border-left: 0; font-size: var(--step-0); }
+  }
+</style>

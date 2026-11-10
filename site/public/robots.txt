@@ -1,0 +1,3 @@
+User-agent: *
+# Preview: nog niet indexeren tot het formulier werkt en de placeholders weg zijn.
+Disallow: /

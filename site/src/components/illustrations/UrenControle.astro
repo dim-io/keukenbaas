@@ -1,0 +1,255 @@
+---
+/*
+ * UrenControle: de dagcontrole uren, of het kaartje Looncontrole. Stijl: zie STIJLREGELS in DymoLabel.astro.
+ *
+ * Props
+ * - variant: 'uren' (standaard) | 'loon'.
+ *   uren  Uren goedkeuren, maandag 9 november: Sanne (Goedgekeurd) en Joris (Concept) met de knop Dagcontrole uren.
+ *   loon  Looncontrole van Joris (19 jaar): huidig loon naast het loon volgens de tabel, met de waarschuwing
+ *         "Let op: bijna jarig". Groot en leesbaar op een eigen kaart.
+ *
+ * Lus (variant uren, data-phase): idle, reach, press, approve, hold, exit. Alleen rijen met data-approve gaan
+ * naar Goedgekeurd; Joris blijft Concept. Standaardstijl zonder data-phase is de eindstaat, ook zonder JS en bij
+ * prefers-reduced-motion. Klik, Enter of hover tijdens de rustfase speelt de actie opnieuw af.
+ * Variant loon: de waarschuwing valt in beeld zodra het kaartje zichtbaar wordt en wiebelt bij hover of focus.
+ */
+const { variant = 'uren' } = Astro.props;
+const rows = [
+  { name: 'Sanne', role: 'Kok', type: 'Avond keuken', plan: ['16:00', '23:00'], work: ['15:55', '23:20'], pause: '0:30', hours: '6,92', ok: true },
+  { name: 'Joris', role: 'Bezorger', type: 'Bezorgdienst', plan: ['17:00', '22:00'], work: ['17:00', '22:15'], pause: '0:00', hours: '5,25', ok: false },
+];
+const cols = ['Medewerker', 'Dienst', 'Gepland', 'Gewerkt', 'Pauze', 'Uren', 'Status'];
+---
+{variant === 'uren' && (
+<figure class="uc" data-uc data-animate style="margin:0">
+  <div class="uc__stage" role="button" tabindex="0" aria-label="Speel het goedkeuren van de uren opnieuw af" data-uc-stage>
+    <div class="uc__wrap" aria-hidden="true">
+      <div class="uc__panel">
+        <div class="uc__top">
+          <span class="uc__title">Uren goedkeuren<small>Maandag 9 november</small></span>
+          <span class="uc__btn" data-btn>Dagcontrole uren</span>
+        </div>
+        <div class="uc__table">
+          {cols.map((c) => <span class="uc__th">{c}</span>)}
+          {rows.map((r) => (
+            <div class="uc__row" data-row {...(r.ok ? { 'data-ok': '', 'data-approve': '' } : {})}>
+              <span class="uc__name"><b>{r.name}</b><small>{r.role}</small></span>
+              <span>{r.type}</span>
+              <span class="uc__t">{r.plan[0]}-<br />{r.plan[1]}</span>
+              <span class="uc__t">{r.work[0]}-<br />{r.work[1]}</span>
+              <span>{r.pause}</span>
+              <span class="uc__u">{r.hours}</span>
+              <span class="uc__status">
+                <span class="uc__chip uc__chip--draft">Concept</span>
+                <span class="uc__chip uc__chip--ok"><svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Goedgekeurd</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+    <span class="uc__cur" data-cur aria-hidden="true">
+      <span class="uc__ring"></span>
+      <svg viewBox="0 0 20 24" focusable="false"><path d="M2 2v17l5-4.5 3.5 7.5 3.5-1.5-3.5-7.5H17z" fill="#fffdf8" stroke="#0a0d22" stroke-width="2" stroke-linejoin="round"/></svg>
+    </span>
+  </div>
+  <figcaption class="uc__cap mono">Klik op de tabel om het nog een keer te zien.</figcaption>
+  <p class="visually-hidden">
+    Uren goedkeuren voor maandag 9 november. Sanne, kok, werkte de avond in de keuken van 15:55 tot 23:20, met 0:30 pauze: 6,92 uur, goedgekeurd.
+    Joris, bezorger, werkte de bezorgdienst van 17:00 tot 22:15 zonder pauze: 5,25 uur, nog concept. Met de knop Dagcontrole uren keur je een dag in één keer goed.
+  </p>
+</figure>
+)}
+
+{variant === 'loon' && (
+<figure class="uc uc--loon" data-uc-loon data-animate style="margin:0">
+  <div class="uc__card" tabindex="0" aria-label="Looncontrole van Joris">
+    <p class="uc__ctitle">Looncontrole</p>
+    <p class="uc__who"><b>Joris</b> <span>19 jaar</span></p>
+    <dl class="uc__pay">
+      <!-- TE BEVESTIGEN: echte bedragen uit de CAO-tabel januari 2026 invullen (voorbeeldbedragen) -->
+      <div><dt>Huidig loon</dt><dd>€ 14,20</dd></div>
+      <div><dt>Volgens tabel</dt><dd>€ 14,71</dd></div>
+    </dl>
+    <p class="uc__warn" data-warn>
+      <svg viewBox="0 0 16 14" focusable="false"><path d="M8 1.5l6.5 11h-13z" fill="#efe0a8" stroke="#0a0d22" stroke-width="2" stroke-linejoin="round"/><path d="M8 5.5v3" stroke="#0a0d22" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Let op: bijna jarig <small>(20 op 16 november)</small></span>
+    </p>
+  </div>
+  <p class="visually-hidden">Het kaartje Looncontrole van Joris, 19 jaar, met huidig loon € 14,20 en volgens de tabel € 14,71 en de waarschuwing: let op, bijna jarig, 20 op 16 november.</p>
+</figure>
+)}
+
+<script>
+  document.querySelectorAll('[data-uc-loon]').forEach((el) => {
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) el.setAttribute('data-js', '');
+  });
+  document.querySelectorAll('[data-uc]').forEach((el) => init(el));
+
+  function init(el) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // statische eindstaat blijft
+
+    const q = (s) => el.querySelector(s);
+    const stage = q('[data-uc-stage]');
+    const btn = q('[data-btn]');
+    if (!btn) return;
+    const cur = q('[data-cur]');
+    const ring = q('.uc__ring');
+    const rows = [...el.querySelectorAll('[data-approve]')];
+
+    const cs = getComputedStyle(el);
+    const ms = (n) => parseFloat(cs.getPropertyValue(n)) || 0;
+
+    let pending = [], started = false, busy = false;
+    const later = (fn, t) => pending.push(setTimeout(fn, t));
+
+    const place = (x, y, d) => {
+      cur.style.transition = d ? `transform ${d}ms var(--ease-out), opacity 400ms var(--ease-out)` : 'none';
+      cur.style.transform = `translate(${x}px, ${y}px)`;
+    };
+    const toBtn = (d) => {
+      const s = stage.getBoundingClientRect(), r = btn.getBoundingClientRect();
+      place(r.left - s.left + r.width * 0.55, r.top - s.top + r.height * 0.55, d);
+    };
+
+    el.setAttribute('data-js', '');
+    // Begin: Sanne staat nog op Concept; de eindstaat (Goedgekeurd) komt na de actie.
+    rows.forEach((r) => r.removeAttribute('data-ok'));
+
+    function play() {
+      if (busy) return;
+      busy = true;
+      pending.forEach(clearTimeout); pending = [];
+      rows.forEach((r) => r.removeAttribute('data-ok'));
+      el.classList.remove('is-done');
+      el.setAttribute('data-phase', 'run');
+      const s = stage.getBoundingClientRect();
+      place(s.width * 0.55, s.height * 0.62, 0);
+      void cur.offsetWidth;
+      const reach = ms('--uc-reach'), press = ms('--uc-press'), approve = ms('--uc-approve'), step = ms('--uc-stagger');
+      later(() => toBtn(reach), 200);
+      later(() => {
+        ring.classList.remove('is-tap'); void ring.offsetWidth; ring.classList.add('is-tap');
+        btn.classList.add('is-pressed');
+        later(() => btn.classList.remove('is-pressed'), 200);
+        rows.forEach((r, i) => later(() => r.setAttribute('data-ok', ''), 150 + i * step));
+        place(s.width * 0.62, s.height * 0.72, approve);
+      }, 200 + reach + press * 0.4);
+      later(() => { el.classList.add('is-done'); busy = false; }, 200 + reach + press + approve);
+    }
+
+    function start() { if (started) return; started = true; play(); }
+
+    el.addEventListener('inviewchange', (e) => { if (e.target === el) start(); });
+    if (el.hasAttribute('data-inview')) start();
+
+    stage.addEventListener('click', () => started && play());
+    stage.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); started && play(); }
+    });
+  }
+</script>
+
+<style>
+  .uc {
+    --uc-reach: 900ms;
+    --uc-press: 400ms;
+    --uc-approve: 1000ms;
+    --uc-warn: 700ms;
+    --uc-stagger: 350ms;
+    width: min(100%, 34rem);
+  }
+  .uc--loon { width: min(100%, 26rem);
+  }
+  .uc__stage { position: relative; container-type: inline-size; cursor: pointer; padding: 0 3px 3px 0; }
+  .uc__wrap { display: grid; gap: 3cqw; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--navy); }
+
+  .uc__panel, .uc__card {
+    background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .uc__panel { padding: 2.4cqw; container-type: inline-size; }
+  .uc__top { display: flex; align-items: center; justify-content: space-between; gap: 2cqw; margin-bottom: 2.4cqw; }
+  .uc__title { font-family: var(--font-display); font-weight: 800; font-size: 4.8cqw; line-height: 1.1; }
+  .uc__title small { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 3cqw; color: var(--muted); margin-top: 0.6cqw; }
+  .uc__btn {
+    font-weight: 600; font-size: 3.3cqw; white-space: nowrap; background: var(--orange); color: var(--navy);
+    border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s); padding: 1.3cqw 2.2cqw;
+  }
+  .uc__btn { transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out); }
+  .uc__btn.is-pressed { transform: translate(2px, 2px); box-shadow: none; }
+
+  .uc__table { display: grid; grid-template-columns: 14fr 12fr 10fr 10fr 8fr 7fr 19fr; column-gap: 1.2cqw; font-size: 3.2cqw; }
+  .uc__th { font-size: 2.7cqw; color: var(--muted); padding-bottom: 1.2cqw; border-bottom: 2px solid var(--navy); font-weight: 500; }
+  .uc__row { display: contents; }
+  .uc__row > span { display: flex; align-items: center; padding: 1.5cqw 0; border-bottom: 2px solid var(--line); line-height: 1.25; }
+  .uc__row:last-child > span { border-bottom: 0; }
+  .uc__name { font-weight: 600; flex-direction: column; align-items: flex-start !important; justify-content: center; gap: 0; }
+  .uc__name small { font-weight: 400; color: var(--muted); font-size: 2.6cqw; }
+  .uc__t { display: block; }
+  .uc__row > .uc__t { display: flex; flex-direction: column; justify-content: center; }
+  .uc__u { font-weight: 600; }
+
+  /* Smal: alleen medewerker, gewerkt, uren en status; de rest staat in de verborgen beschrijving */
+  @container (max-width: 30rem) {
+    .uc__table { grid-template-columns: 8fr 9fr 5fr 11fr; font-size: 4.2cqw; column-gap: 2cqw; }
+    .uc__th { font-size: 3.6cqw; }
+    .uc__table > .uc__th:nth-child(2), .uc__table > .uc__th:nth-child(3), .uc__table > .uc__th:nth-child(5),
+    .uc__row > span:nth-child(2), .uc__row > span:nth-child(3), .uc__row > span:nth-child(5) { display: none; }
+    .uc__top { flex-wrap: wrap; }
+    .uc__title { font-size: 6cqw; }
+    .uc__title small { font-size: 3.8cqw; }
+    .uc__btn { font-size: 3.8cqw; padding: 1.6cqw 2.6cqw; }
+    .uc__name small { font-size: 3.6cqw; }
+    .uc__chip { font-size: 3.5cqw; padding: 0.8cqw 1.4cqw; gap: 1cqw; }
+    .uc__chip svg { width: 3.4cqw; height: 3.4cqw; }
+  }
+
+  .uc__status { position: relative; }
+  .uc__chip {
+    display: inline-flex; align-items: center; gap: 0.8cqw; border: 2px solid var(--navy); border-radius: var(--radius-s);
+    font-weight: 600; font-size: 2.6cqw; padding: 0.6cqw 1cqw; white-space: nowrap; line-height: 1.2;
+  }
+  .uc__chip svg { width: 2.4cqw; height: 2.4cqw; flex: none; }
+  .uc__chip--draft { border-style: dashed; border-color: var(--muted); color: var(--muted); background: var(--paper); }
+  .uc__chip--ok { background: var(--green-soft); color: var(--green-dark); border-color: var(--green-dark); }
+  /* Eindstaat: goedgekeurd. Zonder data-ok (alleen tijdens de lus) staat de rij op Concept. */
+  .uc__row[data-ok] .uc__chip--draft { display: none; }
+  .uc__row:not([data-ok]) .uc__chip--ok { display: none; }
+  .uc__row[data-ok] .uc__chip--ok { animation: uc-flip 360ms var(--ease-out); }
+    @keyframes uc-flip { from { transform: scaleY(0.2); } to { transform: none; } }
+
+  /* Looncontrole: eigen kaart, ruim en groot genoeg om te lezen */
+  .uc__card { padding: var(--space-5) var(--space-5) var(--space-6); font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--navy); }
+  .uc__ctitle { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: var(--step-2); line-height: 1.1; }
+  .uc__who { margin: var(--space-2) 0 var(--space-4); font-size: var(--step-0); }
+  .uc__who b { font-weight: 700; }
+  .uc__who span { color: var(--muted); margin-left: 0.5rem; }
+  .uc__pay { margin: 0; font-size: var(--step-0); }
+  .uc__pay div { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 2px solid var(--line); }
+  .uc__pay dt { color: var(--ink); }
+  .uc__pay dd { margin: 0; font-weight: 600; }
+  .uc__empty { color: var(--muted); }
+  .uc__warn {
+    display: flex; align-items: center; gap: var(--space-3); margin: var(--space-5) 0 0; padding: var(--space-3) var(--space-4);
+    background: var(--tape); border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s);
+    font-weight: 600; font-size: var(--step-0); line-height: 1.25; transform-origin: 10% 50%;
+  }
+  .uc__warn small { display: block; font-weight: 400; font-size: var(--step--1); }
+  .uc__warn svg { width: 1.6rem; height: 1.6rem; flex: none; }
+  .uc--loon[data-inview] .uc__warn { animation: uc-warn var(--uc-warn) var(--ease-out) both; }
+  .uc--loon .uc__card:hover .uc__warn, .uc--loon .uc__card:focus-visible .uc__warn { animation: uc-wiggle 520ms var(--ease-out); }
+  .uc--loon[data-js]:not([data-inview]) .uc__warn { opacity: 0; }
+  @keyframes uc-warn { from { opacity: 0; transform: translateY(40%) rotate(-3deg); } to { opacity: 1; transform: none; } }
+  @keyframes uc-wiggle { 0%, 100% { transform: none; } 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
+
+  .uc__cur { position: absolute; left: 0; top: 0; z-index: 5; width: 4.4cqw; pointer-events: none; visibility: hidden; }
+  .uc[data-phase] .uc__cur { visibility: visible; }
+  .uc__cur svg { display: block; width: 100%; height: auto; filter: drop-shadow(2px 2px 0 var(--navy)); }
+  .uc__ring { position: absolute; left: -2cqw; top: -2cqw; width: 4.4cqw; height: 4.4cqw; border: 2px solid var(--orange); border-radius: 50%; visibility: hidden; }
+  .uc__ring.is-tap { animation: uc-tap 500ms var(--ease-out) both; }
+  @keyframes uc-tap { from { visibility: visible; opacity: 1; transform: scale(0.4); } to { visibility: visible; opacity: 0; transform: scale(1.6); } }
+
+  .uc.is-done .uc__cur { opacity: 0; transition: opacity 500ms var(--ease-out); }
+
+  .uc__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

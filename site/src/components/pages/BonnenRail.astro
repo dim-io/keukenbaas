@@ -1,0 +1,52 @@
+---
+// Bonnen schuiven langs een rail; op elke bon een onderdeel van Keukenbaas, zonder versienummer of datum.
+// Eindstaat (zonder JS, bij reduced motion en buiten beeld): bonnen stilstaand en volledig leesbaar.
+const items = ['Prep-lijst', 'Labels', 'HACCP', 'Rooster', 'Uren en fooi', 'Inkoop'];
+---
+<figure class="br" data-animate style="margin:0" aria-label="Bonnen aan een rail: prep-lijst, labels, HACCP, rooster, uren en fooi, inkoop">
+  <div class="br__view" aria-hidden="true">
+    <div class="br__track">
+      {[0].map((copy) => (
+        <ul class="br__set" role="list" data-copy={copy}>
+          {items.map((t, i) => (
+            <li style={`--r:${[-2, 1.5, -1, 2, -1.5, 1][i]}deg`}>
+              <span class="br__clip"></span>
+              <span class="br__bon receipt-shadow"><span class="receipt"><b>{t}</b><i></i><i></i><i></i></span></span>
+            </li>
+          ))}
+        </ul>
+      ))}
+    </div>
+    <span class="br__rail"></span>
+  </div>
+  <figcaption class="visually-hidden">{items.join(', ')}</figcaption>
+</figure>
+<style>
+  .br { width: 100%; }
+  .br__view { position: relative; overflow: hidden; padding: 2.2rem 0 1.2rem; }
+  .br__rail { position: absolute; left: 0; right: 0; top: 1.6rem; height: 6px; background: var(--navy); border-radius: 3px; }
+  .br__track { display: flex; width: max-content; }
+  @media (prefers-reduced-motion: no-preference) {
+    .br[data-animate]:not([data-inview]) .br__bon { opacity: 0; transform: translateY(-10px); }
+    .br__bon { transition: opacity 450ms var(--ease-out), transform 450ms var(--ease-out); }
+    .br__set li:nth-child(2) .br__bon { transition-delay: 70ms; } .br__set li:nth-child(3) .br__bon { transition-delay: 140ms; }
+    .br__set li:nth-child(4) .br__bon { transition-delay: 210ms; } .br__set li:nth-child(5) .br__bon { transition-delay: 280ms; } .br__set li:nth-child(6) .br__bon { transition-delay: 350ms; }
+  }
+  .br__set { display: flex; gap: var(--space-5); list-style: none; padding: 0 var(--space-5) 0 0; margin: 0; }
+  .br__set li { position: relative; padding-top: 0.9rem; transform: rotate(var(--r)); transform-origin: top center; }
+  .br__clip { position: absolute; left: 50%; top: 0; width: 1.4rem; height: 1.5rem; margin-left: -0.7rem; background: var(--tape); border: 2px solid var(--navy); border-radius: 3px; z-index: 2; }
+  .br__bon { display: block; width: 8.5rem; }
+  .br__bon :global(.receipt) { display: grid; gap: 0.5rem; padding: 1.1rem 0.9rem 1.4rem; min-height: 8rem; align-content: start; }
+  .br__bon b { font-family: var(--font-display); font-weight: 900; font-stretch: 70%; font-size: var(--step-1); line-height: 1; color: var(--navy); }
+  .br__bon i { display: block; height: 0; border-top: 3px dotted var(--line); }
+  .br__bon i:nth-of-type(2) { width: 80%; }
+  .br__bon i:nth-of-type(3) { width: 55%; }
+  @media (max-width: 40rem) {
+    .br__view { overflow: visible; padding-top: 0.8rem; }
+    .br__rail { display: none; }
+    .br__track { width: auto; }
+    .br__set { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4) var(--space-3); padding: 0; }
+    .br__set[aria-hidden="true"], .br__set + .br__set { display: none; }
+    .br__bon { width: 100%; }
+  }
+</style>

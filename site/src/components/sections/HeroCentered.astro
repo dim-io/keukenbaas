@@ -1,0 +1,48 @@
+---
+// Gecentreerde hero. Slot: de grote illustratie, die half over de volgende band valt.
+import Reveal from './Reveal.astro';
+import FigScroll from './FigScroll.astro';
+import InlineSignup from '../InlineSignup.astro';
+const { title, lead, checks = [], note, placeholder, button, signupId = 'hero', figMin = '38rem', figLabel } = Astro.props;
+---
+<section class="hero grid-paper">
+  <div class="container">
+    <Reveal class="hero__copy">
+      <h1 style="--i:0">{title}</h1>
+      <p class="hero__lead" style="--i:1">{lead}</p>
+      {checks.length > 0 && (
+        <ul class="hero__checks" role="list" style="--i:2">
+          {checks.map((c) => (
+            <li>
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="17" height="17" rx="3" fill="#dff5ec" stroke="#0a0d22" stroke-width="2"/><path d="M5.5 10.5l3 3 6-7" fill="none" stroke="#207657" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>{c}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div class="hero__form" style="--i:3">
+        <InlineSignup id={signupId} placeholder={placeholder} button={button} />
+        {note && <p class="hero__note mono">{note}</p>}
+      </div>
+    </Reveal>
+    <Reveal class="hero__art">
+      <div style="--i:4"><FigScroll min={figMin} label={figLabel}><slot /></FigScroll></div>
+    </Reveal>
+  </div>
+</section>
+<style>
+  .hero { padding-top: var(--space-8); padding-bottom: 0; position: relative; z-index: 2; --overlap: clamp(4rem, 11vw, 10rem); }
+  .hero > .container { display: flow-root; }
+  .hero :global(.hero__copy) { display: grid; justify-items: center; text-align: center; gap: var(--space-5); }
+  h1 { max-width: 15em; font-size: clamp(2.75rem, 1.2rem + 5vw, 5.25rem); }
+  .hero__lead { font-size: var(--step-1); max-width: 40rem; margin-inline: auto; }
+  .hero__checks { list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3) var(--space-6); max-width: 60rem; }
+  .hero__checks li { display: flex; align-items: center; gap: var(--space-2); text-align: left; font-weight: 500; color: var(--navy); }
+  .hero__checks svg { width: 1.3rem; height: 1.3rem; flex: none; }
+  @media (max-width: 40rem) { .hero__checks { flex-direction: column; align-items: flex-start; } }
+  .hero__form { display: grid; justify-items: center; gap: var(--space-3); width: 100%; margin-top: var(--space-3); }
+  .hero__form :global(.signup) { width: min(100%, 34rem); }
+  .hero__note { font-size: var(--step--1); color: var(--muted); }
+  .hero :global(.hero__art) { margin-top: var(--space-8); margin-bottom: calc(var(--overlap) * -1); position: relative; z-index: 3; display: flex; justify-content: center; }
+  .hero :global(.hero__art) > :global(div) { width: min(100%, 60rem); }
+</style>

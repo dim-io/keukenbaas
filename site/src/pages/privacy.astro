@@ -1,0 +1,58 @@
+---
+// Privacyverklaring. Copy letterlijk uit docs/copy/privacy.md; markeringen ([TE CONTROLEREN] enz.) staan als HTML-commentaar.
+import Base from '../layouts/Base.astro';
+---
+<Base title="Privacyverklaring · Keukenbaas" titleRaw description="Welke gegevens Keukenbaas vraagt als je je zaak op de wachtlijst zet, waarvoor we ze gebruiken, hoe lang we ze bewaren en hoe je ze laat verwijderen.">
+  <article class="pv">
+    <div class="container pv__in">
+      <h1>Privacyverklaring</h1>
+      <Fragment set:html="<!-- TE CONTROLEREN: Bijgewerkt: datum van publicatie -->" />
+      <p class="pv__intro">Deze website is van Keukenbaas. Hier lees je wat we doen met de gegevens die je ons geeft als je je zaak op de wachtlijst zet. Kort gezegd: we vragen alleen wat we nodig hebben, we gebruiken het alleen voor de wachtlijst, we verkopen het niet en we delen het alleen met de dienst die het formulier verwerkt.</p>
+
+      <h2>Wie we zijn</h2>
+      <p>Keukenbaas, gemaakt door David van Bilderbeek.</p>
+      <Fragment set:html="<!-- TE CONTROLEREN: rechtsvorm, KvK-nummer, adres en wie de verwerkingsverantwoordelijke is. Contact over privacy: TE BEVESTIGEN: e-mailadres -->" />
+
+      <h2>Welke gegevens we vragen</h2>
+      <p>Op het formulier vragen we:</p>
+      <ul>
+        <li>je naam en e-mailadres</li>
+        <li>de naam en plaats van je zaak</li>
+        <li>het aantal vestigingen en medewerkers</li>
+        <li>wat je nu gebruikt voor het rooster en de administratie</li>
+      </ul>
+
+      <h2>Waarvoor we ze gebruiken</h2>
+      <ul>
+        <li>Om je te laten weten wanneer je kunt beginnen</li>
+        <li>Om een kennismaking met je te plannen</li>
+        <li>Om te zien voor welke zaken we Keukenbaas als eerste klaarmaken</li>
+      </ul>
+      <p>We sturen je geen nieuwsbrief zonder dat je daar zelf om vraagt.</p>
+      <Fragment set:html="<!-- TE CONTROLEREN: grondslag voor de verwerking, waarschijnlijk toestemming -->" />
+
+      <h2>Met wie we ze delen</h2>
+      <p>Alleen met de dienst die het formulier verwerkt.</p>
+      <Fragment set:html="<!-- TE CONTROLEREN: welke dienst dat wordt (bijvoorbeeld Formspree of Google Forms), waar die de gegevens opslaat, en of er een verwerkersovereenkomst is -->" />
+
+      <h2>Hoe lang we ze bewaren</h2>
+      <p>Zolang je op de wachtlijst staat. Wil je eraf, dan halen we je gegevens weg.</p>
+      <Fragment set:html="<!-- TE CONTROLEREN: bewaartermijn als iemand nooit reageert -->" />
+
+      <Fragment set:html="<!-- Sectie Cookies en statistieken, nog niet tonen. TE CONTROLEREN: gebruikt de site cookies of een statistiekendienst? Zo niet, dan: 'Deze website plaatst geen cookies en houdt niet bij wie er komt kijken.' -->" />
+
+      <h2>Je rechten</h2>
+      <p>Je mag altijd vragen welke gegevens we van je hebben, ze laten aanpassen of laten verwijderen. Ben je het niet eens met hoe we met je gegevens omgaan, dan kun je een klacht indienen bij de Autoriteit Persoonsgegevens.</p>
+      <Fragment set:html="<!-- TE BEVESTIGEN: e-mailadres. Zin die erbij hoort: 'Stuur een mail naar [e-mailadres], dan regelen we het.' TE CONTROLEREN: volledigheid van deze rechten -->" />
+    </div>
+  </article>
+</Base>
+<style>
+  .pv { padding-block: var(--space-8) var(--space-9); background: var(--paper); }
+  .pv__in { max-width: 44rem; display: grid; gap: var(--space-4); }
+  h1 { font-size: var(--step-4); margin-bottom: var(--space-3); }
+  .pv__intro { font-size: var(--step-1); color: var(--navy); }
+  h2 { font-size: var(--step-2); margin-top: var(--space-5); }
+  p, li { font-size: var(--step-0); line-height: 1.6; }
+  ul { padding-left: 1.4rem; display: grid; gap: var(--space-2); }
+</style>

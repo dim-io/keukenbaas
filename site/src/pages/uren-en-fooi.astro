@@ -1,0 +1,130 @@
+---
+// Uren, loon en fooi. Copy letterlijk uit docs/copy/uren-en-fooi.md; markeringen staan als HTML-commentaar.
+import Base from '../layouts/Base.astro';
+import HeroSplit from '../components/sections/HeroSplit.astro';
+import FixCards from '../components/sections/FixCards.astro';
+import FeatureBlock from '../components/sections/FeatureBlock.astro';
+import MoreTiles from '../components/sections/MoreTiles.astro';
+import RelatedStrip from '../components/sections/RelatedStrip.astro';
+import FaqAccordion from '../components/sections/FaqAccordion.astro';
+import ClosingBand from '../components/sections/ClosingBand.astro';
+import MiniPhone from '../components/sections/MiniPhone.astro';
+import MiniReceipt from '../components/sections/MiniReceipt.astro';
+import FooiVerdeling from '../components/illustrations/FooiVerdeling.astro';
+import UrenControle from '../components/illustrations/UrenControle.astro';
+import { href } from '../lib/url.js';
+
+const fix = [
+  { problem: 'De uren staan op briefjes, in een appgroep of in je hoofd.', fix: 'Je keurt de uren per dag goed, alles in één keer.' },
+  { problem: 'Je weet niet zeker of iedereen volgens de CAO betaald wordt.', fix: 'Naast elk loon staat het loon uit de CAO-tabel.' },
+  { problem: 'De fooi reken je eind van de maand uit, met de urenlijst ernaast.', fix: 'De fooi wordt verdeeld naar goedgekeurde uren.' },
+];
+const tiles = [
+  { title: 'Loonoverzicht voor een eigen periode' },
+  { title: 'Uren in stappen van 5 minuten' },
+  { title: 'Functie en uurloon per medewerker' },
+  { title: 'Medewerkers voeren zelf hun uren in' },
+];
+const related = [
+  { href: href('/rooster'), label: 'Rooster en personeel', text: 'Wat in het rooster staat, staat bij de uren als gepland. Jij vult alleen nog in wat er anders liep.' , go: 'Naar het rooster' },
+  { href: href('/keuken'), label: 'Keuken en prep', text: 'Op het scherm Vandaag zie je wie er staat en wat er gemaakt wordt. Wie afvinkt, staat erbij.' , go: 'Naar de keuken' },
+];
+const faq = [
+  { q: 'Moet ik de CAO-tabel zelf bijhouden?', a: 'De all-in uurlonen uit de horeca-CAO staan erin, tabel januari 2026. Je hoeft ze dus niet over te tikken.', note: 'TE BEVESTIGEN: wie werkt de tabel bij als de CAO verandert (zin "Hoe een nieuwe tabel erin komt, bespreken we bij de kennismaking." weggelaten tot dit vaststaat)' },
+  { q: 'Hoe wordt de fooi precies verdeeld?', a: 'Je telt de totalen van de maand op: SumUp, OrderBuddy en contant. Dat bedrag wordt verdeeld over iedereen die meedeelt, naar het aantal goedgekeurde uren.' },
+  { q: 'Kunnen eigenaren en vrijwilligers buiten de fooi blijven?', a: 'Ja. Bij "Wie deelt mee?" zet je ze uit. Hun uren tellen dan niet mee voor de verdeling.' },
+  { q: 'Haalt Keukenbaas de fooi zelf uit SumUp?', a: 'Nee. Je vult de totalen per maand zelf in. Dat zijn drie bedragen, en dan doet Keukenbaas de rest.' },
+  { q: 'Kan ik de uren naar mijn boekhouder sturen?', a: 'Ja, met de loonexport. Goedgekeurde en afgekeurde uren staan apart, over de periode die jij kiest.', note: 'TE BEVESTIGEN: in welk bestandsformaat, en sluit het aan op gangbare salarispakketten' },
+  { q: 'Kunnen medewerkers hun eigen uren invullen?', a: 'Ja, in hun eigen app. Jij keurt ze daarna goed of af. Pas goedgekeurde uren tellen mee voor loon en fooi.' },
+];
+---
+<Base title="Uren, loon en fooi verdelen in de horeca · Keukenbaas" titleRaw description="Keur de uren per dag goed, zie het loon naast de CAO-tabel en verdeel de fooi naar gewerkte uren. Zonder rekenmachine aan het eind van de maand.">
+  <!-- U2 · Hero -->
+  <HeroSplit
+    eyebrow="Uren, loon en fooi"
+    title="De fooi verdeeld, en het bierviltje kan bij het oud papier."
+    lead="Je keurt de gewerkte uren per dag goed. Aan het eind van de maand vul je de fooi uit SumUp, OrderBuddy en de pot in, en Keukenbaas verdeelt het naar uren. Iedereen ziet het eigen bedrag op de eigen telefoon."
+    placeholder="je@jouwzaak.nl"
+    button="Zet me op de wachtlijst"
+    figMin="28rem"
+    figLabel="De fooiverdeling van oktober 2026"
+  >
+    <FooiVerdeling title="Fooiverdeling · oktober 2026" eigenaar />
+  </HeroSplit>
+
+  <!-- U3 · Zo los je het op -->
+  <FixCards id="fix" tone="paper" title="Zo los je het op" cards={fix} problemLabel="Nu" fixLabel="Met Keukenbaas" />
+
+  <!-- U4 · Urenregistratie -->
+  <FeatureBlock
+    id="urenregistratie"
+    tone="white"
+    reverse
+    title="Uren per dag, in één keer goedgekeurd"
+    text={'Per dag zie je wie er gepland stond en wie er echt gewerkt heeft. Met de pauze erbij rekent Keukenbaas de uren uit, met het uurloon het loon. Elke regel is Concept, Goedgekeurd of Afgekeurd. Klopt de dag, dan keur je met "Dagcontrole uren" alles in één keer goed. Uren gaan in stappen van 5 minuten.'}
+    items={['Gepland en gewerkt naast elkaar', 'Pauze, uren, uurloon en loon per regel', 'Alles in één keer goedkeuren', 'Alleen open met de managercode']}
+    figMin="34rem"
+  >
+    <UrenControle />
+  </FeatureBlock>
+
+  <!-- U5 · Loon naast de CAO-tabel -->
+  <FeatureBlock
+    id="loon"
+    tone="grid"
+    title="Naast het loon staat wat de CAO-tabel zegt"
+    text={'Keukenbaas zet het loon dat je nu betaalt naast het loon dat volgens de tabel hoort, op basis van leeftijd en de all-in uurlonen uit de horeca-CAO. Een week voordat iemand jarig wordt, zie je "Let op: bijna jarig", zodat je het loon op tijd aanpast. De tabel is die van januari 2026.'}
+    items={['Kolommen "Huidig loon" en "Volgens tabel"', 'Uurlonen uit de horeca-CAO, tabel januari 2026', 'Waarschuwing een week voor een verjaardag']}
+    figMin="20rem"
+  >
+    <UrenControle variant="loon" />
+    <Fragment set:html="<!-- TE BEVESTIGEN: echte bedragen uit de CAO-tabel januari 2026 invullen bij Huidig loon en Volgens tabel (nu streepje) -->" />
+  </FeatureBlock>
+
+  <!-- U6 · Fooiverdeling -->
+  <FeatureBlock
+    id="fooi"
+    tone="paper"
+    reverse
+    title="Verdeeld naar uren, en iedereen ziet het eigen bedrag"
+    text={'Je vult per maand de totalen in: wat er via SumUp binnenkwam, via OrderBuddy en contant. Bij "Wie deelt mee?" zet je de eigenaren en vrijwilligers uit. Druk op "Opslaan en berekenen" en de fooi wordt verdeeld naar de uren die je hebt goedgekeurd. Iedere medewerker ziet het eigen bedrag in de app.'}
+    items={['Totalen uit SumUp, OrderBuddy en contant, zelf ingevuld', 'Eigenaren en vrijwilligers zet je uit', 'Verdeeld naar goedgekeurde uren', 'Ieder ziet de eigen fooi op de telefoon']}
+    figMin="18rem"
+  >
+    <div class="fooi-tel"><MiniPhone name="Hoi Fatima" lines={['Je fooi in oktober', '76 uur', '€ 380,00']} /></div>
+  </FeatureBlock>
+
+  <!-- U7 · Export en maandmail -->
+  <FeatureBlock
+    id="export"
+    tone="white"
+    title="Klaar voor je loonadministratie"
+    text="Over elke periode die je kiest, maak je een loonoverzicht. De export zet goedgekeurde en afgekeurde uren apart, zodat je boekhouder alleen de goedgekeurde hoeft te lezen. Aan het eind van de maand komt er een mail met het overzicht."
+    items={['Maandoverzicht en loonoverzicht voor een eigen periode', 'Loonexport met goedgekeurde en afgekeurde uren apart', 'Maandmail met het overzicht']}
+    figMin="18rem"
+  >
+    <div class="export-bon"><MiniReceipt title="Loonexport" rotate={-1.5} rows={[{ label: '1 t/m 31 oktober 2026' }, { label: 'Goedgekeurd', value: '400,00 uur', done: true }, { label: 'Afgekeurd', value: '3,25 uur' }]} footer="Exporteren" /></div>
+    <Fragment set:html="<!-- TE BEVESTIGEN: bestandsformaat van de export -->" />
+  </FeatureBlock>
+
+  <!-- U8 · En verder -->
+  <MoreTiles id="verder" tone="grid" title="En verder" tiles={tiles} />
+
+  <!-- U9 · Vergelijking: vervalt -->
+
+  <!-- U10 · Hoort bij -->
+  <RelatedStrip id="verwant" title="Dit werkt samen met" links={related} />
+
+  <!-- U11 · Veelgestelde vragen -->
+  <FaqAccordion id="faq" title="Vragen over uren, loon en fooi" items={faq} />
+
+  <!-- U12 · Afsluitende band -->
+  <ClosingBand tone="navy" title="Laat het bierviltje liggen." placeholder="je@jouwzaak.nl" button="Zet me op de wachtlijst" />
+</Base>
+<style>
+  .fooi-tel, .export-bon { display: grid; place-items: center; padding: var(--space-4); }
+  .fooi-tel :global(.mp) { transition: transform var(--dur-3) var(--ease-snap); }
+  .fooi-tel:hover :global(.mp) { transform: rotate(-2deg) translateY(-4px); }
+  .export-bon :global(.mr) { transition: transform var(--dur-3) var(--ease-snap); }
+  .export-bon:hover :global(.mr) { transform: rotate(1deg) translateY(-4px); }
+</style>

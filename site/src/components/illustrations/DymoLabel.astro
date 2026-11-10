@@ -1,0 +1,227 @@
+---
+/*
+ * STIJLREGELS ILLUSTRATIES
+ * Dit component is het stijlvoorbeeld voor alle productillustraties op de site.
+ *
+ * Tekenstijl
+ * - Vlak, geen verlopen, geen blur, geen transparantie-effecten. Alleen tokens uit tokens.css.
+ * - Lijnen: 2px navy (var(--navy)), stroke-linejoin round. Geen lijn dunner dan 2px.
+ * - Vlakken: wit (--white) voor papier en labels, crème (--paper) voor kernen en achtergrond,
+ *   oranje (--orange) als accent, tape (--tape) voor markeringen, groen (--green) alleen als OK-signaal,
+ *   rood (--red) alleen voor een afwijking. Nooit paars of blauwe verlopen.
+ * - Schaduw: harde offset (2px 2px of 3px 3px, navy) zoals --shadow-s en --shadow. Nooit blur.
+ * - Hoeken: --radius (6px) of --radius-s (3px) op HTML-delen; in SVG rx 6 tot 10.
+ *
+ * Fonts
+ * - IBM Plex Mono (--font-mono) voor alles wat bon, label of scherm-data is, met tabulaire cijfers.
+ * - Archivo (--font-display) alleen voor koppen in de illustratie. Permanent Marker (--font-marker)
+ *   alleen voor een stiftlabel op tape, spaarzaam.
+ * - Tekst in een illustratie schaalt mee met de illustratie: gebruik container query units (cqw)
+ *   op een element met container-type: inline-size, geen vaste px.
+ * - Gebruik voorbeeldnamen en -producten uit docs/messaging.md (Sanne, Joris, Fatima, Mehmet, Lotte;
+ *   tomaten-courgettesoep, pizzadeeg, focaccia, aioli, gepekelde ui) en echte velden uit de app.
+ *
+ * Timing en easing (CSS custom properties op de root van het component, namen --<naam>-<stap>)
+ * - Per stap een eigen duurtoken in ms, bijv. --dymo-print: 1600ms, --dymo-hold: 2800ms,
+ *   --dymo-tear: 450ms, --dymo-exit: 700ms, --dymo-pause: 1000ms. JS leest deze tokens uit; zet geen
+ *   duur dubbel in CSS en JS.
+ * - Alles beweegt vloeiend: var(--ease-out) of var(--ease-snap). Tellers tellen vloeiend op
+ *   (requestAnimationFrame met ease-out), balken en wijzers glijden. GEEN steps() (leest schokkerig),
+ *   behalve heel subtiel bij het uitrollen van een DYMO-label.
+ * - GEEN autoplay-lus. Een illustratie speelt één keer zijn verhaal af en blijft dan in de eindstaat.
+ *   Nooit terug naar 0. Opnieuw afspelen alleen als de bezoeker klikt.
+ *
+ * Eén keer in beeld (vastgelegd 2026-11-10 na feedback "schokkend, reset de hele tijd")
+ * - De root heeft data-animate. src/scripts/inview.js zet data-inview één keer zodra de illustratie
+ *   in beeld komt en haalt het NOOIT weg. Uit en in beeld scrollen verandert niets.
+ * - Telefoonmockups: nette afgeronde rand, geen notch- of eiland-uitsnede.
+ * - Geen afgekapte tekst: niets valt buiten zijn vak, geen ellipsis op namen, geen overflow.
+ * - De lus is een kleine toestandsmachine op data-phase (idle, print, hold, tear, exit). CSS regelt
+ *   per fase de animatie, JS regelt de volgorde en de tekst van het volgende item.
+ * - Hover, klik of Enter/Spatie op de illustratie laat iets gebeuren (hier: direct een extra label),
+ *   met een korte afkoeltijd tegen spammen. Het interactieve element heeft role="button", tabindex="0"
+ *   en een aria-label.
+ *
+ * Toegankelijkheid en reduced motion
+ * - De standaardstijl (zonder data-phase) is de eindstaat: het label ligt volledig zichtbaar.
+ *   Bij prefers-reduced-motion start de JS niet en schakelt global.css alle animaties uit, dus de
+ *   gebruiker ziet een statisch label. Dat geldt ook zonder JS.
+ * - Decoratieve delen krijgen aria-hidden; de inhoud van het label staat als tekst in een
+ *   visually-hidden beschrijving.
+ */
+const { items: itemsProp, buttons = [], caption = 'Klik op de printer voor nog een label.' } = Astro.props;
+const first = itemsProp?.[0] ?? { title: 'FOCACCIA', tht: 'THT: 11-11', made: 'Gemaakt door: Sanne op 09-11 (10:42u)', batch: 'Batch: 4 platen' };
+---
+<figure class="dymo" data-items={itemsProp ? JSON.stringify(itemsProp) : undefined} data-dymo data-animate style="margin:0">
+  <div class="dymo__stage" role="button" tabindex="0" aria-label="Print nog een label" data-dymo-stage>
+    <div class="dymo__label" data-dymo-label aria-hidden="true">
+      <span class="dymo__title" data-l="title">{first.title}</span>
+      <span class="dymo__tht" data-l="tht">{first.tht}</span>
+      <span class="dymo__line" data-l="made">{first.made}</span>
+      <span class="dymo__line" data-l="batch">{first.batch}</span>
+    </div>
+    <svg class="dymo__printer" viewBox="0 0 400 300" aria-hidden="true" focusable="false">
+      <g stroke="#0a0d22" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+        <!-- rol met labels bovenop -->
+        <circle cx="110" cy="58" r="44" fill="#fffdf8"/>
+        <circle cx="110" cy="58" r="30" fill="none" stroke-dasharray="3 5"/>
+        <circle cx="110" cy="58" r="12" fill="#f6f1e7"/>
+        <!-- harde schaduw -->
+        <rect x="25" y="65" width="360" height="123" rx="10" fill="#0a0d22"/>
+        <!-- romp -->
+        <rect x="20" y="60" width="360" height="123" rx="10" fill="#fffdf8"/>
+        <rect x="20" y="124" width="360" height="16" fill="#e06633"/>
+        <!-- uitvoersleuf -->
+        <rect x="48" y="166" width="304" height="9" rx="3" fill="#0a0d22"/>
+        <!-- scherm met lampje en knop -->
+        <rect x="40" y="84" width="92" height="24" rx="3" fill="#0a0d22"/>
+        <text x="48" y="101" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500" fill="#efe0a8" stroke="none">KB-01 KLAAR</text>
+        <rect x="296" y="86" width="40" height="20" rx="4" fill="#f6f1e7"/>
+        <circle cx="356" cy="96" r="6" fill="#40ac83"/>
+      </g>
+    </svg>
+  </div>
+  {buttons.length > 0 && <div class="dymo__btns" aria-hidden="true">{buttons.map((b) => <span class="dymo__btn mono">{b}</span>)}</div>}
+  <figcaption class="dymo__cap mono">{caption}</figcaption>
+  <p class="visually-hidden">Een labelprinter print THT-labels met productnaam, houdbaarheidsdatum, wie het maakte en de batchgrootte.</p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-dymo]').forEach((el) => init(el));
+
+  function init(el) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (reduce.matches) return; // statisch label blijft staan
+
+    const stage = el.querySelector('[data-dymo-stage]');
+    const label = el.querySelector('[data-dymo-label]');
+    const f = (k) => label.querySelector(`[data-l="${k}"]`);
+    const items = el.dataset.items ? JSON.parse(el.dataset.items) : [
+      { title: 'FOCACCIA', tht: 'THT: 11-11', made: 'Gemaakt door: Sanne op 09-11 (10:42u)', batch: 'Batch: 4 platen' },
+      { title: 'PIZZADEEG', tht: 'THT: 11-11', made: 'Gemaakt door: Mehmet op 09-11 (11:15u)', batch: 'Batch: 4 kg' },
+      { title: 'AIOLI', tht: 'THT: 13-11', made: 'Gemaakt door: Sanne op 09-11 (11:58u)', batch: 'Batch: 1,2 kg' },
+    ];
+    const cs = getComputedStyle(el);
+    const ms = (name) => parseFloat(cs.getPropertyValue(name)) || 0;
+
+    let index = 0, busy = false, timer = 0, started = false;
+    el.setAttribute('data-js', '');
+
+    function fill(i) {
+      const it = items[i % items.length];
+      f('title').textContent = it.title;
+      f('title').style.fontSize = Math.min(7, 83 / (it.title.length * 0.6)) + 'cqw';
+      f('tht').textContent = it.tht;
+      f('made').textContent = it.made;
+      f('batch').textContent = it.batch;
+    }
+
+    function setPhase(p) {
+      el.removeAttribute('data-phase');
+      void el.offsetWidth;
+      el.setAttribute('data-phase', p);
+    }
+
+    // Speelt een rij fases af en blijft op de laatste staan (hold = label ligt in de uitvoer).
+    function run(steps) {
+      busy = true;
+      const [p, ...rest] = steps;
+      if (p === 'idle') { index += 1; fill(index); }
+      setPhase(p);
+      const d = p === 'idle' ? 0 : ms(`--dymo-${p}`);
+      if (!rest.length) { busy = false; return; }
+      timer = setTimeout(() => run(rest), d);
+    }
+
+    function start() {
+      if (started) return;
+      started = true;
+      fill(0);
+      // eerst één label printen, dan een tweede dat blijft liggen
+      run(['print', 'hold', 'tear', 'exit', 'idle', 'print', 'rest']);
+    }
+
+    function again() {
+      if (!started || busy) return;
+      run(['tear', 'exit', 'idle', 'print', 'rest']);
+    }
+
+    el.addEventListener('inviewchange', (e) => { if (e.target === el) start(); });
+    if (el.hasAttribute('data-inview')) start();
+
+    stage.addEventListener('click', again);
+    stage.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); again(); }
+    });
+  }
+</script>
+
+<style>
+  .dymo {
+    --dymo-print: 1100ms;
+    --dymo-hold: 400ms;
+    --dymo-tear: 400ms;
+    --dymo-exit: 600ms;
+    width: min(100%, 30rem);
+  }
+  .dymo__stage {
+    position: relative;
+    aspect-ratio: 400 / 300;
+    overflow: hidden;
+    cursor: pointer;
+    border-radius: var(--radius);
+  }
+  .dymo__printer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+
+  /* Label 89 x 28 mm. Standaard (zonder JS, reduced motion) is de eindstaat: label ligt uitgerold. */
+  .dymo__label {
+    position: absolute;
+    z-index: 1;
+    left: 10%;
+    top: 60%;
+    width: 80%;
+    aspect-ratio: 89 / 28;
+    container-type: inline-size;
+    background: var(--white);
+    border: 2px solid var(--navy);
+    border-radius: var(--radius-s);
+    box-shadow: var(--shadow-s);
+    padding: 2cqw 3.5cqw;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--navy);
+    overflow: hidden;
+    line-height: 1.1;
+    transform-origin: 0 0;
+  }
+  .dymo__title { font-weight: 600; font-size: 6.6cqw; white-space: nowrap; letter-spacing: -0.01em; }
+  .dymo__tht { font-weight: 600; font-size: 5cqw; align-self: flex-start; background: var(--orange-soft); padding: 0 1.2cqw; }
+  .dymo__line { font-size: 4.1cqw; letter-spacing: -0.03em; white-space: nowrap; color: var(--ink); }
+
+  /* Voor de eerste keer in beeld ligt er nog geen label in de uitvoer */
+  .dymo[data-js]:not([data-inview]) .dymo__label { transform: translateY(-105%); }
+
+  /* Fases (gezet door het script) */
+  .dymo[data-phase="idle"] .dymo__label { transform: translateY(-105%); }
+  .dymo[data-phase="print"] .dymo__label { animation: dymo-print var(--dymo-print) cubic-bezier(0.3, 0.1, 0.3, 1) both; }
+  .dymo[data-phase="tear"] .dymo__label { animation: dymo-tear var(--dymo-tear) var(--ease-out) both; }
+  .dymo[data-phase="exit"] .dymo__label { animation: dymo-exit var(--dymo-exit) var(--ease-out) both; }
+
+  @keyframes dymo-print { from { transform: translateY(-105%); } to { transform: translateY(0); } }
+  @keyframes dymo-tear {
+    from { transform: translate(0, 0) rotate(0); }
+    to { transform: translate(5%, 4%) rotate(3deg); }
+  }
+  @keyframes dymo-exit {
+    from { transform: translate(5%, 4%) rotate(3deg); }
+    to { transform: translate(130%, 20%) rotate(9deg); }
+  }
+
+  .dymo__btns { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+  .dymo__btn { font-size: var(--step--1); font-weight: 600; color: var(--navy); background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: 2px 2px 0 var(--navy); padding: 0.25rem 0.7rem; }
+  .dymo__btn:nth-child(2) { background: var(--orange-soft); }
+  .dymo__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

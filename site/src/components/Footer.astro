@@ -1,0 +1,65 @@
+---
+import { href, functies } from '../lib/url.js';
+---
+<footer class="footer on-dark">
+  <div class="container footer__cols">
+    <nav aria-label="Producten">
+      <h2 class="footer__h">Producten</h2>
+      <ul role="list">
+        <li><a href={href('/rooster')}>Rooster</a></li>
+        <li><a href={href('/uren-en-fooi')}>Uren en fooi</a></li>
+        <li><a href={href('/keuken')}>Keuken</a></li>
+        <li><a href={href('/haccp')}>HACCP</a></li>
+        <li><a href={href('/inkoop')}>Inkoop</a></li>
+      </ul>
+    </nav>
+    <nav aria-label="Keukenbaas">
+      <h2 class="footer__h">Keukenbaas</h2>
+      <ul role="list">
+        <li><a href={href('/verhaal')}>Ons verhaal</a></li>
+        <li><a href={href('/wachtlijst')}>Wachtlijst</a></li>
+      </ul>
+    </nav>
+    <nav aria-label="Hulp">
+      <h2 class="footer__h">Hulp</h2>
+      <ul role="list">
+        <li><a href={href('/privacy')}>Privacy</a></li>
+        {/* Contact: [TE BEVESTIGEN: contactadres] */}
+      </ul>
+    </nav>
+    <div>
+      <h2 class="footer__h">Gebouwd in</h2>
+      <p class="footer__built">de keuken van Pumpkin</p>
+    </div>
+  </div>
+  <p class="container footer__legal">© 2026 Keukenbaas</p>
+  <div class="footer__print" data-animate="once" aria-hidden="true">
+    <svg viewBox="0 0 1000 190" preserveAspectRatio="xMidYMax meet">
+      <text x="0" y="178" textLength="1000" lengthAdjust="spacingAndGlyphs">Keukenbaas</text>
+    </svg>
+  </div>
+</footer>
+<style>
+  .footer { background: var(--navy); color: var(--paper); padding-top: var(--space-8); overflow: hidden; }
+  .footer__cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: var(--space-6); padding-bottom: var(--space-8); }
+  .footer__h { font-family: var(--font-mono); font-weight: 500; font-stretch: 100%; font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.1em; color: var(--tape); margin-bottom: var(--space-3); }
+  .footer ul { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
+  .footer a { color: var(--paper); text-decoration-color: var(--orange); background-image: linear-gradient(var(--paper), var(--paper)); background-repeat: no-repeat; background-position: 0 58%; background-size: 0% 2px; }
+  .footer a:hover { background-size: 100% 2px; }
+
+  .footer__built { max-width: none; }
+  .footer__legal { font-family: var(--font-mono); font-size: var(--step--1); color: var(--tape); padding-bottom: var(--space-5); }
+  /* Groot woordmerk, "uitgeprint" van boven naar beneden zodra het in beeld komt */
+  .footer__print { padding-inline: var(--gutter); line-height: 0; }
+  .footer__print svg { width: 100%; height: auto; }
+  .footer__print text {
+    font-family: var(--font-display); font-weight: 900; font-stretch: 62%; font-size: 200px;
+    fill: var(--orange); text-transform: none;
+  }
+  .footer__print svg { clip-path: inset(0 0 100% 0); }
+  .footer__print[data-inview] svg { animation: footer-print 1.4s var(--ease-out) both; }
+  @keyframes footer-print { to { clip-path: inset(0 0 0 0); } }
+  /* zonder animatie (reduced motion) of zonder JS direct zichtbaar */
+  @media (prefers-reduced-motion: reduce) { .footer__print svg { clip-path: none; } }
+</style>
+<noscript><style>.footer__print svg { clip-path: none !important; }</style></noscript>

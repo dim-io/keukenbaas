@@ -1,0 +1,235 @@
+---
+/*
+ * MedewerkerApp: de medewerkersapp op een telefoon. Sanne tikt haar beschikbaarheid aan en slaat hem op.
+ * Stijl: zie STIJLREGELS in DymoLabel.astro. Geen props.
+ *
+ * Eén keer afspelen zodra data-inview gezet wordt (data-phase: idle, reach1, tap1, reach2, tap2, done).
+ * Standaardstijl zonder data-phase is de eindstaat (woensdag uit, "Opgeslagen"), ook zonder JS
+ * en bij prefers-reduced-motion. Klik of Enter speelt de actie kort opnieuw af.
+ */
+const shifts = [
+  ['Ma', '9 nov', 'Avond keuken', '16:00-23:00'],
+  ['Wo', '11 nov', 'Avond keuken', '16:00-23:00'],
+  ['Za', '14 nov', 'Avond keuken', '15:00-23:30'],
+];
+const avail = [
+  { id: 'ma', d: 'ma', on: true }, { id: 'di', d: 'di', on: true }, { id: 'wo', d: 'wo', on: false },
+  { id: 'do', d: 'do', on: true }, { id: 'vr', d: 'vr', on: true }, { id: 'za', d: 'za', on: true }, { id: 'zo', d: 'zo', on: false },
+];
+---
+<figure class="ma" data-ma data-animate style="margin:0">
+  <div class="ma__stage" role="button" tabindex="0" aria-label="Speel het invullen van de beschikbaarheid opnieuw af" data-ma-stage>
+    <div class="ma__phone" aria-hidden="true">
+      <div class="ma__speaker"></div>
+      <div class="ma__hi">
+        <span class="ma__hello">Hoi Sanne</span>
+        <span class="ma__sub">Week 46 &middot; 9 t/m 15 november</span>
+      </div>
+
+      <div class="ma__body">
+        {shifts.map(([d, date, type, time]) => (
+          <div class="ma__shift">
+            <span class="ma__day"><b>{d}</b> {date}</span>
+            <span class="ma__type">{type}</span>
+            <span class="ma__time">{time}</span>
+          </div>
+        ))}
+
+        <p class="ma__h">Beschikbaarheid week 47</p>
+        <div class="ma__days">
+          {avail.map((a) => (
+            <span class="ma__dc" data-seg={a.id} data-on={a.on ? 'yes' : 'no'}>
+              <span class="ma__dn">{a.d}</span>
+              <span class="ma__mk ma__mk--yes">&#10003;</span><span class="ma__mk ma__mk--no">&#10007;</span>
+            </span>
+          ))}
+        </div>
+
+        <span class="ma__save" data-save>
+          <span class="ma__save-a">Beschikbaarheid opslaan</span>
+          <span class="ma__save-b"><svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Beschikbaarheid opslaan</span>
+        </span>
+        <span class="ma__absence">Afwezigheid doorgeven</span>
+      </div>
+    </div>
+
+    <span class="ma__cur" data-cur aria-hidden="true"><span class="ma__ring"></span></span>
+  </div>
+  <figcaption class="ma__cap mono">Klik op de telefoon om het nog een keer te zien.</figcaption>
+  <p class="visually-hidden">
+    De medewerkersapp zegt Hoi Sanne en toont week 46 met haar diensten op maandag 9, woensdag 11 en zaterdag 14 november.
+    Daaronder staat haar beschikbaarheid voor week 47: maandag, dinsdag, donderdag, vrijdag en zaterdag staan aan, woensdag en zondag uit.
+    Sanne zet woensdag uit en slaat de beschikbaarheid op. Onderaan staat de knop Afwezigheid doorgeven.
+  </p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-ma]').forEach((el) => init(el));
+
+  function init(el) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // statische eindstaat blijft
+
+    const q = (s) => el.querySelector(s);
+    const stage = q('[data-ma-stage]');
+    const cur = q('[data-cur]');
+    const ring = q('.ma__ring');
+    const woSeg = q('[data-seg="wo"]');
+    const save = q('[data-save]');
+
+    const cs = getComputedStyle(el);
+    const ms = (n) => parseFloat(cs.getPropertyValue(n)) || 0;
+
+    let gen = 0, timers = [], started = false, cooling = false;
+    const later = (fn, t, g) => timers.push(setTimeout(() => { if (g === gen) fn(); }, t));
+
+    const rel = (n) => {
+      const s = stage.getBoundingClientRect(), r = n.getBoundingClientRect();
+      return { x: r.left - s.left, y: r.top - s.top, w: r.width, h: r.height };
+    };
+    const curTo = (node, fx, fy, dur) => {
+      const r = rel(node);
+      cur.style.transition = dur ? `transform ${dur}ms var(--ease-out), opacity 250ms var(--ease-out)` : 'none';
+      cur.style.transform = `translate(${r.x + r.w * fx}px, ${r.y + r.h * fy}px)`;
+    };
+    const tap = () => { ring.classList.remove('is-tap'); void ring.offsetWidth; ring.classList.add('is-tap'); };
+    const phase = (p) => el.setAttribute('data-phase', p);
+
+    function reset() {
+      woSeg.dataset.on = 'yes';
+      save.dataset.state = 'todo';
+      save.classList.remove('is-pressed');
+      const s = stage.getBoundingClientRect();
+      cur.style.transition = 'none';
+      cur.style.transform = `translate(${s.width * 0.8}px, ${s.height * 0.2}px)`;
+    }
+
+    function play() {
+      timers.forEach(clearTimeout); timers = [];
+      const g = ++gen;
+      reset(); phase('idle');
+      let t = ms('--ma-pause');
+      later(() => { phase('reach1'); curTo(woSeg, 0.5, 0.6, ms('--ma-reach')); }, t, g);
+      t += ms('--ma-reach') + 60;
+      later(() => { phase('tap1'); tap(); }, t, g);
+      later(() => { woSeg.dataset.on = 'no'; }, t + 120, g);
+      t += 450;
+      later(() => { phase('reach2'); curTo(save, 0.55, 0.55, ms('--ma-reach')); }, t, g);
+      t += ms('--ma-reach') + 60;
+      later(() => { phase('tap2'); tap(); save.classList.add('is-pressed'); }, t, g);
+      later(() => { save.classList.remove('is-pressed'); save.dataset.state = 'done'; }, t + 180, g);
+      t += 650;
+      later(() => phase('done'), t, g);
+    }
+
+    el.addEventListener('inviewchange', (e) => {
+      if (e.target !== el || started) return;
+      started = true; play();
+    });
+    reset(); phase('idle');
+    if (el.hasAttribute('data-inview')) { started = true; play(); }
+
+    const again = () => {
+      if (!started || cooling) return;
+      cooling = true; setTimeout(() => (cooling = false), 900);
+      play();
+    };
+    stage.addEventListener('click', again);
+    stage.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); again(); }
+    });
+  }
+</script>
+
+<style>
+  .ma {
+    --ma-reach: 700ms;
+    --ma-pause: 250ms;
+    width: min(100%, 22rem);
+  }
+  .ma__stage { position: relative; cursor: pointer; padding: 0 3px 3px 0; }
+  .ma__phone {
+    container-type: inline-size;
+    background: var(--paper);
+    border: 3px solid var(--navy);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--navy);
+  }
+  .ma__speaker { width: 16%; height: 1.4cqw; background: var(--line); border-radius: 2cqw; margin: 3cqw auto 0; }
+  .ma__hi { display: block; padding: 3cqw 5cqw 3cqw; }
+  .ma__hello { display: block; font-family: var(--font-display); font-weight: 800; font-size: 8cqw; line-height: 1.05; }
+  .ma__sub { display: block; font-size: 3.4cqw; color: var(--muted); margin-top: 1cqw; }
+
+  .ma__week {
+    position: sticky; top: 0; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--orange); color: var(--navy);
+    border-block: 2px solid var(--navy);
+    padding: 2.2cqw 5cqw; font-size: 3.8cqw;
+  }
+  .ma__week b { font-weight: 700; }
+  .ma__arrow { font-size: 5cqw; line-height: 1; font-weight: 700; }
+
+  .ma__body { padding: 3cqw 4cqw 5cqw; display: flex; flex-direction: column; gap: 1.6cqw; }
+  .ma__h { margin: 2cqw 0 0.4cqw; font-family: var(--font-display); font-weight: 700; font-size: 4.2cqw; }
+
+  .ma__shift, .ma__avail {
+    display: flex; align-items: center; gap: 2cqw;
+    background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius-s);
+    padding: 1.8cqw 2.6cqw; font-size: 3.4cqw;
+  }
+  .ma__day b { font-weight: 700; }
+  .ma__day { min-width: 22cqw; }
+  .ma__type { font-weight: 600; flex: 1; }
+  .ma__time { color: var(--ink); }
+
+  .ma__days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1.2cqw; }
+  .ma__dc { transition: background 350ms var(--ease-out), border-color 350ms var(--ease-out), color 350ms; display: grid; justify-items: center; gap: 0.6cqw; padding: 1.4cqw 0; border: 2px solid var(--navy); border-radius: var(--radius-s); background: var(--white); font-size: 3.2cqw; font-weight: 600; }
+  .ma__mk { font-size: 4cqw; font-weight: 700; line-height: 1; }
+  .ma__dc[data-on="yes"] { background: var(--green-soft); border-color: var(--green); }
+  .ma__dc[data-on="yes"] .ma__mk--yes { color: var(--green-dark); }
+  .ma__dc[data-on="yes"] .ma__mk--no, .ma__dc[data-on="no"] .ma__mk--yes { display: none; }
+  .ma__dc[data-on="no"] { background: var(--paper); border-color: var(--line); color: var(--muted); }
+  .ma__dc[data-on="no"] .ma__mk--no { color: var(--red); }
+  
+
+  .ma__save, .ma__absence {
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--navy); border-radius: var(--radius-s);
+    font-weight: 600; font-size: 3.6cqw; padding: 2.6cqw 3cqw; box-shadow: var(--shadow-s);
+  }
+  .ma__save { margin-top: 1.4cqw; background: var(--green); }
+  .ma__save-b { display: inline-flex; align-items: center; gap: 1.6cqw; }
+  .ma__save-b svg { width: 3.8cqw; height: 3.8cqw; }
+  .ma__save-a { display: none; }
+  .ma__save { transition: transform 120ms var(--ease-out), box-shadow 120ms var(--ease-out), background 300ms var(--ease-out); }
+  .ma__save.is-pressed { transform: translate(2px, 2px); box-shadow: none; }
+  /* Eindstaat toont "Opgeslagen"; tijdens de lus staat hij eerst op "todo" */
+  .ma[data-phase] .ma__save[data-state="todo"] { background: var(--orange); }
+  .ma[data-phase] .ma__save[data-state="todo"] .ma__save-a { display: inline; }
+  .ma[data-phase] .ma__save[data-state="todo"] .ma__save-b { display: none; }
+  .ma__save[data-state="done"] { animation: ma-done 450ms var(--ease-out); }
+  @keyframes ma-done { from { transform: scale(0.96); } to { transform: none; } }
+
+  .ma__absence { background: var(--white); }
+  .ma__tip {
+    margin: 1cqw 0 0; font-size: 3.4cqw; background: var(--tape); border: 2px solid var(--navy);
+    border-radius: var(--radius-s); padding: 2cqw 2.6cqw;
+  }
+  .ma__tip b { font-weight: 700; }
+
+  .ma__cur { position: absolute; left: 0; top: 0; z-index: 5; width: 1px; height: 1px; pointer-events: none; opacity: 0; transition: opacity 300ms var(--ease-out); }
+  .ma[data-phase="reach1"] .ma__cur, .ma[data-phase="tap1"] .ma__cur, .ma[data-phase="reach2"] .ma__cur, .ma[data-phase="tap2"] .ma__cur { opacity: 1; }
+  .ma__cur::before {
+    content: ""; position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; box-sizing: border-box;
+    border-radius: 50%; background: var(--white); border: 2px solid var(--navy); box-shadow: var(--shadow-s);
+  }
+  .ma__ring { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; box-sizing: border-box; border: 2px solid var(--orange); border-radius: 50%; visibility: hidden; }
+  .ma__ring.is-tap { animation: ma-tap 500ms var(--ease-out); }
+  @keyframes ma-tap { 0% { visibility: visible; opacity: 1; transform: scale(0.4); } 100% { visibility: visible; opacity: 0; transform: scale(1.5); } }
+
+  .ma__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

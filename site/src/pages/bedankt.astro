@@ -1,0 +1,97 @@
+---
+// Bedankt. Copy letterlijk uit docs/copy/bedankt.md; markeringen staan als HTML-commentaar. Niet indexeren.
+import Base from '../layouts/Base.astro';
+import Section from '../components/Section.astro';
+import Reveal from '../components/sections/Reveal.astro';
+import Steps from '../components/sections/Steps.astro';
+import Eyebrow from '../components/Eyebrow.astro';
+import Button from '../components/Button.astro';
+import BevestigingBon from '../components/pages/BevestigingBon.astro';
+import LabelMaker from '../components/pages/LabelMaker.astro';
+import { href } from '../lib/url.js';
+
+const stappen = [
+  { title: 'We nemen contact op', text: 'Als jouw zaak aan de beurt is, plannen we de kennismaking.' },
+  { title: 'Je zaak wordt klaargezet', text: 'Samen zetten we je medewerkers, producten en meetpunten erin.' },
+];
+---
+<Base noindex title="Je staat op de lijst · Keukenbaas" titleRaw description="Je zaak staat op de wachtlijst van Keukenbaas. Print alvast je eigen label voor de DYMO, en lees wat er nu gebeurt.">
+  <!-- B1 · Bevestiging en plek in de rij -->
+  <section class="bd grid-paper">
+    <div class="container bd__in">
+      <Reveal class="bd__copy">
+        <div style="--i:0"><Eyebrow>Gelukt</Eyebrow></div>
+        <h1 style="--i:1">Bon is binnen. Je staat op de lijst.</h1>
+        <p class="bd__lead" style="--i:2">We hebben je aanmelding. Je hoort van ons zodra jouw zaak aan de beurt is.</p>
+        <Fragment set:html="<!-- Teller: Je bent nummer [X] op de lijst. Pas tonen als er een backend is die het nummer kent. -->" />
+      </Reveal>
+      <div class="bd__art"><BevestigingBon /></div>
+    </div>
+  </section>
+
+  <!-- B2 · Kleine beloning -->
+  <Section tone="white" id="label">
+    <Reveal class="bl">
+      <div class="bl__txt" style="--i:0">
+        <h2>Je eerste label is van ons</h2>
+        <p>Heb je een DYMO in de keuken? Typ de naam van je zaak en print je eigen Keukenbaas-label. Plak hem op de bak met je beste aioli.</p>
+      </div>
+      <div class="bl__maker" style="--i:1"><LabelMaker /></div>
+    </Reveal>
+  </Section>
+
+  <!-- B3 · Wat nu -->
+  <Steps id="wat-nu" title="Wat er nu gebeurt" steps={stappen} />
+  <Section tone="paper" id="verder">
+    <Reveal class="bn">
+      <div class="bn__card" style="--i:0">
+        <h3>Lees ons verhaal</h3>
+        <p>Hoe een prep-lijst in de keuken van Pumpkin uitgroeide tot Keukenbaas.</p>
+        <a class="bn__link" href={href('/verhaal')}>Naar ons verhaal<span aria-hidden="true"> →</span></a>
+      </div>
+      <div class="bn__card" style="--i:1">
+        <h3>Vertel het een collega</h3>
+        <p>Ken je een chef die ook elke zondag het rooster in Excel zit te maken? Stuur de link door.</p>
+        <div class="bn__copy">
+          <Button type="button" variant="secondary" data-copy>Link kopiëren</Button>
+          <span class="bn__done mono" role="status" aria-live="polite" data-copy-done></span>
+        </div>
+      </div>
+    </Reveal>
+  </Section>
+</Base>
+<script>
+  const btn = document.querySelector<HTMLElement>('[data-copy]');
+  const done = document.querySelector<HTMLElement>('[data-copy-done]');
+  btn?.addEventListener('click', async () => {
+    // De link die je doorstuurt is de homepage, niet deze pagina.
+    const url = new URL(import.meta.env.BASE_URL, window.location.origin).toString();
+    try { await navigator.clipboard.writeText(url); }
+    catch {
+      const t = document.createElement('textarea');
+      t.value = url; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); } catch { /* geen toegang tot het klembord */ }
+      t.remove();
+    }
+    if (done) { done.textContent = 'Gekopieerd'; setTimeout(() => (done.textContent = ''), 2500); }
+  });
+</script>
+<style>
+  .bd { padding-block: var(--space-8) var(--space-9); }
+  .bd__in { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); gap: var(--space-7); align-items: center; }
+  .bd :global(.bd__copy) { display: grid; gap: var(--space-5); justify-items: start; }
+  .bd h1 { font-size: var(--step-4); }
+  .bd__lead { font-size: var(--step-1); }
+  .bd__art { display: flex; justify-content: center; }
+  :global(.bl) { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: var(--space-8); align-items: center; }
+  .bl__txt { display: grid; gap: var(--space-4); }
+  .bl h2 { font-size: var(--step-3); }
+  .bl__maker { min-width: 0; }
+  :global(.bn) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+  .bn__card { display: grid; gap: var(--space-3); align-content: start; padding: var(--space-5); background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .bn__card h3 { font-size: var(--step-2); }
+  .bn__link { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: var(--step-1); }
+  .bn__copy { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+  .bn__done { color: var(--green-dark); font-weight: 600; }
+  @media (max-width: 56rem) { .bd__in, :global(.bl), :global(.bn) { grid-template-columns: 1fr; gap: var(--space-6); } }
+</style>

@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { href } from '../lib/url.js';
+
+const { title, description = 'Keukenbaas: de webapp voor zelfstandige restaurants.', nav = 'full', noindex = false, titleRaw = false } = Astro.props;
+const fullTitle = titleRaw || title === 'Keukenbaas' ? title : `${title} | Keukenbaas`;
+const ogImage = new URL(href('/og.png'), Astro.site).href;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="icon" type="image/svg+xml" href={href('/favicon.svg')} />
+    <meta name="theme-color" content="#f6f1e7" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Keukenbaas" />
+    <meta property="og:locale" content="nl_NL" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&family=Permanent+Marker&display=swap"
+    />
+    <noscript><style>.reveal > * { opacity: 1 !important; transform: none !important; }</style></noscript>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Naar de inhoud</a>
+    <Nav variant={nav} />
+    <main id="main"><slot /></main>
+    <Footer />
+    <script>
+      import '../scripts/inview.js';
+    </script>
+  </body>
+</html>

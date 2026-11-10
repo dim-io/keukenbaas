@@ -1,0 +1,18 @@
+---
+// tone: paper | white | grid | navy | orange
+const { id, tone = 'paper', class: cls = '' } = Astro.props;
+---
+<section id={id} class:list={['section', `section--${tone}`, tone === 'navy' && 'on-dark', cls]}>
+  <div class="container"><slot /></div>
+</section>
+<style>
+  .section { padding-block: var(--space-9); }
+  .section--white { background: var(--white); }
+  .section--grid { background-color: var(--paper); background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px);
+    background-size: 24px 24px; }
+  .section--orange { background: var(--orange); color: var(--navy); }
+  .section--navy { background: var(--navy); color: var(--paper); }
+  .section--navy :global(h1), .section--navy :global(h2), .section--navy :global(h3), .section--navy :global(a) { color: var(--paper); }
+</style>

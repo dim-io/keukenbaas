@@ -1,0 +1,9 @@
+---
+import Eyebrow from '../Eyebrow.astro';
+const { title, eyebrow, center = false, id, class: cls = '' } = Astro.props;
+---
+<div class:list={['sec-head', { 'sec-head--center': center }, cls]}>
+  {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+  <h2 id={id}>{title}</h2>
+  <slot />
+</div>

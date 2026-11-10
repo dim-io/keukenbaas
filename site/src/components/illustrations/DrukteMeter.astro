@@ -1,0 +1,218 @@
+---
+/*
+ * DrukteMeter: drie bronnen schuiven binnen als bonnetjes en vallen in een halve-cirkelmeter die naar 78% "Druk" loopt.
+ * Volgt de STIJLREGELS in DymoLabel.astro.
+ * Eén keer afspelen zodra data-inview gezet wordt (data-phase: idle > feed > done): de bonnen schuiven binnen,
+ * vallen één voor één in de meter, de naald glijdt en de teller loopt vloeiend op. Eindstaat: bonnen op hun plek,
+ * naald en teller blijven op 78%. Klik of Enter speelt het kort opnieuw af. Zonder JS of bij reduced motion
+ * is de eindstaat de standaard.
+ */
+const sources = [
+  { k: 'OPEN-METEO', t: 'Weer: droog, 11 °C', to: 22, ty: 21, my: 62 },
+  { k: 'GOTABLE', t: 'GoTable: 42 reserveringen', to: 51, ty: 4, my: 44 },
+  { k: 'FOODTICKET', t: 'Foodticket: 31 bestellingen', to: 78, ty: -14, my: 26 },
+];
+// halve cirkel, 0% links en 100% rechts, middelpunt (100,100)
+const pt = (v: number, r: number) => {
+  const a = Math.PI * (v / 100);
+  return `${(100 - r * Math.cos(a)).toFixed(2)} ${(100 - r * Math.sin(a)).toFixed(2)}`;
+};
+const sector = (a: number, b: number) =>
+  `M ${pt(a, 52)} L ${pt(a, 86)} A 86 86 0 0 1 ${pt(b, 86)} L ${pt(b, 52)} A 52 52 0 0 0 ${pt(a, 52)} Z`;
+const zones = [
+  { a: 0, b: 40, fill: '#fffdf8' },
+  { a: 40, b: 70, fill: '#efe0a8' },
+  { a: 70, b: 100, fill: '#e06633' },
+];
+const ticks = [10, 20, 30, 50, 60, 80, 90];
+---
+<figure class="rm" data-rm data-animate style="margin:0">
+  <div class="rm__stage" role="button" tabindex="0" aria-label="Speel de drukte-meter opnieuw af" data-rm-stage>
+    <div class="rm__panel" aria-hidden="true">
+      <div class="rm__src">
+        {sources.map((s) => (
+          <div class="rm__ticket" data-rm-ticket data-s="fed" data-to={s.to} style={`--ty:${s.ty}cqw;--my:${s.my}cqw`}>
+            <p class="rm__k">{s.k}</p>
+            <p class="rm__v mono">{s.t}</p>
+            <span class="rm__in"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.5" fill="none" stroke="#0a0d22" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        ))}
+      </div>
+      <div class="rm__meter">
+        <p class="rm__k rm__mk">VERWACHTE DRUKTE</p>
+        <svg class="rm__svg" viewBox="0 0 200 112" focusable="false">
+          <g stroke="#0a0d22" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+            {zones.map((z) => <path d={sector(z.a, z.b)} fill={z.fill} />)}
+            {ticks.map((t) => <path d={`M ${pt(t, 52)} L ${pt(t, 58)}`} fill="none" />)}
+            <g class="rm__needle" data-rm-needle style="--a:50.4deg">
+              <path d="M 95.5 100 L 100 38 L 104.5 100 Z" fill="#0a0d22" />
+            </g>
+            <circle cx="100" cy="100" r="10" fill="#0a0d22" />
+            <circle cx="100" cy="100" r="4" fill="#e06633" stroke="none" />
+          </g>
+        </svg>
+        <div class="rm__read">
+          <span class="rm__pct mono" data-rm-pct>78%</span>
+          <span class="rm__tag" data-rm-tag>Druk</span>
+        </div>
+      </div>
+    </div>
+    <div class="rm__btns" aria-hidden="true">
+      <span class="rm__btn">GoTable ophalen</span><span class="rm__btn">Foodticket ophalen</span><span class="rm__btn">Weer ophalen</span>
+    </div>
+  </div>
+  <p class="visually-hidden">Drie bronnen voeden de verwachte drukte: het weer (droog, 11 graden), 42 reserveringen via GoTable en 31 bestellingen via Foodticket. Samen geven ze een score van 78 procent, druk.</p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-rm]').forEach((el) => init(el as HTMLElement));
+
+  function init(el: HTMLElement) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // eindstaat blijft staan
+    const tickets = [...el.querySelectorAll('[data-rm-ticket]')] as HTMLElement[];
+    const needle = el.querySelector('[data-rm-needle]') as HTMLElement;
+    const pct = el.querySelector('[data-rm-pct]') as HTMLElement;
+    const tag = el.querySelector('[data-rm-tag]') as HTMLElement;
+    const cs = getComputedStyle(el);
+    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    let gen = 0, cooling = false, started = false, shown = 0, raf = 0;
+    let timers: number[] = [];
+
+    const later = (fn: () => void, t: number, g: number) => { timers.push(window.setTimeout(() => { if (g === gen) fn(); }, t)); };
+    const phase = (p: string) => el.setAttribute('data-phase', p);
+    const label = (v: number) => (v < 40 ? 'Rustig' : v < 70 ? 'Normaal' : 'Druk');
+    const show = (v: number) => { pct.textContent = Math.round(v) + '%'; tag.textContent = label(v); };
+    const setNeedle = (v: number) => needle.style.setProperty('--a', (-90 + 1.8 * v) + 'deg');
+
+    // Teller loopt met ease-out mee met de naald
+    function countTo(v: number, d: number) {
+      cancelAnimationFrame(raf);
+      const from = shown, t0 = performance.now();
+      const step = (now: number) => {
+        const p = Math.min(1, (now - t0) / d);
+        shown = from + (v - from) * (1 - Math.pow(1 - p, 3));
+        show(shown);
+        if (p < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+
+    function reset() {
+      timers.forEach(clearTimeout); timers = [];
+      cancelAnimationFrame(raf);
+      el.setAttribute('data-reset', '');
+      tickets.forEach((t) => t.setAttribute('data-s', 'wait'));
+      needle.style.setProperty('--a', '-90deg');
+      shown = 0; show(0);
+      void el.offsetWidth;
+      el.removeAttribute('data-reset');
+    }
+
+    function play() {
+      const g = ++gen;
+      reset(); phase('idle');
+      later(() => {
+        phase('feed');
+        tickets.forEach((t, i) => {
+          later(() => t.setAttribute('data-s', 'fed'), i * 140, g);             // schuift binnen
+          const T = 700 + i * 750;
+          later(() => t.setAttribute('data-s', 'drop'), T, g);                   // valt in de meter
+          later(() => { setNeedle(Number(t.dataset.to)); countTo(Number(t.dataset.to), ms('--rm-needle')); }, T + 300, g);
+          later(() => t.setAttribute('data-s', 'fed'), T + 700, g);              // terug op zijn plek
+        });
+        later(() => { shown = 78; show(78); phase('done'); }, 700 + 2 * 750 + 700 + ms('--rm-back') + 80, g);
+      }, 60, g);
+    }
+
+    el.addEventListener('inviewchange', (e) => {
+      if ((e as CustomEvent).target !== el || started) return;
+      started = true; play();
+    });
+    reset(); phase('idle');
+    if (el.hasAttribute('data-inview')) { started = true; play(); }
+
+    const again = () => {
+      if (!started || cooling) return;
+      cooling = true; setTimeout(() => (cooling = false), 900);
+      play();
+    };
+    const stage = el.querySelector('[data-rm-stage]') as HTMLElement;
+    stage.addEventListener('click', again);
+    stage.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); again(); }
+    });
+  }
+</script>
+
+<style>
+  .rm {
+    --rm-in: 650ms;
+    --rm-drop: 400ms;
+    --rm-needle: 650ms;
+    --rm-back: 380ms;
+    width: min(100%, 40rem);
+    container-type: inline-size;
+  }
+  .rm__stage { cursor: pointer; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .rm__panel {
+    position: relative; overflow: clip; background: var(--paper);
+    border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow-l);
+    display: grid; grid-template-columns: 1.15fr 1fr; gap: 3cqw; padding: 3.4cqw; color: var(--navy);
+    font-family: var(--font-body);
+  }
+  .rm__panel p { margin: 0; }
+  .rm__k { font-weight: 800; font-size: 2.1cqw; letter-spacing: 0.1em; color: var(--orange-dark); }
+
+  .rm__btns { display: flex; flex-wrap: wrap; gap: 1.6cqw; margin-top: 2.4cqw; }
+  .rm__btn { font-weight: 600; font-size: 2.4cqw; padding: 1cqw 2.2cqw; background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s); color: var(--navy); transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out), background var(--dur-1); }
+  .rm__btn:hover { transform: translate(2px, 2px); box-shadow: none; background: var(--orange); }
+  .rm__src { display: grid; gap: 2.2cqw; align-content: center; min-width: 0; }
+  .rm__ticket {
+    position: relative; z-index: 3; background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius-s);
+    box-shadow: var(--shadow-s); padding: 1.8cqw 2.4cqw; cursor: default; min-width: 0;
+    transition: transform var(--rm-in) var(--ease-out), background var(--dur-1), box-shadow var(--dur-1);
+  }
+  .rm__ticket::after { content: ""; position: absolute; left: 2.4cqw; right: 2.4cqw; bottom: 0; border-bottom: 2px dashed var(--line); }
+  .rm__v { font-size: 2.5cqw; font-weight: 500; margin-top: 0.6cqw !important; padding: 0 3.6cqw 1.2cqw 0; overflow-wrap: break-word; }
+  .rm__in {
+    position: absolute; top: 1.4cqw; right: 1.6cqw; width: 3.2cqw; height: 3.2cqw; display: grid; place-items: center;
+    background: var(--green); border: 2px solid var(--navy); border-radius: var(--radius-s);
+  }
+  .rm__in svg { width: 80%; height: 80%; }
+  .rm__ticket[data-s="fed"]:hover { transform: translateX(1.2cqw); background: var(--orange-soft); box-shadow: var(--shadow); }
+  .rm__ticket[data-s="wait"] { transform: translateX(-70cqw); }
+  .rm__ticket[data-s="wait"] .rm__in, .rm__ticket[data-s="drop"] .rm__in { visibility: hidden; }
+  .rm__ticket[data-s="drop"] { transform: translate(50cqw, var(--ty)) scale(0.45) rotate(6deg); transition-duration: var(--rm-drop); }
+  .rm__ticket[data-s="fed"] { transition-duration: var(--rm-back); }
+  .rm[data-phase="feed"] .rm__ticket[data-s="fed"] { transition-duration: var(--rm-in); }
+  .rm[data-reset] .rm__ticket { transition: none; }
+
+  .rm__meter { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; }
+  .rm__mk { align-self: flex-start; }
+  .rm__svg { width: 100%; height: auto; margin-top: 1cqw; overflow: visible; }
+  .rm__needle { transform-origin: 100px 100px; transform: rotate(var(--a)); transition: transform var(--rm-needle) var(--ease-out); }
+  .rm[data-reset] .rm__needle { transition: none; }
+  .rm__read { display: flex; align-items: center; gap: 2cqw; margin-top: 1.2cqw; }
+  .rm__pct { font-size: 8cqw; font-weight: 600; line-height: 1; min-width: 4.3ch; }
+  .rm__tag { font-weight: 800; font-size: 2.8cqw; background: var(--orange); border: 2px solid var(--navy); border-radius: 99px; padding: 0.4cqw 2.2cqw; box-shadow: var(--shadow-s); }
+
+  /* Smal: bronnen boven, meter eronder, grotere letters */
+  @container (max-width: 32rem) {
+    .rm__panel { grid-template-columns: 1fr; gap: 5cqw; padding: 4.5cqw; }
+    .rm__k { font-size: 3.5cqw; }
+    .rm__src { gap: 3cqw; }
+    .rm__ticket { padding: 2.6cqw 3.4cqw; }
+    .rm__v { font-size: 3.6cqw; }
+    .rm__in { width: 5cqw; height: 5cqw; top: 2cqw; right: 2.4cqw; }
+    .rm__svg { max-width: 70cqw; }
+    .rm__pct { font-size: 12cqw; }
+    .rm__tag { font-size: 4cqw; padding: 0.6cqw 3.4cqw; }
+    .rm__btns { gap: 2.4cqw; margin-top: 3.4cqw; }
+    .rm__btn { font-size: 3.2cqw; padding: 1.6cqw 3cqw; }
+    .rm__ticket[data-s="drop"] { transform: translate(0, var(--my)) scale(0.45) rotate(6deg); }
+  }
+  @container (max-width: 20rem) {
+    .rm__btn { font-size: 3.7cqw; }
+  }
+</style>

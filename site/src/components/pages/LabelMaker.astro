@@ -1,0 +1,135 @@
+---
+// Beloning op /bedankt: typ de naam van je zaak, zie hem live op een DYMO-label (89 x 28 mm) en druk hem af.
+// Er worden geen gegevens verstuurd. Print: een kopie van het label komt in #print-root; de printstijl toont alleen dat.
+// Stijl volgens STIJLREGELS in illustrations/DymoLabel.astro.
+---
+<div class="lm" data-lm data-animate>
+  <div class="lm__field">
+    <label for="lm-naam">Naam van je zaak</label>
+    <input id="lm-naam" type="text" maxlength="28" autocomplete="organization" placeholder="Naam van je zaak" data-lm-input />
+  </div>
+
+  <div class="lm__stage" aria-hidden="true">
+    <svg class="lm__printer" viewBox="0 0 400 110" focusable="false">
+      <g stroke="#0a0d22" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+        <rect x="25" y="25" width="360" height="75" rx="10" fill="#0a0d22"/>
+        <rect x="20" y="20" width="360" height="75" rx="10" fill="#fffdf8"/>
+        <rect x="20" y="56" width="360" height="14" fill="#e06633"/>
+        <rect x="48" y="80" width="304" height="9" rx="3" fill="#0a0d22"/>
+        <rect x="40" y="32" width="92" height="20" rx="3" fill="#0a0d22"/>
+        <text x="48" y="47" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500" fill="#efe0a8" stroke="none">KB-01 KLAAR</text>
+        <circle cx="356" cy="40" r="6" fill="#40ac83"/>
+      </g>
+    </svg>
+    <div class="lm__label" data-lm-label>
+      <span class="lm__title" data-lm-title>JOUW ZAAK</span>
+      <span class="lm__tht">THT: nooit</span>
+      <span class="lm__line" data-lm-made>Gemaakt door: Keukenbaas op 09-11 (21:47u)</span>
+      <span class="lm__line">Batch: 1 wachtlijstplek</span>
+    </div>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-lm-sr>Label met de tekst JOUW ZAAK, THT nooit, batch 1 wachtlijstplek.</p>
+
+  <div class="lm__btns">
+    <button type="button" class="lm__btn lm__btn--go" data-lm-dymo>Direct naar DYMO</button>
+    <button type="button" class="lm__btn" data-lm-print>Afdrukken</button>
+  </div>
+  <p class="lm__note">Past op DYMO 99010 (89 bij 28 mm). Geen DYMO? Druk hem af op gewoon papier en knip hem uit.</p>
+</div>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-lm]').forEach((root) => {
+    const input = root.querySelector<HTMLInputElement>('[data-lm-input]')!;
+    const label = root.querySelector<HTMLElement>('[data-lm-label]')!;
+    const title = root.querySelector<HTMLElement>('[data-lm-title]')!;
+    const made = root.querySelector<HTMLElement>('[data-lm-made]')!;
+    const sr = root.querySelector<HTMLElement>('[data-lm-sr]')!;
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    function fit() {
+      const t = (input.value.trim() || 'JOUW ZAAK').toUpperCase();
+      title.textContent = t;
+      title.style.fontSize = Math.min(8.2, 83 / (t.length * 0.6)) + 'cqw';
+      sr.textContent = `Label met de tekst ${t}, THT nooit, batch 1 wachtlijstplek.`;
+    }
+    function stamp() {
+      const d = new Date();
+      made.textContent = `Gemaakt door: Keukenbaas op ${pad(d.getDate())}-${pad(d.getMonth() + 1)} (${pad(d.getHours())}:${pad(d.getMinutes())}u)`;
+    }
+    function roll() {
+      label.removeAttribute('data-roll');
+      void label.offsetWidth;
+      label.setAttribute('data-roll', '');
+    }
+    input.addEventListener('input', fit);
+    fit();
+    stamp();
+
+    let sizeStyle: HTMLStyleElement | null = null;
+    function printNow(dymo: boolean) {
+      stamp();
+      roll();
+      document.getElementById('print-root')?.remove();
+      const holder = document.createElement('div');
+      holder.id = 'print-root';
+      holder.appendChild(label.cloneNode(true));
+      document.body.appendChild(holder);
+      sizeStyle?.remove();
+      sizeStyle = document.createElement('style');
+      sizeStyle.textContent = dymo ? '@page { size: 89mm 28mm; margin: 0; }' : '@page { margin: 15mm; }';
+      document.head.appendChild(sizeStyle);
+      holder.dataset.dymo = dymo ? '1' : '0';
+      setTimeout(() => window.print(), 60);
+    }
+    window.addEventListener('afterprint', () => {
+      document.getElementById('print-root')?.remove();
+      sizeStyle?.remove();
+      sizeStyle = null;
+    });
+    root.querySelector('[data-lm-dymo]')!.addEventListener('click', () => printNow(true));
+    root.querySelector('[data-lm-print]')!.addEventListener('click', () => printNow(false));
+  });
+</script>
+<style>
+  .lm { display: grid; gap: var(--space-5); max-width: 32rem; width: 100%; }
+  .lm__field { display: grid; gap: 0.35rem; }
+  label { font-family: var(--font-mono); font-size: var(--step--1); font-weight: 600; color: var(--navy); }
+  input { width: 100%; min-height: 3rem; padding: 0.6rem 0.9rem; background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: inset 2px 2px 0 var(--line); font-family: var(--font-mono); font-size: var(--step-0); color: var(--navy); }
+  input::placeholder { color: var(--muted); }
+  input:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+  .lm__stage { position: relative; aspect-ratio: 400 / 196; }
+  .lm__printer { position: absolute; left: 0; top: 0; width: 100%; height: auto; z-index: 2; pointer-events: none; }
+  .lm__label {
+    position: absolute; left: 10%; top: 47%; width: 80%; aspect-ratio: 89 / 28; z-index: 1;
+    container-type: inline-size;
+    background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s);
+    padding: 2.4cqw 4cqw; display: flex; flex-direction: column; justify-content: space-between;
+    font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--navy); overflow: visible; line-height: 1.15; gap: 0.6cqw;
+  }
+  .lm__title { font-weight: 600; font-size: 8.2cqw; overflow-wrap: anywhere; letter-spacing: -0.01em; }
+  .lm__tht { font-weight: 600; font-size: 5cqw; align-self: flex-start; background: var(--orange-soft); padding: 0 1.2cqw; }
+  .lm__line { font-size: max(3.9cqw, 9px); color: var(--ink); }
+  @media (prefers-reduced-motion: no-preference) {
+    .lm__label[data-roll] { animation: lm-roll 900ms var(--ease-out) both; }
+    .lm[data-inview] .lm__label:not([data-roll]) { animation: lm-roll 900ms var(--ease-out) both; }
+  }
+  @keyframes lm-roll { from { transform: translateY(-80%); } to { transform: translateY(0); } }
+
+  .lm__btns { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .lm__btn { appearance: none; cursor: pointer; min-height: 3rem; padding: 0.6rem 1.3rem; border: 2px solid var(--navy); border-radius: var(--radius); background: var(--white); box-shadow: var(--shadow); font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: var(--step-0); color: var(--navy); }
+  .lm__btn--go { background: var(--orange); }
+  .lm__btn:hover { transform: translate(-1px, -1px); }
+  .lm__btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--navy); }
+  .lm__btn:focus-visible { outline: 3px solid var(--navy); outline-offset: 3px; }
+  .lm__note { font-size: var(--step--1); color: var(--muted); margin: 0; }
+</style>
+<style is:global>
+  #print-root { display: none; }
+  @media print {
+    body > *:not(#print-root) { display: none !important; }
+    html, body { background: #fff !important; }
+    #print-root { display: block !important; }
+    #print-root .lm__label { position: static !important; width: 89mm !important; height: 28mm !important; aspect-ratio: auto !important; box-shadow: none !important; animation: none !important; transform: none !important; margin: 0; }
+    #print-root[data-dymo="0"] .lm__label { border-color: #000; }
+  }
+</style>

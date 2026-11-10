@@ -1,0 +1,184 @@
+---
+// Homepage. Copy letterlijk uit docs/copy/home.md; markeringen ([TE BEVESTIGEN] enz.) staan als HTML-commentaar.
+import Base from '../layouts/Base.astro';
+import Section from '../components/Section.astro';
+import Reveal from '../components/sections/Reveal.astro';
+import FigScroll from '../components/sections/FigScroll.astro';
+import HeroCentered from '../components/sections/HeroCentered.astro';
+import IntegrationsStrip from '../components/sections/IntegrationsStrip.astro';
+import ProductTabs from '../components/sections/ProductTabs.astro';
+import Bento from '../components/sections/Bento.astro';
+import ProofQuote from '../components/sections/ProofQuote.astro';
+import DayTimeline from '../components/sections/DayTimeline.astro';
+import Steps from '../components/sections/Steps.astro';
+import FaqAccordion from '../components/sections/FaqAccordion.astro';
+import ClosingBand from '../components/sections/ClosingBand.astro';
+import MiniReceipt from '../components/sections/MiniReceipt.astro';
+import MiniPhone from '../components/sections/MiniPhone.astro';
+import VandaagScherm from '../components/illustrations/VandaagScherm.astro';
+import HerkenningChaos from '../components/illustrations/HerkenningChaos.astro';
+import RoosterWeek from '../components/illustrations/RoosterWeek.astro';
+import FooiVerdeling from '../components/illustrations/FooiVerdeling.astro';
+import RaceTegenDeKlok from '../components/illustrations/RaceTegenDeKlok.astro';
+import KoelcelMeting from '../components/illustrations/KoelcelMeting.astro';
+import KostprijsRecept from '../components/illustrations/KostprijsRecept.astro';
+import DrukteMeter from '../components/illustrations/DrukteMeter.astro';
+import DymoLabel from '../components/illustrations/DymoLabel.astro';
+import { href } from '../lib/url.js';
+
+const herkenning = [
+  ['Het rooster in Excel', 'Zondagavond, half twaalf, en Lotte kan vrijdag toch niet.'],
+  ['De HACCP-lijst op de koelcel', 'Woensdag is leeg. Niemand weet meer wie er toen stond.'],
+  ['Tape en stift', 'Op de bak staat "aioli 6/11". Of was het 8/11?'],
+  ['WhatsApp naar de leverancier', 'Drie berichten, één spraakbericht, en de crème fraîche kwam niet.'],
+  ['De fooi op een bierviltje', 'Eind van de maand, rekenmachine erbij, en toch klopt het net niet.'],
+];
+
+const tabs = [
+  { label: 'Rooster', checks: ['De assistent doet een voorstel op basis van wie beschikbaar is', 'Een open dienst kleurt oranje', 'Wie een dienst krijgt of kwijtraakt, krijgt een mail'], link: { href: href('/rooster'), label: 'Meer over het rooster' } },
+  { label: 'Uren en fooi', checks: ['Uren per dag in één keer goedkeuren', 'Naast elk loon het uurloon uit de horeca-CAO (tabel januari 2026)', 'De fooi verdeeld naar gewerkte uren'], link: { href: href('/uren-en-fooi'), label: 'Meer over uren en fooi' } },
+  { label: 'Keuken', checks: ['De kok ziet bij binnenkomst wat er open staat, en van wie', 'Afvinken legt vast wie wat wanneer maakte', 'De drukte-score helpt bij hoeveel je preppt'], link: { href: href('/keuken'), label: 'Meer over de keuken' } },
+  { label: 'HACCP', checks: ['Een melding als de koeling te warm is', 'THT-labels uit je eigen DYMO', 'Een rapport voor de NVWA als PDF'], link: { href: href('/haccp'), label: 'Meer over HACCP en labels' } },
+  { label: 'Inkoop', checks: ['Wat een gerecht kost, naast wat je ervoor vraagt', 'Eén bestelmail per leverancier', 'Prijzen inlezen uit de catalogus van je leverancier'], link: { href: href('/inkoop'), label: 'Meer over recepten en inkoop' } },
+];
+
+const bento = [
+  { size: 'wide', title: 'De eigenaar', text: 'Aan het eind van de maand zijn de uren al goedgekeurd. Jij vult de fooitotalen in, Keukenbaas rekent de verdeling uit.' },
+  { size: 'tall', tone: 'soft', title: 'De medewerker', text: 'Op de eigen telefoon het rooster van de week, de eigen uren en de eigen fooi. Beschikbaarheid doorgeven kan daar ook.' },
+  { size: 'wide', title: 'De chef en de kok', text: 'Bij binnenkomst zie je wat er vandaag gemaakt moet worden en wie wat doet. Afvinken, label printen, door.' },
+  { size: 'full', tone: 'dashed', label: 'Staat op de planning', title: 'Groepen met meerdere zaken', text: 'Meerdere zaken in één account kan nog niet. Heb je twee of drie vestigingen, zet dat dan in je aanmelding. Dan weten we hoeveel zaken erop wachten.', link: { href: href('/wachtlijst'), label: 'Zet je zaken op de wachtlijst' } },
+];
+
+const dag = [
+  { time: '08:30', icon: 'weer', title: 'Hoe druk wordt het?', text: 'Het weer, de reserveringen en de bestellingen geven een score voor vandaag. Daar stem je de prep op af.' },
+  { time: '09:00', icon: 'lijst', title: 'De prep staat klaar', text: 'Sanne opent het scherm Vandaag en ziet wat er gemaakt moet worden.' },
+  { time: '10:42', icon: 'label', title: 'Het label rolt eruit', text: 'De focaccia is klaar. Sanne vinkt hem af en print het label.' },
+  { time: '14:00', icon: 'thermo', title: 'De koelcel gemeten', text: 'Mehmet meet de koelcel en de vriezer. Alles groen.' },
+  { time: '16:15', icon: 'mail', title: 'Joris meldt zich ziek', text: 'De bezorgdienst van 17:00 staat open. Fatima neemt hem over en krijgt er een mail van.' },
+  { time: '23:30', icon: 'maan', title: 'Sluit', text: 'De checklist voor de avondshift. Nog twee punten, dan kan het licht uit.' },
+];
+
+const stappen = [
+  { title: 'Zet je zaak op de lijst', text: 'Met je e-mailadres sta je erop. Een paar vragen over je zaak volgen daarna.' },
+  { title: 'Kennismaken', text: 'Een gesprek over hoe jouw keuken nu draait, en wat je als eerste wilt regelen.' },
+  { title: 'We zetten je zaak samen klaar', text: 'Je medewerkers, je producten en je meetpunten.' },
+  { title: 'Je team logt in', text: 'Iedereen logt in met een eigen code, op de eigen telefoon.' },
+];
+
+const faq = [
+  { q: 'Is dit niet weer een systeem erbij?', a: 'Het komt in de plaats van de losse dingen: het rooster in Excel, de lijst op de koelcel, tape en stift, de appjes naar de leverancier en de fooi op de rekenmachine. Bij de kennismaking kijken we samen waarmee je begint.' },
+  { q: 'Werkt het op mijn telefoon, ook met natte handen?', a: 'Keukenbaas is een webapp. Je opent hem in de browser van je telefoon, tablet of laptop, en zet hem met één tik op je beginscherm. Een productie afvinken is één tik. Wie liever papier bij de pass heeft, drukt de daglijst af.' },
+  { q: 'Werkt het met de labelprinter die ik al heb?', a: 'Keukenbaas print op DYMO-labels van 89 bij 28 mm (type 99010), via de computer waar de DYMO aan hangt. Heb je een DYMO LabelWriter, noem het model dan bij de kennismaking.', note: 'TE BEVESTIGEN: welke DYMO-modellen zijn getest' },
+  { q: 'Hoeveel tijd kost het om in te richten?', a: 'Je doet het niet alleen. We zetten je zaak samen met je klaar: je medewerkers, je producten en je meetpunten. Hoe lang dat duurt, hangt af van je zaak. Dat spreken we af bij de kennismaking.' },
+  { q: 'Ik heb al een roosterprogramma. Kan ik overstappen?', a: 'We kijken samen wat je meeneemt uit je huidige programma. Je medewerkers zetten we er bij het klaarzetten in. Je oude programma zeg je pas op als het rooster in Keukenbaas draait.' },
+  { q: 'Wat gaat het kosten?', a: 'Een prijs hebben we nog niet. Je hoort hem als eerste, voordat je iets besluit, en inschrijven verplicht je tot niets.' },
+  { q: 'Gaat mijn team dit wel gebruiken?', a: 'Je team hoeft niets te installeren. Ze loggen in met een code op hun eigen telefoon en zien alleen hun eigen rooster, uren en fooi. Bij Pumpkin werkt het team er elke dag mee.' },
+  { q: 'Wat gebeurt er met mijn gegevens?', a: 'We gebruiken ze alleen om Keukenbaas in jouw zaak te laten werken. Waar ze staan en hoe je ze meeneemt als je stopt, zetten we hier zodra het vastligt.', note: 'TE BEVESTIGEN: opslag, toegang en meenemen bij opzeggen' },
+  { q: 'Kan ik het voor meerdere zaken gebruiken?', a: 'Nog niet in één account. Dat staat op de planning. Zet in je aanmelding hoeveel vestigingen je hebt, dan hoor je het als het zover is.' },
+];
+---
+<Base titleRaw title="Keukenbaas · Rooster, uren, HACCP en prep in één app" description="Rooster, uren en fooi, prep, HACCP met THT-labels en inkoop in één webapp. Gemaakt in de keuken van Pumpkin, voor zelfstandige restaurants.">
+  <!-- H2 · Hero -->
+  <HeroCentered
+    title="Na sluit naar huis, niet achter Excel en WhatsApp."
+    lead="Keukenbaas is een webapp voor het werk naast het koken: rooster, uren en fooi, prep, HACCP en inkoop. Gemaakt in een restaurantkeuken, voor zelfstandige restaurants."
+    checks={['Je team ziet het eigen rooster op de eigen telefoon', 'Een afgevinkte productie geeft een label uit je DYMO', 'De fooi verdeeld naar goedgekeurde uren']}
+    placeholder="je@jouwzaak.nl"
+    button="Zet me op de wachtlijst"
+    note="Je hoort van ons zodra je kunt beginnen."
+    figMin="40rem"
+    figLabel="Het scherm Vandaag op een laptop en het rooster op een telefoon"
+  >
+    <VandaagScherm withPhone />
+  </HeroCentered>
+
+  <!-- H3 · Werkt met -->
+  <IntegrationsStrip overlap eyebrow="Past bij wat je al gebruikt" items={['DYMO', 'GoTable', 'Foodticket', 'OrderBuddy', 'SumUp', 'InOne', 'Open-Meteo']} />
+
+  <!-- H4 · Herkenning -->
+  <Section tone="paper" id="herkenning" class="hk">
+    <div class="hk__top">
+      <Reveal class="hk__copy">
+        <h2 style="--i:0">Herkenbaar?</h2>
+        <ul class="hk__list" role="list">
+          {herkenning.map(([t, r], i) => (
+            <li style={`--i:${i + 1}`}>
+              <span class="hk__n mono" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{t}</h3>
+              <p>{r}</p>
+            </li>
+          ))}
+        </ul>
+      </Reveal>
+      <div class="hk__art"><HerkenningChaos /></div>
+    </div>
+    <Reveal class="hk__join">
+      <h3 style="--i:0">Het hangt aan elkaar</h3>
+      <p style="--i:1">De uren die je goedkeurt, bepalen de fooi. Een afgevinkte productie geeft een label met THT. Een recept geeft de kostprijs.</p>
+    </Reveal>
+  </Section>
+
+  <!-- H5 · Productkiezer -->
+  <ProductTabs id="kiezer" title="Kies waar je mee begint" tabs={tabs}>
+    <RoosterWeek slot="panel-0" />
+    <FooiVerdeling slot="panel-1" />
+    <RaceTegenDeKlok slot="panel-2" />
+    <KoelcelMeting slot="panel-3" />
+    <KostprijsRecept slot="panel-4" />
+  </ProductTabs>
+
+  <!-- H6 · Voor iedereen in de zaak -->
+  <Bento id="rollen" title="Voor iedereen in de zaak" tiles={bento}>
+    <MiniReceipt slot="tile-0" title="Oktober" rotate={1.5} rows={[{ label: '400 uur goedgekeurd', done: true }, { label: 'Fooi verdeeld', done: true }, { label: 'Loonexport klaar', done: true }]} />
+    <MiniPhone slot="tile-1" name="Hoi Sanne" lines={['Je fooi in oktober: € 460,00']} button="Beschikbaarheid opslaan" />
+    <MiniReceipt slot="tile-2" rotate={-1.5} rows={[{ label: 'Pizzadeeg', value: 'Sanne · 10:00' }, { label: 'Aioli', value: 'Mehmet · 11:45' }]} />
+  </Bento>
+
+  <!-- H6b · Bewijs: zo werkt het bij Pumpkin -->
+  <ProofQuote
+    eyebrow="Gemaakt in de keuken van Pumpkin"
+    placeholder="Citaat volgt"
+    link={{ href: href('/verhaal'), label: 'Lees ons verhaal' }}
+    note="CITAAT TE ONTVANGEN: eigenaar of chef van Pumpkin, over hoe het werken met Keukenbaas de dag in de keuken veranderd heeft. Onder het citaat: [naam], [rol] bij Pumpkin, Haarlem"
+  />
+
+  <!-- H7 · Een dag in de keuken -->
+  <DayTimeline id="dag" title="Een dag in de keuken, van 08:30 tot 23:30" items={dag}>
+    <DrukteMeter slot="item-0" />
+    <VandaagScherm slot="item-1" />
+    <DymoLabel slot="item-2" />
+    <KoelcelMeting slot="item-3" variant="groen" />
+    <MiniReceipt slot="item-4" title="Open dienst" rotate={-1} rows={[{ label: 'Bezorgdienst 17:00-22:00' }, { label: 'Fatima', done: true }]} />
+    <MiniReceipt slot="item-5" rotate={1} rows={[{ label: 'Kassa geteld', done: true }, { label: 'Koeling gemeten', done: true }, { label: 'Afval weggebracht' }, { label: 'Keuken schoon' }]} footer="Nog 2 punt(en) voor sluit" />
+  </DayTimeline>
+
+  <!-- H8 · Vergelijking: vervalt -->
+
+  <!-- H9 · Zo begin je -->
+  <Steps id="stappen" title="Zo begin je" steps={stappen} />
+
+  <!-- H10 · Veelgestelde vragen -->
+  <FaqAccordion id="faq" title="Veelgestelde vragen" items={faq} />
+
+  <!-- H11 · Afsluitende band -->
+  <ClosingBand title="Zet je zaak op de wachtlijst" placeholder="je@jouwzaak.nl" button="Zet me op de wachtlijst" note="Wie op de lijst staat, begint eerder en praat mee over wat erbij komt.">
+    <Fragment slot="after"><Fragment set:html="<!-- Teller: Je bent nummer [X] -->" /></Fragment>
+  </ClosingBand>
+</Base>
+<style>
+  :global(.hk) { overflow: hidden; }
+  .hk__top { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--space-7); align-items: center; }
+  :global(.hk__copy) { display: grid; gap: var(--space-6); }
+  .hk__list { list-style: none; padding: 0; display: grid; gap: var(--space-4); }
+  .hk__list li { position: relative; display: grid; gap: 2px; padding: var(--space-4) var(--space-4) var(--space-4) 3.75rem; background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s); }
+  .hk__list li:nth-child(odd) { transform: rotate(-0.5deg); }
+  .hk__list li:nth-child(even) { transform: rotate(0.5deg); margin-left: var(--space-4); }
+  .hk__n { position: absolute; left: 0.9rem; top: 1rem; font-weight: 600; color: var(--orange-dark); }
+  .hk__list h3 { font-size: var(--step-1); }
+  .hk__list p { font-size: var(--step--1); }
+  .hk__art { min-width: 0; display: flex; justify-content: center; }
+  :global(.hk__join) { display: grid; gap: var(--space-3); max-width: 44rem; margin-top: var(--space-8); }
+  :global(.hk__join) h3 { font-size: var(--step-3); }
+  :global(.hk__join) p { font-size: var(--step-1); color: var(--navy); }
+  @media (max-width: 56rem) { .hk__top { grid-template-columns: 1fr; gap: var(--space-6); } .hk__list li:nth-child(even) { margin-left: 0; } }
+</style>

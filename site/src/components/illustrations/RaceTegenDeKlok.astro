@@ -1,0 +1,250 @@
+---
+/*
+ * RaceTegenDeKlok: de daglijst wordt afgevinkt; als alles af is verschijnt de modal met bon-snippers,
+ * die zichzelf weer sluit. Volgt de STIJLREGELS in DymoLabel.astro.
+ * Eén keer afspelen zodra data-inview gezet wordt (data-phase: idle > list > modal > close > done).
+ * Eindstaat (ook zonder JS en bij reduced motion): alle drie de rijen klaar, modal dicht.
+ * Klik op de illustratie of op "Mooi, door!" speelt het kort opnieuw af.
+ */
+const rows = [
+  { t: '10:00', n: 'Pizzadeeg', b: '6 kg', s: 'Deeg' },
+  { t: '11:15', n: 'Focaccia', b: '4 platen', s: 'Oven' },
+  { t: '12:00', n: 'Gepekelde ui', b: '1,5 kg', s: 'Koud' },
+];
+const colors = ['var(--orange)', 'var(--tape)', 'var(--green)', 'var(--white)', 'var(--navy)', 'var(--orange-soft)'];
+// vaste, gespreide positie per snipper: hoek en afstand in cqw
+const snips = Array.from({ length: 22 }, (_, i) => {
+  const a = (i / 22) * Math.PI * 2 + (i % 3) * 0.2;
+  const d = 26 + (i % 5) * 5;
+  return {
+    dx: (Math.cos(a) * d * 1.25).toFixed(1),
+    dy: (Math.sin(a) * d * 0.8 - 2).toFixed(1),
+    r: ((i * 53) % 180) - 90,
+    c: colors[i % colors.length],
+    big: i % 4 === 0,
+  };
+});
+---
+<figure class="rk" data-rk data-animate style="margin:0">
+  <div class="rk__stage" role="button" tabindex="0" aria-label="Speel de race tegen de klok opnieuw af" data-rk-stage>
+    <div class="rk__win" aria-hidden="true">
+      <div class="rk__bar"><i></i><i></i><i></i></div>
+      <div class="rk__app">
+        <div class="rk__head">
+          <div>
+            <p class="rk__title">Daglijst</p>
+          </div>
+          <div class="rk__prog">
+            <span class="rk__ptxt mono" data-rk-count>3 van 3 klaar</span>
+            <span class="rk__pbar"><i data-rk-bar style="--p:100"></i></span>
+          </div>
+        </div>
+        <div class="rk__table">
+          <div class="rk__tr rk__th"><span>Tijd</span><span>Product</span><span>Batch</span><span>Station</span><span>Status</span></div>
+          {rows.map((r) => (
+            <div class="rk__tr" data-rk-row data-done>
+              <span class="mono">{r.t}</span>
+              <span class="rk__prod">{r.n}</span>
+              <span class="mono">{r.b}</span>
+              <span class="rk__st">{r.s}</span>
+              <span class="rk__status">
+                <span class="rk__open">Bezig</span>
+                <span class="rk__done"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.5" pathLength="1" fill="none" stroke="#0a0d22" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Klaar</span></span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="rk__modalwrap">
+        {snips.map((s) => (
+          <i class:list={['rk__snip', { 'is-big': s.big }]} style={`--dx:${s.dx}cqw;--dy:${s.dy}cqw;--r:${s.r}deg;--c:${s.c}`}></i>
+        ))}
+        <div class="rk__modal">
+          <p class="rk__eyebrow">RACE TEGEN DE KLOK</p>
+          <p class="rk__good">Goed gedaan!</p>
+          <p class="rk__sub">Je hebt weer een scherpe tijd neergezet.</p>
+          <p class="rk__score mono">Score <b>100</b> punten</p>
+          <button type="button" class="rk__go" tabindex="-1" data-rk-go>Mooi, door!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="visually-hidden">De daglijst met drie producties (pizzadeeg, focaccia en gepekelde ui) wordt afgevinkt. Als alles klaar is, verschijnt Goed gedaan met een score van 100 punten.</p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-rk]').forEach((el) => init(el as HTMLElement));
+
+  function init(el: HTMLElement) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // eindstaat blijft staan
+    const rows = [...el.querySelectorAll('[data-rk-row]')] as HTMLElement[];
+    const cnt = el.querySelector('[data-rk-count]') as HTMLElement;
+    const bar = el.querySelector('[data-rk-bar]') as HTMLElement;
+    const cs = getComputedStyle(el);
+    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    let gen = 0, cooling = false, started = false;
+    let timers: number[] = [];
+
+    const later = (fn: () => void, t: number, g: number) => { timers.push(window.setTimeout(() => { if (g === gen) fn(); }, t)); };
+    const phase = (p: string) => { el.removeAttribute('data-phase'); void el.offsetWidth; el.setAttribute('data-phase', p); };
+    const update = () => {
+      const n = rows.filter((r) => r.hasAttribute('data-done')).length;
+      cnt.textContent = n + ' van ' + rows.length + ' klaar';
+      bar.style.setProperty('--p', String((n / rows.length) * 100));
+    };
+
+    function play() {
+      timers.forEach(clearTimeout); timers = [];
+      const g = ++gen;
+      rows.forEach((r) => r.removeAttribute('data-done')); update();
+      phase('idle');
+      let t = ms('--rk-pause');
+      later(() => phase('list'), t, g);
+      rows.forEach((r) => { t += ms('--rk-check'); later(() => { r.setAttribute('data-done', ''); update(); }, t, g); });
+      t += ms('--rk-beat');
+      later(() => phase('modal'), t, g);
+      t += ms('--rk-hold');
+      later(() => phase('close'), t, g);
+      t += ms('--rk-close');
+      later(() => phase('done'), t, g);
+    }
+
+    el.addEventListener('inviewchange', (e) => {
+      if ((e as CustomEvent).target !== el || started) return;
+      started = true; play();
+    });
+    rows.forEach((r) => r.removeAttribute('data-done')); update(); phase('idle');
+    if (el.hasAttribute('data-inview')) { started = true; play(); }
+
+    const again = () => {
+      if (!started || cooling) return;
+      cooling = true; setTimeout(() => (cooling = false), 900);
+      play();
+    };
+    const stage = el.querySelector('[data-rk-stage]') as HTMLElement;
+    stage.addEventListener('click', again);
+    stage.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); again(); }
+    });
+  }
+</script>
+
+<style>
+  .rk {
+    --rk-pause: 200ms;
+    --rk-check: 420ms;
+    --rk-beat: 250ms;
+    --rk-hold: 1250ms;
+    --rk-close: 380ms;
+    --rk-draw: 360ms;
+    width: min(100%, 44rem);
+    container-type: inline-size;
+  }
+  .rk__stage { cursor: pointer; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .rk__win {
+    position: relative; overflow: hidden; background: var(--paper); border: 2px solid var(--navy);
+    border-radius: var(--radius); box-shadow: var(--shadow-l); color: var(--navy);
+    font-family: var(--font-body); font-size: 2.3cqw; line-height: 1.25;
+    aspect-ratio: 5 / 4;
+  }
+  .rk__win p { margin: 0; }
+  .rk__bar { display: flex; align-items: center; gap: 1.2cqw; padding: 1.6cqw 2.4cqw; background: var(--white); border-bottom: 2px solid var(--navy); }
+  .rk__bar i { width: 2cqw; height: 2cqw; border-radius: 50%; border: 2px solid var(--navy); background: var(--paper); }
+  .rk__bar i:first-child { background: var(--orange); }
+  .rk__bar i:nth-child(2) { background: var(--tape); }
+  .rk__url { margin-left: 2cqw; flex: 1; font-size: 2cqw; color: var(--muted); border: 2px solid var(--line); border-radius: 99px; padding: 0.4cqw 2cqw; background: var(--paper); }
+  .rk__app { padding: 3cqw 3.4cqw; }
+  .rk__head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.4cqw; gap: 3cqw; }
+  .rk__eyebrow { font-weight: 800; font-size: 2cqw; letter-spacing: 0.1em; color: var(--orange-dark); }
+  .rk__title { font-family: var(--font-display); font-weight: 800; font-size: 5cqw; line-height: 1.05; letter-spacing: -0.02em; }
+  .rk__prog { text-align: right; min-width: 24cqw; }
+  .rk__ptxt { font-size: 2.2cqw; font-weight: 600; }
+  .rk__pbar { display: block; height: 2.2cqw; margin-top: 0.8cqw; border: 2px solid var(--navy); border-radius: var(--radius-s); background: var(--white); overflow: hidden; }
+  .rk__pbar i { display: block; height: 100%; width: calc(var(--p) * 1%); background: var(--orange); border-right: 2px solid var(--navy); transition: width 420ms var(--ease-out); }
+  .rk__table { background: var(--white); border: 2px solid var(--line); border-radius: var(--radius); }
+  .rk__tr {
+    display: grid; grid-template-columns: 11cqw 1fr 14cqw 11cqw 17cqw; gap: 1.5cqw; align-items: center;
+    padding: 1.9cqw 2.4cqw; font-size: 2.3cqw; transition: background var(--dur-2) var(--ease-out);
+  }
+  .rk__tr + .rk__tr { border-top: 2px solid var(--paper); }
+  .rk__th { font-weight: 800; font-size: 1.9cqw; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .rk__tr[data-rk-row]:hover { background: var(--paper); }
+  .rk__tr[data-done] { background: var(--green-soft); }
+  .rk__prod { font-weight: 700; }
+  .rk__st { color: var(--ink); }
+  .rk__tr .mono { font-size: 2.1cqw; }
+  .rk__status { display: block; }
+  .rk__open { display: inline-block; font-weight: 700; font-size: 2cqw; padding: 0.3cqw 1.8cqw; border: 2px solid var(--line); border-radius: 99px; background: var(--paper); color: var(--muted); }
+  .rk__done { display: none; align-items: center; gap: 1cqw; }
+  .rk__done svg { width: 3cqw; height: 3cqw; background: var(--green); border: 2px solid var(--navy); border-radius: var(--radius-s); padding: 2px; }
+  .rk__done path { stroke-dasharray: 1; stroke-dashoffset: 0; }
+  .rk__tr[data-done] .rk__open { display: none; }
+  .rk__tr[data-done] .rk__done { display: inline-flex; }
+  .rk__tr[data-done] .rk__done path { animation: rk-draw var(--rk-draw) var(--ease-out) both; }
+
+  /* Modal en snippers. Standaard (eindstaat): zichtbaar. */
+  .rk__modalwrap { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; display: none; }
+  .rk__modalwrap > * { pointer-events: auto; }
+  .rk__modal {
+    position: relative; z-index: 2; width: 62cqw; text-align: center; background: var(--white);
+    border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow-l); padding: 3.4cqw 3cqw 3cqw;
+  }
+  .rk__good { font-family: var(--font-display); font-weight: 900; font-size: 8.4cqw; line-height: 1; letter-spacing: -0.02em; margin: 1.2cqw 0; }
+  .rk__sub { font-size: 2.4cqw; color: var(--ink); }
+  .rk__score { margin: 2.4cqw auto; display: inline-block; font-size: 2.8cqw; font-weight: 600; background: var(--orange-soft); border: 2px solid var(--orange); border-radius: var(--radius-s); padding: 0.8cqw 2.4cqw; }
+  .rk__score b { font-size: 4cqw; font-weight: 600; }
+  .rk__go {
+    display: block; margin: 0 auto; font: inherit; font-weight: 800; font-size: 2.6cqw; padding: 1.4cqw 4cqw; cursor: pointer;
+    background: var(--orange); color: var(--navy); border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow);
+  }
+  .rk__go:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-l); }
+  .rk__go:active { transform: translate(3px, 3px); box-shadow: none; }
+  .rk__snip {
+    position: absolute; z-index: 3; width: 2cqw; height: 2cqw; background: var(--c); border: 2px solid var(--navy);
+    transform: translate(var(--dx), var(--dy)) rotate(var(--r)); pointer-events: none;
+  }
+  .rk__snip.is-big { width: 2.8cqw; height: 1.4cqw; }
+
+  .rk[data-phase="modal"] .rk__modalwrap, .rk[data-phase="close"] .rk__modalwrap { display: grid; }
+  .rk[data-phase="modal"] .rk__modal { animation: rk-pop 520ms var(--ease-out) both; }
+  .rk[data-phase="modal"] .rk__snip { animation: rk-burst 900ms var(--ease-out) both; }
+  .rk[data-phase="close"] .rk__modalwrap { animation: rk-out var(--rk-close) var(--ease-out) forwards; }
+
+  @keyframes rk-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.94); } }
+  @keyframes rk-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes rk-pop { from { transform: scale(0.6) translateY(4cqw); } to { transform: scale(1) translateY(0); } }
+  @keyframes rk-burst {
+    from { transform: translate(0, 0) rotate(0) scale(0.3); }
+    to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(1); }
+  }
+
+  /* Smal: grotere letters, kolom Station weg, geen vaste hoogte */
+  @container (max-width: 32rem) {
+    .rk__win { aspect-ratio: auto; min-height: 92cqw; font-size: 3.2cqw; }
+    .rk__app { padding: 4cqw; }
+    .rk__bar { padding: 2.4cqw 3cqw; gap: 1.8cqw; }
+    .rk__bar i { width: 3cqw; height: 3cqw; }
+    .rk__title { font-size: 7cqw; }
+    .rk__prog { min-width: 34cqw; }
+    .rk__ptxt { font-size: 3.2cqw; }
+    .rk__pbar { height: 3.4cqw; }
+    .rk__tr { grid-template-columns: 11.5cqw 1fr 15cqw 21cqw; gap: 1.6cqw; padding: 2.8cqw 2.4cqw; font-size: 3.3cqw; }
+    .rk__tr > :nth-child(4) { display: none; }
+    .rk__th { font-size: 2.9cqw; }
+    .rk__tr .mono { font-size: 3cqw; }
+    .rk__open { font-size: 3cqw; padding: 0.4cqw 2.2cqw; }
+    .rk__done { gap: 1.2cqw; }
+    .rk__done svg { width: 4.4cqw; height: 4.4cqw; }
+    .rk__modal { width: 80cqw; padding: 5cqw 4cqw; }
+    .rk__good { font-size: 11cqw; }
+    .rk__sub { font-size: 3.6cqw; }
+    .rk__score { font-size: 4cqw; margin: 3.4cqw auto; }
+    .rk__score b { font-size: 5.6cqw; }
+    .rk__go { font-size: 3.8cqw; padding: 2cqw 5cqw; }
+    .rk__eyebrow { font-size: 3cqw; }
+    .rk__snip { width: 3cqw; height: 3cqw; }
+    .rk__snip.is-big { width: 4cqw; height: 2cqw; }
+  }
+</style>

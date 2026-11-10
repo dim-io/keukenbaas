@@ -1,0 +1,256 @@
+---
+/*
+ * HerkenningChaos: voor de homepage-sectie "zo ziet je week er nu uit". Vijf losse objecten op rasterpapier
+ * (Excel-rooster op een geprint vel, papieren HACCP-lijst, tape met stift, chatballon, bierviltje) schuiven bij
+ * één keer (~2,5 s) naar het midden en klappen samen tot één telefoon met het scherm "Vandaag". De eindstaat blijft staan.
+ * Stijl volgens STIJLREGELS in DymoLabel.astro.
+ * Props: geen. De root heeft data-animate; inview.js zet data-inview één keer. Voortgang p (0 tot 1) loopt op tijd
+ * (requestAnimationFrame); JS zet per object --q.
+ * Zonder JS of bij reduced motion (geen data-motion): de beginstaat en de eindstaat staan naast elkaar.
+ */
+---
+<figure class="hc" data-hc data-animate style="margin:0">
+  <div class="hc__scene">
+    <div class="hc__layer hc__layer--chaos grid-paper" aria-hidden="true">
+      <span class="hc__tag mono">Nu</span>
+
+      <!-- 1. Excel-achtig rooster op een geprint vel -->
+      <div class="hc__obj hc__xl" data-hc-obj style="--dx:27;--dy:24;--r:-4">
+        <div class="hc__xlbar mono">prep_week45_DEF2.xlsx</div>
+        <div class="hc__xlgrid mono">
+          <span class="c h"></span><span class="c h">A</span><span class="c h">B</span><span class="c h">C</span><span class="c h">D</span>
+          <span class="c h">1</span><span class="c">Product</span><span class="c">Kg</span><span class="c">Wie</span><span class="c">Klaar</span>
+          <span class="c h">2</span><span class="c">Soep</span><span class="c">5</span><span class="c">S.</span><span class="c">ja</span>
+          <span class="c h">3</span><span class="c">Deeg</span><span class="c sel">4</span><span class="c">M.</span><span class="c">?</span>
+          <span class="c h">4</span><span class="c">Aioli</span><span class="c err">#WAARDE!</span><span class="c">S.</span><span class="c"></span>
+          <span class="c h">5</span><span class="c">Ui</span><span class="c">2</span><span class="c"></span><span class="c">nee</span>
+        </div>
+      </div>
+
+      <!-- 2. Papieren HACCP-lijst met handgeschreven temperaturen -->
+      <div class="hc__obj hc__haccp" data-hc-obj style="--dx:-25;--dy:21;--r:5">
+        <span class="hc__tapebit"></span>
+        <p class="hc__htitle mono">HACCP koeling</p>
+        <div class="hc__hl"><span>Koelcel 1</span><b class="marker">4°</b></div>
+        <div class="hc__hl"><span>Vriezer</span><b class="marker">-18</b></div>
+        <div class="hc__hl"><span>Koelkast bar</span><b class="marker hc__bad">8°?</b></div>
+        <div class="hc__hl"><span>Vaatwasser</span><b class="marker">62</b></div>
+        <div class="hc__hl"><span>Paraaf</span><b class="marker">S</b></div>
+      </div>
+
+      <!-- 3. Tape met stift -->
+      <div class="hc__obj hc__tape" data-hc-obj style="--dx:29;--dy:-18;--r:-8">
+        <span class="marker">AIOLI 6/11</span>
+      </div>
+
+      <!-- 4. Chatballon (generiek, geen merklogo) -->
+      <div class="hc__obj hc__chat" data-hc-obj style="--dx:-6;--dy:-23;--r:3">
+        <p>kan je morgen 4 kg tomaat brengen?</p>
+        <span class="hc__time mono">21:47
+          <svg viewBox="0 0 24 12" focusable="false"><path d="M1 6.5l3.5 3.5L11 2M9 8l1.5 1.5L17 2" fill="none" stroke="#207657" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+
+      <!-- 5. Bierviltje met fooiberekening -->
+      <div class="hc__obj hc__coaster" data-hc-obj style="--dx:-36.5;--dy:-19.5;--r:-12">
+        <span class="hc__ring"></span>
+        <span class="marker hc__sum">312</span>
+        <span class="marker hc__sum">÷ 6</span>
+        <span class="marker hc__sum">= 52</span>
+      </div>
+    </div>
+
+    <div class="hc__layer hc__layer--phone grid-paper" aria-hidden="true">
+      <span class="hc__tag mono">Alles staat netjes</span>
+      <div class="hc__phone" data-hc-phone>
+        <div class="hc__screen">
+          <p class="hc__eyebrow mono">Keukenbaas · Vandaag</p>
+          <p class="hc__date">maandag 9 november</p>
+
+          <div class="hc__blk" data-hc-blk>
+            <p class="hc__bt mono">Keukenlijst</p>
+            <div class="hc__li mono"><i class="hc__ck hc__ck--on"></i><span>Tomaten-courgettesoep</span><em>Mehmet</em></div>
+            <div class="hc__li mono"><i class="hc__ck"></i><span>Pizzadeeg</span><em>Sanne</em></div>
+            <div class="hc__li mono"><i class="hc__ck"></i><span>Aioli</span><em>Mehmet</em></div>
+          </div>
+
+          <div class="hc__blk" data-hc-blk>
+            <p class="hc__bt mono">Controles</p>
+            <div class="hc__li mono"><span>Koelcel 1</span><em>3,8 °C</em><b class="hc__ok">Goed</b></div>
+          </div>
+
+          <div class="hc__blk hc__blk--close" data-hc-blk>
+            <p class="hc__bt mono">Dagafsluiting</p>
+            <p class="hc__note mono">Nog 2 punt(en) voor sluit</p>
+          </div>
+        </div>
+        <div class="hc__nav mono">
+          <span class="on">Vandaag</span><span>MEP</span><span>Rooster</span><span>HACCP</span><span>Meer</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption class="hc__cap mono">De losse onderdelen klappen samen tot één scherm.</figcaption>
+  <p class="visually-hidden">Een Excel-rooster op een geprint vel, een papieren HACCP-lijst met handgeschreven temperaturen, een stuk tape met AIOLI 6/11, een chatbericht met de vraag of je morgen 4 kilo tomaat kunt brengen en een bierviltje met een fooiberekening. Samen vormen ze de week zoals die nu vaak verloopt. Ze worden vervangen door één telefoonscherm met de Keukenbaas-weergave Vandaag: keukenlijst, controles en dagafsluiting.</p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-hc]').forEach((el) => init(el as HTMLElement));
+
+  function init(el: HTMLElement) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // beginstaat en eindstaat naast elkaar
+
+    const objs = Array.from(el.querySelectorAll<HTMLElement>('[data-hc-obj]'));
+    const phone = el.querySelector<HTMLElement>('[data-hc-phone]')!;
+    const blks = Array.from(el.querySelectorAll<HTMLElement>('[data-hc-blk]'));
+    const starts = [0, 0.07, 0.14, 0.21, 0.28];
+    const clamp = (v: number) => Math.min(1, Math.max(0, v));
+    const smooth = (v: number) => v * v * (3 - 2 * v);
+
+    el.dataset.motion = '';
+    const DUR = 2500; // ms, het samenklappen
+    let raf = 0, played = false;
+
+    function apply(p: number) {
+      objs.forEach((o, i) => {
+        const q = smooth(clamp((p - starts[i]) / 0.4));
+        o.style.setProperty('--q', q.toFixed(4));
+        o.dataset.gone = q > 0.97 && p > 0.7 ? '1' : '';
+      });
+      const pq = smooth(clamp((p - 0.55) / 0.3));
+      phone.style.setProperty('--pq', pq.toFixed(4));
+      phone.dataset.on = pq > 0.02 ? '1' : '';
+      const n = Math.floor(clamp((p - 0.7) / 0.28) * (blks.length + 0.999));
+      blks.forEach((b, i) => (b.dataset.on = i < n ? '1' : ''));
+    }
+
+    // Eén keer afspelen zodra het in beeld komt; de eindstaat blijft staan.
+    function play() {
+      if (played) return;
+      played = true;
+      const t0 = performance.now();
+      const step = (t: number) => {
+        const p = clamp((t - t0) / DUR);
+        apply(p);
+        if (p < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+
+    apply(0);
+    el.addEventListener('inviewchange', (e) => {
+      if ((e as CustomEvent).target === el) play();
+    });
+    if (el.hasAttribute('data-inview')) play();
+  }
+</script>
+
+<style>
+  .hc { width: min(100%, 40rem); }
+
+  /* Standaard (zonder JS of bij reduced motion): beginstaat en eindstaat naast elkaar */
+  .hc__scene { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--space-4); }
+  .hc__layer {
+    container-type: inline-size;
+    position: relative;
+    aspect-ratio: 100 / 90;
+    border: 2px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    background-size: 4cqw 4cqw;
+  }
+  .hc__tag {
+    position: absolute; left: 2.4cqw; top: 2.4cqw; z-index: 6;
+    font-size: 2.8cqw; font-weight: 600; background: var(--navy); color: var(--tape); padding: 0.5cqw 2cqw; border-radius: var(--radius-s);
+  }
+
+  /* In beweging: één podium, de telefoon ligt boven op de objecten */
+  .hc[data-motion] .hc__scene { display: block; position: relative; }
+  .hc[data-motion] .hc__layer { aspect-ratio: 100 / 90; }
+  .hc[data-motion] .hc__layer--phone {
+    position: absolute; inset: 0; background: none; border: 0; box-shadow: none; pointer-events: none; z-index: 3;
+  }
+  .hc[data-motion] .hc__tag { display: none; }
+
+  /* Objecten */
+  .hc__obj {
+    position: absolute; z-index: 2;
+    --q: 0;
+    transform:
+      translate(calc(var(--dx) * var(--q) * 1cqw), calc(var(--dy) * var(--q) * 1cqw))
+      rotate(calc(var(--r) * (1 - var(--q)) * 1deg))
+      scale(calc(1 - 0.7 * var(--q)));
+    color: var(--navy);
+  }
+  .hc__obj[data-gone="1"] { visibility: hidden; }
+
+  .hc__xl { left: 3cqw; top: 8cqw; width: 40cqw; container-type: inline-size; background: var(--white); border: 2px solid var(--navy); box-shadow: var(--shadow); }
+  .hc__xlbar { background: var(--green-dark); color: var(--white); font-size: 5cqw; padding: 1.4cqw 3cqw; white-space: nowrap; overflow: hidden; }
+  .hc__xlgrid { display: grid; grid-template-columns: 7cqw 1fr 1fr 1fr 1fr; font-size: max(4.8cqw, 8.5px); }
+  .hc__xlgrid .c { padding: 1.6cqw 1.6cqw; border: 1px solid var(--line); border-width: 0 1px 1px 0; white-space: nowrap; overflow: visible; min-height: 8cqw; }
+  .hc__xlgrid .h { background: var(--paper); color: var(--muted); text-align: center; padding-inline: 0; }
+  .hc__xlgrid .sel { outline: 2px solid var(--orange); outline-offset: -2px; }
+  .hc__xlgrid .err { color: var(--red); font-weight: 600; font-size: 0.8em; letter-spacing: -0.02em; }
+
+  .hc__haccp { left: 58cqw; top: 6cqw; width: 34cqw; container-type: inline-size; background: var(--white); border: 2px solid var(--navy); box-shadow: var(--shadow); padding: 5cqw 5cqw 4cqw; }
+  .hc__tapebit { position: absolute; left: 36%; top: -3cqw; width: 28%; height: 6cqw; background: var(--tape); border: 2px solid var(--navy); transform: rotate(-3deg); }
+  .hc__htitle { margin: 0 0 3cqw; font-size: 7cqw; font-weight: 600; }
+  .hc__hl { display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw; border-bottom: 2px solid var(--line); font-size: 6.4cqw; font-family: var(--font-body); padding: 1.2cqw 0; }
+  .hc__hl b { font-weight: 400; font-size: 8.4cqw; color: var(--navy); }
+  .hc__hl .hc__bad { color: var(--red); }
+
+  .hc__tape {
+    left: 7cqw; top: 58cqw; width: 30cqw; height: 10cqw;
+    background: var(--tape); border-top: 2px solid var(--navy); border-bottom: 2px solid var(--navy);
+    clip-path: polygon(0 8%, 3% 0, 6% 10%, 9% 0, 12% 8%, 100% 0, 100% 100%, 94% 92%, 91% 100%, 88% 90%, 85% 100%, 0 100%);
+    display: grid; place-items: center;
+  }
+  .hc__tape span { font-size: 4.6cqw; }
+
+  .hc__chat { left: 36cqw; top: 60cqw; width: 40cqw; container-type: inline-size; background: var(--green-soft); border: 2px solid var(--navy); border-radius: 10px 10px 10px 2px; box-shadow: var(--shadow-s); padding: 4cqw 5cqw 3cqw; }
+  .hc__chat p { margin: 0; font-size: 7cqw; line-height: 1.25; font-family: var(--font-body); font-weight: 500; }
+  .hc__time { display: flex; justify-content: flex-end; align-items: center; gap: 2cqw; font-size: 5cqw; color: var(--muted); margin-top: 1.6cqw; }
+  .hc__time svg { width: 8cqw; height: auto; }
+
+  .hc__coaster {
+    left: 76cqw; top: 54cqw; width: 21cqw; aspect-ratio: 1; border-radius: 50%;
+    background: var(--paper); border: 2px solid var(--navy); box-shadow: var(--shadow-s);
+    container-type: inline-size;
+    display: grid; place-content: center; text-align: center;
+  }
+  .hc__ring { position: absolute; inset: 7%; border: 2px dashed var(--orange); border-radius: 50%; }
+  .hc__sum { position: relative; font-size: 17cqw; line-height: 1.08; }
+
+  /* Telefoon */
+  .hc__phone {
+    --pq: 1;
+    position: absolute; left: 50%; top: 50%; width: 46cqw; height: 84cqw;
+    margin: -42cqw 0 0 -23cqw;
+    container-type: inline-size;
+    background: var(--white); border: 2px solid var(--navy); border-radius: 6cqw; box-shadow: var(--shadow-l);
+    display: flex; flex-direction: column; overflow: hidden; color: var(--navy);
+    transform: scale(calc(0.6 + 0.4 * var(--pq)));
+  }
+  .hc[data-motion] .hc__phone[data-on=""] { visibility: hidden; }
+  .hc__screen { flex: 1; padding: 6cqw 6cqw 0; display: grid; align-content: start; gap: 4cqw; overflow: hidden; }
+  .hc__eyebrow { margin: 0; font-size: 6cqw; font-weight: 600; color: var(--orange-dark); text-transform: uppercase; letter-spacing: 0.06em; }
+  .hc__date { margin: -3cqw 0 0; font-family: var(--font-display); font-weight: 800; font-size: 9cqw; line-height: 1.1; }
+  .hc__blk { border: 2px solid var(--navy); border-radius: var(--radius-s); background: var(--paper); padding: 3cqw 3.4cqw; box-shadow: var(--shadow-s); display: grid; gap: 1.8cqw; }
+  .hc[data-motion] .hc__blk[data-on=""] { visibility: hidden; }
+  .hc__bt { margin: 0; font-size: 5.4cqw; font-weight: 600; }
+  .hc__li { display: flex; align-items: center; gap: 2cqw; font-size: 4.4cqw; }
+  .hc__li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .hc__li em, .hc__li b { white-space: nowrap; }
+  .hc__li em { font-style: normal; color: var(--muted); }
+  .hc__ck { width: 4.6cqw; height: 4.6cqw; border: 2px solid var(--navy); border-radius: 2px; background: var(--white); flex: none; }
+  .hc__ck--on { background: var(--green); }
+  .hc__ok { background: var(--green-soft); border: 2px solid var(--navy); border-radius: var(--radius-s); font-size: 4.6cqw; padding: 0 1.6cqw; font-weight: 600; }
+  .hc__note { margin: 0; font-size: 5.2cqw; color: var(--ink); }
+  .hc__blk--close { background: var(--orange-soft); }
+  .hc__nav { display: flex; justify-content: space-between; padding: 3cqw 4cqw; border-top: 2px solid var(--navy); font-size: 4.4cqw; background: var(--white); flex: none; }
+  .hc__nav span { color: var(--muted); }
+  .hc__nav .on { color: var(--navy); font-weight: 600; box-shadow: inset 0 -3px 0 var(--orange); }
+
+  .hc__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

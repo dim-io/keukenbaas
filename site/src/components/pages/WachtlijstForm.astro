@@ -1,0 +1,125 @@
+---
+// Formulier van de wachtlijstpagina (fase 1, nog geen backend). Velden bewust zonder name-attribuut, zodat er
+// niets in de URL kan komen. Bij verzenden: JS-navigatie naar /bedankt. Bij een geldig veld zet een stift een vinkje.
+import Button from '../Button.astro';
+import { href } from '../../lib/url.js';
+const fields = [
+  { id: 'naam', label: 'Naam', type: 'text', placeholder: 'Je voornaam en achternaam', auto: 'name', err: 'Vul je naam in.' },
+  { id: 'zaak', label: 'Zaak', type: 'text', placeholder: 'Naam van je zaak', auto: 'organization', err: 'Vul de naam van je zaak in.' },
+  { id: 'plaats', label: 'Plaats', type: 'text', placeholder: 'Bijvoorbeeld Haarlem', auto: 'address-level2', err: 'Vul de plaats van je zaak in.' },
+  { id: 'vestigingen', label: 'Aantal vestigingen', options: ['1', '2', '3', 'meer dan 3'], err: 'Kies het aantal vestigingen.' },
+  { id: 'medewerkers', label: 'Aantal medewerkers', options: ['minder dan 8', '8 tot 15', '16 tot 40', 'meer dan 40'], err: 'Kies het aantal medewerkers.' },
+  { id: 'nu', label: 'Wat gebruik je nu?', options: ['Shiftbase', 'Excel', 'Papier', 'Iets anders'], err: 'Kies wat je nu gebruikt.' },
+  { id: 'email', label: 'E-mailadres', type: 'email', placeholder: 'je@jouwzaak.nl', auto: 'email', err: 'Vul een geldig e-mailadres in.' },
+];
+---
+<form class="wf" action={href('/bedankt')} method="get" novalidate data-wf data-target={href('/bedankt')}>
+  <div class="wf__grid">
+    {fields.map((f) => (
+      <div class:list={['wf__field', { 'wf__field--wide': f.id === 'email' || f.id === 'nu' }]} data-field>
+        <label for={`wf-${f.id}`}>{f.label}</label>
+        <div class="wf__box">
+          {f.options ? (
+            <select id={`wf-${f.id}`} required aria-describedby={`wf-${f.id}-e`} data-err={f.err}>
+              <option value="" selected disabled></option>
+              {f.options.map((o) => <option value={o}>{o}</option>)}
+            </select>
+          ) : (
+            <input id={`wf-${f.id}`} type={f.type} required autocomplete={f.auto} placeholder={f.placeholder} aria-describedby={`wf-${f.id}-e`} data-err={f.err} />
+          )}
+          <span class="wf__pen" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false"><path class="wf__tick" d="M4 13l5 5L20 6" pathLength="1" fill="none" stroke="#207657" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <i class="wf__nib"></i>
+          </span>
+        </div>
+        <p class="wf__err mono" id={`wf-${f.id}-e`} aria-live="polite"></p>
+      </div>
+    ))}
+  </div>
+  <div class="wf__send">
+    <Button type="submit">Zet me op de wachtlijst</Button>
+    <p class="wf__priv">We gebruiken je gegevens alleen voor de wachtlijst. <a href={href('/privacy')}>Lees de privacyverklaring.</a></p>
+  </div>
+</form>
+<script>
+  document.querySelectorAll<HTMLFormElement>('[data-wf]').forEach((form) => {
+    const fields = Array.from(form.querySelectorAll<HTMLElement>('[data-field]'));
+    const ctl = (f: HTMLElement) => f.querySelector<HTMLInputElement | HTMLSelectElement>('input, select')!;
+
+    function check(f: HTMLElement, showError: boolean) {
+      const c = ctl(f);
+      const err = f.querySelector<HTMLElement>('.wf__err')!;
+      const ok = c.value.trim() !== '' && c.checkValidity();
+      if (ok && f.dataset.valid !== '1') {
+        // Stift opnieuw laten schrijven
+        f.dataset.valid = '1';
+        f.removeAttribute('data-write');
+        void f.offsetWidth;
+        f.setAttribute('data-write', '');
+      }
+      if (!ok) f.removeAttribute('data-valid');
+      if (ok) { c.removeAttribute('aria-invalid'); err.textContent = ''; f.removeAttribute('data-bad'); }
+      else if (showError) { c.setAttribute('aria-invalid', 'true'); err.textContent = c.dataset.err || ''; f.setAttribute('data-bad', ''); }
+      return ok;
+    }
+
+    fields.forEach((f) => {
+      const c = ctl(f);
+      c.addEventListener('blur', () => { if (c.value !== '') check(f, true); });
+      c.addEventListener('input', () => check(f, f.hasAttribute('data-bad')));
+      c.addEventListener('change', () => check(f, true));
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const results = fields.map((f) => check(f, true));
+      const first = results.indexOf(false);
+      if (first !== -1) { ctl(fields[first]).focus(); return; }
+      window.location.assign(form.dataset.target!);
+    });
+  });
+</script>
+<style>
+  .wf { display: grid; gap: var(--space-5); width: 100%; }
+  .wf__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .wf__field { display: grid; gap: 0.35rem; align-content: start; min-width: 0; }
+  .wf__field--wide { grid-column: 1 / -1; }
+  label { font-family: var(--font-mono); font-size: var(--step--1); font-weight: 600; color: var(--navy); }
+  .wf__box { position: relative; }
+  input, select {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.6rem 2.6rem 0.6rem 0.9rem;
+    background: var(--white);
+    border: 2px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: inset 2px 2px 0 var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--step-0);
+    color: var(--navy);
+  }
+  select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--navy) 50%), linear-gradient(135deg, var(--navy) 50%, transparent 50%); background-position: calc(100% - 2.1rem) 52%, calc(100% - 1.8rem) 52%; background-size: 0.35rem 0.35rem; background-repeat: no-repeat; }
+  input::placeholder { color: var(--muted); }
+  input:focus-visible, select:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+  [aria-invalid="true"] { border-color: var(--red); }
+  .wf__err { min-height: 1.1em; margin: 0; font-size: var(--step--1); color: var(--orange-dark); }
+  .wf__err:empty { min-height: 0; }
+
+  /* Stift met vinkje: in de eindstaat staat het vinkje er gewoon; de animatie schrijft hem opnieuw. */
+  .wf__pen { position: absolute; right: 0.55rem; top: 50%; width: 1.5rem; height: 1.5rem; margin-top: -0.75rem; pointer-events: none; display: none; }
+  [data-valid] .wf__pen { display: block; }
+  .wf__pen svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .wf__tick { stroke-dasharray: 1; stroke-dashoffset: 0; }
+  .wf__nib { position: absolute; left: 0; top: 0; width: 0.55rem; height: 0.55rem; background: var(--orange); border: 2px solid var(--navy); border-radius: 0 50% 50% 50%; transform: rotate(45deg); display: none; offset-path: path('M4 13 L9 18 L20 6'); offset-rotate: 0deg; }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-write] .wf__tick { animation: wf-draw 380ms var(--ease-out) both; }
+    [data-write] .wf__nib { display: block; animation: wf-pen 380ms var(--ease-out) both, wf-away 200ms 380ms var(--ease-out) forwards; }
+  }
+  @keyframes wf-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes wf-pen { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+  @keyframes wf-away { to { transform: translate(0.9rem, -0.9rem) rotate(45deg) scale(0); } }
+
+  .wf__send { display: grid; gap: var(--space-3); justify-items: start; }
+  .wf__priv { font-size: var(--step--1); color: var(--muted); margin: 0; }
+  @media (max-width: 36rem) { .wf__grid { grid-template-columns: minmax(0, 1fr); } .wf__send :global(.btn) { width: 100%; } }
+</style>

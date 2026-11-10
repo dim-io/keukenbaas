@@ -1,0 +1,122 @@
+---
+// Keuken en prep. Copy letterlijk uit docs/copy/keuken.md.
+import Base from '../layouts/Base.astro';
+import HeroSplit from '../components/sections/HeroSplit.astro';
+import FixCards from '../components/sections/FixCards.astro';
+import FeatureBlock from '../components/sections/FeatureBlock.astro';
+import MoreTiles from '../components/sections/MoreTiles.astro';
+import RelatedStrip from '../components/sections/RelatedStrip.astro';
+import FaqAccordion from '../components/sections/FaqAccordion.astro';
+import ClosingBand from '../components/sections/ClosingBand.astro';
+import VandaagScherm from '../components/illustrations/VandaagScherm.astro';
+import MepPlanning from '../components/illustrations/MepPlanning.astro';
+import DrukteMeter from '../components/illustrations/DrukteMeter.astro';
+import RaceTegenDeKlok from '../components/illustrations/RaceTegenDeKlok.astro';
+import { href } from '../lib/url.js';
+
+const fix = [
+  { problem: 'Wie binnenkomt, vraagt eerst wat er moet gebeuren.', fix: 'Het scherm Vandaag laat zien wat er open staat, en van wie.' },
+  { problem: 'De prep bedenk je elke week opnieuw.', fix: 'Je kopieert de planning van vorige week en past aan.' },
+  { problem: 'Op een rustige dinsdag gooi je soep weg, op vrijdag kom je tekort.', fix: 'Een score voor de drukte geeft houvast, uit het weer, de reserveringen en de bestellingen.' },
+];
+const tiles = [
+  { title: 'Daglijst om af te drukken' },
+  { title: 'Productietijd en THT per product' },
+  { title: 'Stations' },
+  { title: 'Een gedeeld boodschappenlijstje' },
+  { title: 'Taken die terugkomen: dagelijks, wekelijks of maandelijks' },
+  { title: 'Productiearchief: wie maakte wat, en wanneer' },
+];
+const related = [
+  { href: href('/haccp'), label: 'HACCP en labels', text: 'Een afgevinkte productie geeft een label met THT, naam en batch.' , go: 'Naar HACCP en labels' },
+  { href: href('/inkoop'), label: 'Recepten en inkoop', text: 'Elk product hangt aan een recept, met productietijd en kostprijs.' , go: 'Naar recepten en inkoop' },
+];
+const faq = [
+  { q: 'Werkt het met natte handen?', a: 'Afvinken is één tik per productie. Wie liever papier bij de pass heeft, drukt de daglijst af en vinkt later in de app af.' },
+  { q: 'Moet ik mijn kassa of reserveringssysteem koppelen?', a: 'Nee, alles werkt zonder koppeling. Alleen de drukte-score heeft gegevens nodig. Het weer haalt Keukenbaas zelf op. Gebruik je GoTable, Foodticket of OrderBuddy, dan komen de reserveringen en bestellingen erbij.' },
+  { q: 'Hoe komt de drukte-score tot stand?', a: 'Keukenbaas legt het weer, de reserveringen en de bestellingen naast dagen die erop lijken. Het is een schatting, en hoeveel je maakt, bepaal je zelf.' },
+  { q: 'Hoe zet ik een nieuw product erin?', a: 'In de productlijst, met een naam, receptcode, batchgrootte, eenheid, station, productietijd en het aantal dagen THT. Hang je er een recept aan, dan komt de productietijd daaruit.' },
+  { q: 'Kan ik de daglijst afdrukken?', a: 'Ja, met de kolommen tijd, product, batch, station, status en opmerking. Wat je op papier afvinkt, vink je later in de app af.' },
+];
+---
+<Base title="Prep-lijst en MEP-planning voor je keuken · Keukenbaas" titleRaw description="Het scherm Vandaag laat zien wat er gemaakt moet worden en door wie. Met een weekplanning voor de MEP en een score voor de drukte van vanavond.">
+  <!-- K2 · Hero -->
+  <HeroSplit
+    eyebrow="Keuken en prep"
+    title="Wat moet er vandaag gemaakt worden, en door wie?"
+    lead="Op het scherm Vandaag staat wat er open staat, wie het maakt en hoe druk het vanavond wordt."
+    placeholder="je@jouwzaak.nl"
+    button="Zet me op de wachtlijst"
+    figMin="20rem"
+    figLabel="Het scherm Vandaag op een telefoon"
+  >
+    <VandaagScherm variant="phone" />
+  </HeroSplit>
+
+  <!-- K3 · Zo los je het op -->
+  <FixCards id="fix" tone="white" title="Zo los je het op" cards={fix} problemLabel="Nu" fixLabel="Met Keukenbaas" />
+
+  <!-- K4 · Het scherm Vandaag -->
+  <FeatureBlock
+    id="vandaag"
+    tone="paper"
+    title="Het eerste scherm van de dag"
+    text="De kok opent Keukenbaas en ziet de keukenlijst: welke producties open staan, voor hoe laat en wie ze maakt. Daaronder staan de controles die nog moeten. 's Ochtends is er een checklist voor de dagstart, 's avonds een voor de avondshift."
+    items={['Keukenlijst met open producties en wie ze maakt', 'Aandacht nodig, en de HACCP-controles van vandaag', 'Checklist voor de dagstart en de avondshift', 'Zit de dag erop, dan staat de voorbereiding voor morgen klaar']}
+    figMin="30rem"
+  >
+    <VandaagScherm variant="controles" />
+  </FeatureBlock>
+
+  <!-- K5 · MEP-planning -->
+  <FeatureBlock
+    id="mep"
+    tone="grid"
+    reverse
+    title="De prep voor de hele week"
+    text={'Per dag kies je welke producten er gemaakt moeten worden. Moet de focaccia toch een dag eerder, dan sleep je hem aan het greepje naar dinsdag. Was vorige week goed, dan druk je op "Vorige week kopiëren". Uit de planning komt de daglijst: om af te vinken op de telefoon of om op te hangen bij de pass.'}
+    items={['Producten per dag kiezen en toevoegen', 'Slepen naar een andere dag', 'Vorige week kopiëren', 'Daglijst om af te drukken, met tijd, product, batch, station en status']}
+    figMin="32rem"
+  >
+    <MepPlanning />
+  </FeatureBlock>
+
+  <!-- K6 · Drukte-voorspelling -->
+  <FeatureBlock
+    id="drukte"
+    tone="white"
+    title="Weet hoe druk het wordt voordat je gaat preppen"
+    text="Keukenbaas haalt het weer op, de reserveringen uit GoTable en de bestellingen uit Foodticket en OrderBuddy, en vergelijkt dat met dagen die erop lijken. Dat geeft een score in procenten. Hoeveel je maakt, bepaal je zelf."
+    items={['Weer via Open-Meteo', 'Reserveringen uit GoTable', 'Bestellingen uit Foodticket en OrderBuddy', 'Vergeleken met dagen die erop lijken']}
+    figMin="26rem"
+  >
+    <DrukteMeter />
+  </FeatureBlock>
+
+  <!-- K7 · Race tegen de klok -->
+  <FeatureBlock
+    id="daglijst"
+    tone="paper"
+    reverse
+    title="Afvinken, en iedereen weet wat af is"
+    text={'Elke productie die af is, vink je af. Keukenbaas legt vast wie hem maakte en wanneer. Staat de hele lijst op groen, dan verschijnt "Goed gedaan!" met een score. Een kleine beloning voor een afgemaakte lijst.'}
+    items={['Afvinken legt vast wie wat wanneer maakte', 'Het label voor de DYMO staat meteen klaar', 'Volle lijst: Goed gedaan! Score 100 punten']}
+    figMin="26rem"
+  >
+    <RaceTegenDeKlok />
+  </FeatureBlock>
+
+  <!-- K8 · En verder -->
+  <MoreTiles id="verder" tone="grid" title="En verder" tiles={tiles} />
+
+  <!-- K9 · Vergelijking: vervalt -->
+
+  <!-- K10 · Hoort bij -->
+  <RelatedStrip id="verwant" title="Dit werkt samen met" links={related} />
+
+  <!-- K11 · Veelgestelde vragen -->
+  <FaqAccordion id="faq" title="Vragen over de keuken" items={faq} />
+
+  <!-- K12 · Afsluitende band -->
+  <ClosingBand title="Wat moet er nog? Het staat op het scherm." placeholder="je@jouwzaak.nl" button="Zet me op de wachtlijst" />
+</Base>

@@ -1,0 +1,120 @@
+---
+// Rooster en personeel. Copy letterlijk uit docs/copy/rooster.md.
+import Base from '../layouts/Base.astro';
+import HeroSplit from '../components/sections/HeroSplit.astro';
+import FixCards from '../components/sections/FixCards.astro';
+import FeatureBlock from '../components/sections/FeatureBlock.astro';
+import MoreTiles from '../components/sections/MoreTiles.astro';
+import RelatedStrip from '../components/sections/RelatedStrip.astro';
+import FaqAccordion from '../components/sections/FaqAccordion.astro';
+import ClosingBand from '../components/sections/ClosingBand.astro';
+import RoosterWeek from '../components/illustrations/RoosterWeek.astro';
+import MedewerkerApp from '../components/illustrations/MedewerkerApp.astro';
+import MailKaart from '../components/illustrations/MailKaart.astro';
+import { href } from '../lib/url.js';
+
+const fix = [
+  { problem: 'Je maakt het rooster op zondagavond, na de dienst.', fix: 'De assistent doet een voorstel voor de week, jij past aan wat niet klopt.' },
+  { problem: 'Elke wijziging app je los naar wie het aangaat.', fix: 'Wie een dienst krijgt, verliest of verschuift, krijgt automatisch een mail.' },
+  { problem: 'Wie kan er vrijdag? Je scrolt door drie appgroepen.', fix: 'Wie beschikbaar is, staat groen in het rooster.' },
+];
+const tiles = [
+  { title: 'Iemand in meer dan één team' },
+  { title: 'Herinnering om beschikbaarheid door te geven' },
+  { title: 'Jij krijgt een melding als iemand jarig is' },
+  { title: 'Agendapunten per team' },
+];
+const related = [
+  { href: href('/uren-en-fooi'), label: 'Uren, loon en fooi', text: 'De diensten uit het rooster staan klaar als geplande uren. Jij keurt de gewerkte uren goed, en die bepalen de fooi.' , go: 'Naar uren en fooi' },
+  { href: href('/keuken'), label: 'Keuken en prep', text: 'Wie er vandaag in de keuken staat, staat ook bij de producties op het scherm Vandaag.' , go: 'Naar de keuken' },
+];
+const faq = [
+  { q: 'Ik heb al een roosterprogramma. Waarom zou ik overstappen?', a: 'Omdat de diensten uit het rooster als geplande uren bij de urenregistratie staan, en de goedgekeurde uren de fooi bepalen. Je team ziet rooster, uren en fooi in één app. Wat je meeneemt uit je huidige programma, bekijken we samen bij het klaarzetten.' },
+  { q: 'Moeten mijn medewerkers een app installeren?', a: 'Nee. Ze openen Keukenbaas in de browser van hun telefoon en loggen in met hun e-mailadres en een code. Wie wil, zet het met één tik op het beginscherm. Het werkt op Android en iPhone.' },
+  { q: 'Is de roosterassistent een AI?', a: 'Nee. Hij werkt met vaste regels: je weekpatroon, wie beschikbaar is, wie afwezig is en wie al hoeveel diensten heeft.' },
+  { q: 'Hoe ver vooruit kan ik roosteren?', a: 'Twee tot twaalf weken. Een vaste dienst zet je één keer neer en laat je herhalen.' },
+  { q: 'Wat als iemand zich op het laatste moment ziek meldt?', a: 'Haal de naam bij de dienst weg. Hij wordt een open dienst en kleurt oranje. Wie beschikbaar is, staat groen, dus je ziet meteen wie je kunt vragen. Wie de dienst krijgt, krijgt er een mail van.' },
+  { q: 'Kunnen mijn medewerkers zelf diensten ruilen?', a: 'Nog niet. Ze geven hun beschikbaarheid en afwezigheid zelf door, jij zet de dienst om.' },
+];
+---
+<Base title="Rooster maken voor je restaurant · Keukenbaas" titleRaw description="Maak het weekrooster met een voorstel op basis van wie beschikbaar is. Je team ziet het op de eigen telefoon en krijgt een mail bij elke wijziging.">
+  <!-- R2 · Hero -->
+  <HeroSplit
+    eyebrow="Rooster en personeel"
+    title="De assistent zet een voorstel klaar, jij schuift wat niet klopt."
+    lead="Het voorstel gaat uit van wie beschikbaar is. Jij sleept wat anders moet en vult de open diensten. Wie een dienst krijgt of kwijtraakt, krijgt een mail."
+    placeholder="je@jouwzaak.nl"
+    button="Zet me op de wachtlijst"
+    figMin="30rem"
+    figLabel="Het rooster van week 46 met een dienst die naar vrijdag wordt gesleept"
+  >
+    <RoosterWeek />
+  </HeroSplit>
+
+  <!-- R3 · Zo los je het op -->
+  <FixCards id="fix" tone="white" title="Zo los je het op" cards={fix} problemLabel="Nu" fixLabel="Met Keukenbaas" />
+
+  <!-- R4 · Weekrooster en open diensten -->
+  <FeatureBlock
+    id="weekrooster"
+    tone="grid"
+    title="De week in één scherm"
+    text="Per dag en per medewerker zie je wie er werkt, in welke dienst en van hoe laat tot hoe laat. Een dienst sleep je naar een andere dag, of je kopieert hem. Een dienst zonder naam is een open dienst en die valt op in oranje, dus je vergeet hem niet. Wie die dag beschikbaar is, staat groen. Wie al is ingeroosterd, krijgt een vinkje."
+    items={['Dienst toevoegen met medewerker, diensttype en tijden', '"Alleen deze week" of elke week herhalen', 'Gesloten dagen zet je met één schakelaar uit', 'Roosteren tot 12 weken vooruit']}
+    figMin="22rem"
+  >
+    <RoosterWeek variant="dag" />
+  </FeatureBlock>
+
+  <!-- R5 · Roosterassistent -->
+  <FeatureBlock
+    id="assistent"
+    tone="white"
+    reverse
+    title="Een voorstel voor de hele week"
+    text={'De roosterassistent kijkt naar je vaste weekpatroon, naar wie beschikbaar is, wie vrij heeft en wie al de meeste diensten heeft. Daar maakt hij een voorstel van. Je ziet het eerst als voorbeeld en drukt pas op "Toepassen" als het klopt. Wat je anders wilt, sleep je daarna nog om.'}
+    items={['Wie de minste diensten heeft, komt eerst aan de beurt', 'Vakantie en afwezigheid tellen mee', 'Niets verandert voordat jij op "Toepassen" drukt']}
+    figMin="22rem"
+  >
+    <RoosterWeek variant="assistent" />
+  </FeatureBlock>
+
+  <!-- R6 · Mail bij een wijziging -->
+  <FeatureBlock
+    id="mail"
+    tone="paper"
+    title="Iedereen weet het, zonder dat jij appt"
+    text="Voeg je een dienst toe, verschuif je hem of haal je hem weg, dan gaat er een mail naar de medewerker. Een dienst die elke week terugkomt, staat in één mail en niet in twaalf. Daarnaast krijgt iedereen elke week het eigen rooster in de mail. Wie wil, zet zijn diensten in de agenda op de eigen telefoon."
+    items={['Mail bij elke nieuwe, gewijzigde of verwijderde dienst', 'Elke week een mail met het eigen rooster', 'Eigen agenda per medewerker, voor de agenda op Android of iPhone']}
+    figMin="20rem"
+  >
+    <MailKaart />
+  </FeatureBlock>
+
+  <!-- R7 · Medewerkersapp -->
+  <FeatureBlock
+    id="medewerkersapp"
+    tone="grid"
+    reverse
+    title="Je team kijkt zelf"
+    text={'Iedere medewerker logt in met het eigen e-mailadres en een code. De telefoon onthoudt de inlog. Daarna staat de eigen week klaar: welke diensten, hoe laat, met wie. Beschikbaarheid geven ze zelf door, week voor week. Vakantie of een tandartsafspraak geven ze door via "Afwezigheid doorgeven". Jij ziet het meteen terug in het rooster.'}
+    items={['Inloggen met e-mail en code, op Android en iPhone', 'Beschikbaarheid per week opslaan', 'Afwezigheid doorgeven', 'Eigen uren en eigen fooi inzien']}
+    figMin="18rem"
+  >
+    <MedewerkerApp />
+  </FeatureBlock>
+
+  <!-- R8 · En verder -->
+  <MoreTiles id="verder" tone="paper" title="En verder" tiles={tiles} />
+
+  <!-- R9 · Vergelijking: vervalt -->
+
+  <!-- R10 · Hoort bij -->
+  <RelatedStrip id="verwant" title="Dit werkt samen met" links={related} />
+
+  <!-- R11 · Veelgestelde vragen -->
+  <FaqAccordion id="faq" title="Vragen over het rooster" items={faq} />
+
+  <!-- R12 · Afsluitende band -->
+  <ClosingBand title="Zondagavond vrij?" placeholder="je@jouwzaak.nl" button="Zet me op de wachtlijst" />
+</Base>

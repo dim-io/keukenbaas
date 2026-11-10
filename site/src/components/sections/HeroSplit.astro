@@ -1,0 +1,48 @@
+---
+// Hero voor productpagina's: tekst en aanmelding links, illustratie rechts.
+import Reveal from './Reveal.astro';
+import FigScroll from './FigScroll.astro';
+import Eyebrow from '../Eyebrow.astro';
+import InlineSignup from '../InlineSignup.astro';
+const { eyebrow, title, lead, checks = [], note, placeholder, button, signupId = 'hero', figMin = '30rem', figLabel } = Astro.props;
+---
+<section class="hs grid-paper">
+  <div class="container hs__in">
+    <Reveal class="hs__copy">
+      {eyebrow && <div style="--i:0"><Eyebrow>{eyebrow}</Eyebrow></div>}
+      <h1 style="--i:1">{title}</h1>
+      <p class="hs__lead" style="--i:2">{lead}</p>
+      {checks.length > 0 && (
+        <ul class="hs__checks" role="list" style="--i:3">
+          {checks.map((c) => (
+            <li>
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="17" height="17" rx="3" fill="#dff5ec" stroke="#0a0d22" stroke-width="2"/><path d="M5.5 10.5l3 3 6-7" fill="none" stroke="#207657" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>{c}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div class="hs__form" style="--i:4">
+        <InlineSignup id={signupId} placeholder={placeholder} button={button} />
+        {note && <p class="hs__note mono">{note}</p>}
+      </div>
+    </Reveal>
+    <Reveal class="hs__art"><div style="--i:2"><FigScroll min={figMin} label={figLabel}><slot /></FigScroll></div></Reveal>
+  </div>
+</section>
+<style>
+  .hs { padding-block: var(--space-8) var(--space-9); }
+  .hs__in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: var(--space-7); align-items: center; }
+  .hs :global(.hs__copy) { display: grid; gap: var(--space-5); justify-items: start; }
+  h1 { font-size: var(--step-4); }
+  .hs__lead { font-size: var(--step-1); }
+  .hs__checks { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
+  .hs__checks li { display: flex; gap: var(--space-2); align-items: flex-start; font-weight: 500; color: var(--navy); }
+  .hs__checks svg { width: 1.3rem; height: 1.3rem; flex: none; margin-top: 0.2rem; }
+  .hs__form { display: grid; gap: var(--space-3); width: 100%; }
+  .hs__note { font-size: var(--step--1); color: var(--muted); }
+  .hs :global(.hs__art) { display: flex; justify-content: center; }
+  .hs :global(.hs__art) > :global(div) { width: 100%; }
+  @media (max-width: 56rem) { .hs__in { grid-template-columns: minmax(0, 1fr); } }
+  .hs :global(.hs__art) { min-width: 0; }
+</style>

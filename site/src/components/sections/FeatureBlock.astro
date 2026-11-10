@@ -1,0 +1,47 @@
+---
+// Tekst met opsomming naast een illustratie (slot). reverse: illustratie links. tone: paper | white | grid.
+import Reveal from './Reveal.astro';
+import FigScroll from './FigScroll.astro';
+import Eyebrow from '../Eyebrow.astro';
+const { id, eyebrow, title, text, items = [], link, reverse = false, tone = 'white', figMin = '30rem' } = Astro.props;
+---
+<section id={id} class:list={['fb', `fb--${tone}`, { 'fb--reverse': reverse }]}>
+  <div class="container">
+    <Reveal class="fb__in">
+      <div class="fb__text" style="--i:0">
+        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+        <h2>{title}</h2>
+        {text && <p>{text}</p>}
+        {items.length > 0 && (
+          <ul class="fb__items" role="list">
+            {items.map((it) => (
+              <li><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="17" height="17" rx="3" fill="#dff5ec" stroke="#0a0d22" stroke-width="2"/><path d="M5.5 10.5l3 3 6-7" fill="none" stroke="#207657" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>{it}</span></li>
+            ))}
+          </ul>
+        )}
+        {link && <a class="fb__link" href={link.href}>{link.label}<span aria-hidden="true"> →</span></a>}
+      </div>
+      <div class="fb__art" style="--i:1"><FigScroll min={figMin}><slot /></FigScroll></div>
+    </Reveal>
+  </div>
+</section>
+<style>
+  .fb { padding-block: var(--space-9); }
+  .fb--white { background: var(--white); }
+  .fb--paper { background: var(--paper); }
+  .fb--grid { background-color: var(--paper); background-image: linear-gradient(to right, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
+  .fb :global(.fb__in) { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--space-8); align-items: center; }
+  .fb--reverse .fb__text { order: 2; }
+  .fb__text { display: grid; gap: var(--space-4); justify-items: start; }
+  .fb h2 { font-size: var(--step-3); }
+  .fb__items { list-style: none; padding: 0; display: grid; gap: var(--space-3); }
+  .fb__items li { display: flex; gap: var(--space-3); align-items: flex-start; color: var(--navy); font-weight: 500; }
+  .fb__items svg { width: 1.3rem; height: 1.3rem; flex: none; margin-top: 0.15rem; }
+  .fb__link { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; }
+  .fb__art { display: flex; justify-content: center; min-width: 0; }
+  .fb__art > :global(.figscroll) { width: 100%; }
+  @media (max-width: 56rem) {
+    .fb :global(.fb__in) { grid-template-columns: 1fr; gap: var(--space-6); }
+    .fb--reverse .fb__text { order: 0; }
+  }
+</style>

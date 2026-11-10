@@ -1,0 +1,321 @@
+---
+/*
+ * MepPlanning: weekplanning ma-vr met productkaartjes. Eén keer afspelen zodra data-inview gezet wordt: een cursor pakt het
+ * focaccia-kaartje bij het greepje (tooltip "Sleep naar een andere dag"), sleept het van woensdag naar dinsdag, klikt
+ * "Vorige week kopiëren" en de week vult zich. Daarna blijft de gevulde week staan (data-phase done).
+ * Volgt de STIJLREGELS in DymoLabel.astro. Echt slepen met muis of vinger mag ook (pointer events, op het greepje).
+ * Knop "Speel opnieuw af" onder de illustratie. Eindstaat zonder JS of bij reduced motion: week gevuld, focaccia op dinsdag.
+ * Smal (onder 32rem): de dagen staan onder elkaar met grotere letters.
+ */
+const days = [
+  { d: 'ma', n: '9', today: true, cards: [
+    { n: 'Pizzadeeg', b: '6 kg', s: 'Deeg' },
+    { n: 'Tomaten-courgettesoep', b: '10 l', s: 'Warm' } ] },
+  { d: 'di', n: '10', cards: [
+    { n: 'Focaccia', b: '4 platen', s: 'Oven', move: true, home: 1 },
+    { n: 'Aioli', b: '2 l', s: 'Koud' } ] },
+  { d: 'wo', n: '11', cards: [
+    { n: 'Gepekelde ui', b: '1,5 kg', s: 'Koud' } ] },
+  { d: 'do', n: '12', cards: [
+    { n: 'Tomaten-courgettesoep', b: '10 l', s: 'Warm', copy: true },
+    { n: 'Aioli', b: '2 l', s: 'Koud', copy: true } ] },
+  { d: 'vr', n: '13', cards: [
+    { n: 'Pizzadeeg', b: '6 kg', s: 'Deeg', copy: true },
+    { n: 'Focaccia', b: '4 platen', s: 'Oven', copy: true },
+    { n: 'Gepekelde ui', b: '1,5 kg', s: 'Koud', copy: true } ] },
+];
+---
+<figure class="mp" data-mp data-animate style="margin:0">
+  <div class="mp__stage" data-mp-stage>
+    <div class="mp__win">
+      <div class="mp__tool">
+        <div>
+          <p class="mp__eyebrow">Weekplanning</p>
+          <p class="mp__title">Week 46</p>
+        </div>
+        <div class="mp__btns">
+          <span class="mp__btn" aria-hidden="true">Vandaag</span>
+          <span class="mp__btn" aria-hidden="true">Alles invouwen</span>
+          <button type="button" class="mp__btn mp__btn--on" data-mp-copy>Vorige week kopiëren</button>
+        </div>
+      </div>
+      <div class="mp__week">
+        {days.map((day, di) => (
+          <div class:list={['mp__col', { 'is-today': day.today }]} data-mp-col>
+            <p class="mp__dh"><span>{day.d}</span> <b class="mono">{day.n}</b></p>
+            <div class="mp__list" data-mp-list>
+              {day.cards.map((c) => (
+                <div class="mp__card" data-home={c.home ?? di} data-mp-card {...(c.move ? { 'data-mp-move': '' } : {})} {...(c.copy ? { 'data-mp-copycard': '' } : {})}>
+                  <span class="mp__grip" data-mp-grip title="Sleep naar een andere dag" aria-label="Sleep naar een andere dag">
+                    <svg viewBox="0 0 24 8"><circle cx="5" cy="4" r="1.6"/><circle cx="9.5" cy="4" r="1.6"/><circle cx="14" cy="4" r="1.6"/><circle cx="18.5" cy="4" r="1.6"/></svg>
+                  </span>
+                  <span class="mp__name">{c.n}</span>
+                  <span class="mp__meta mono">{c.b} · {c.s}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div class="mp__tip" data-mp-tip aria-hidden="true"><span>Sleep naar een andere dag</span></div>
+    <svg class="mp__cursor" data-mp-cursor viewBox="0 0 14 20" aria-hidden="true" focusable="false">
+      <path d="M1.2 1.2 V15.6 L4.9 12.3 L7.5 18.4 L10 17.3 L7.4 11.3 L12.4 11.3 Z" fill="#fffdf8" stroke="#0a0d22" stroke-width="1.6" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <figcaption class="mp__cap"><button type="button" class="mp__replay mono" data-mp-replay>Speel opnieuw af</button></figcaption>
+  <p class="visually-hidden">De weekplanning van week 46 met productkaartjes. Het focaccia-kaartje wordt via het greepje van woensdag naar dinsdag gesleept en met de knop Vorige week kopiëren vult de week zich. Je kunt kaartjes ook zelf naar een andere dag slepen.</p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-mp]').forEach((el) => init(el as HTMLElement));
+
+  function init(el: HTMLElement) {
+    const q = <T extends HTMLElement>(s: string) => el.querySelector(s) as T;
+    const stage = q('[data-mp-stage]');
+    const cols = [...el.querySelectorAll('[data-mp-col]')] as HTMLElement[];
+    const lists = cols.map((c) => c.querySelector('[data-mp-list]') as HTMLElement);
+    const cards = [...el.querySelectorAll('[data-mp-card]')] as HTMLElement[];
+    const copies = [...el.querySelectorAll('[data-mp-copycard]')] as HTMLElement[];
+    const focaccia = q('[data-mp-move]');
+    const cursor = q('[data-mp-cursor]'), tip = q('[data-mp-tip]');
+    const copyBtn = q('[data-mp-copy]'), replay = q('[data-mp-replay]');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cs = getComputedStyle(el);
+    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    let gen = 0, started = false, busy = false;
+
+    const sleep = (t: number, g: number) =>
+      new Promise<void>((res, rej) => setTimeout(() => (g === gen ? res() : rej()), t));
+    const phase = (p: string) => el.setAttribute('data-phase', p);
+
+    const rel = (n: Element) => {
+      const r = n.getBoundingClientRect(), s = stage.getBoundingClientRect();
+      return { x: r.left - s.left, y: r.top - s.top, w: r.width, h: r.height };
+    };
+    const centre = (n: Element) => { const r = rel(n); return { x: r.x + r.w / 2, y: r.y + r.h / 2 }; };
+    const at = (x: number, y: number) => { cursor.style.transform = `translate(${x}px, ${y}px)`; };
+    const tipAt = (x: number, y: number) => { tip.style.transform = `translate(${x}px, ${y}px)`; };
+
+    function drop(card: HTMLElement, list: HTMLElement) {
+      const r1 = card.getBoundingClientRect();
+      card.removeAttribute('data-drag'); card.removeAttribute('data-live');
+      card.style.transition = 'none'; card.style.transform = '';
+      list.prepend(card);
+      const r2 = card.getBoundingClientRect();
+      card.style.transform = `translate(${r1.left - r2.left}px, ${r1.top - r2.top}px)`;
+      void card.offsetWidth;
+      card.style.transition = `transform ${ms('--mp-settle')}ms var(--ease-out)`;
+      card.style.transform = '';
+      setTimeout(() => { card.style.transition = ''; }, ms('--mp-settle') + 60);
+    }
+
+    async function reveal(wait: (t: number) => Promise<void>) {
+      copyBtn.setAttribute('data-press', '');
+      await wait(ms('--mp-press'));
+      copyBtn.removeAttribute('data-press');
+      for (const c of copies) {
+        if (!c.hasAttribute('data-hide')) continue;
+        c.removeAttribute('data-hide'); c.setAttribute('data-new', '');
+        await wait(ms('--mp-stagger'));
+      }
+    }
+
+    function reset() {
+      cards.forEach((c) => { c.removeAttribute('data-drag'); c.removeAttribute('data-live'); c.removeAttribute('data-hover'); c.style.transform = ''; c.style.transition = ''; });
+      cards.filter((c) => c !== focaccia).forEach((c) => lists[Number(c.dataset.home)].append(c));
+      lists[2].prepend(focaccia);
+      copies.forEach((c) => { c.setAttribute('data-hide', ''); c.removeAttribute('data-new'); });
+      cols.forEach((c) => c.removeAttribute('data-over'));
+      copyBtn.removeAttribute('data-press');
+      tip.removeAttribute('data-on'); cursor.removeAttribute('data-on');
+    }
+
+    async function play() {
+      const g = ++gen;
+      try {
+        reset(); phase('idle');
+        const s = stage.getBoundingClientRect();
+        cursor.style.transition = 'none'; at(s.width * 0.62, s.height * 0.92); void cursor.offsetWidth; cursor.style.transition = '';
+        await sleep(ms('--mp-pause'), g);
+        cursor.setAttribute('data-on', '');
+        phase('drag');
+        const grip = focaccia.querySelector('[data-mp-grip]') as HTMLElement;
+        const g0 = centre(grip);
+        at(g0.x, g0.y);
+        await sleep(ms('--mp-move') + 100, g);
+        focaccia.setAttribute('data-hover', '');
+        tipAt(g0.x, g0.y); tip.setAttribute('data-on', '');
+        await sleep(ms('--mp-tip'), g);
+        tip.removeAttribute('data-on');
+        const lr = rel(lists[1]);
+        const tx = lr.x + lr.w / 2, ty = lr.y + Math.min(lr.h / 2, 0.6 * lr.w);
+        focaccia.removeAttribute('data-hover'); focaccia.setAttribute('data-drag', '');
+        cols[1].setAttribute('data-over', '');
+        focaccia.style.transform = `translate(${tx - g0.x}px, ${ty - g0.y}px) rotate(2deg)`;
+        at(tx, ty);
+        await sleep(ms('--mp-move') + 100, g);
+        cols[1].removeAttribute('data-over');
+        drop(focaccia, lists[1]);
+        await sleep(ms('--mp-settle') + 100, g);
+        phase('copy');
+        const b = centre(copyBtn);
+        at(b.x, b.y);
+        await sleep(ms('--mp-move') + 100, g);
+        await reveal((t) => sleep(t, g));
+        cursor.removeAttribute('data-on');
+        phase('done');
+      } catch { /* herstart of onderbroken */ }
+    }
+
+    function interrupt() {
+      gen++;
+      cursor.removeAttribute('data-on'); tip.removeAttribute('data-on'); phase('done');
+      copies.forEach((c) => { c.removeAttribute('data-hide'); });
+      cards.forEach((c) => { c.removeAttribute('data-hover'); if (c.hasAttribute('data-drag') && !c.hasAttribute('data-live')) { c.removeAttribute('data-drag'); c.style.transform = ''; } });
+      cols.forEach((c) => c.removeAttribute('data-over'));
+    }
+
+    // Echt slepen met pointer events, alleen via het greepje
+    el.addEventListener('pointerdown', (e) => {
+      const grip = (e.target as HTMLElement).closest('[data-mp-grip]') as HTMLElement | null;
+      if (!grip || (e as PointerEvent).button > 0) return;
+      const card = grip.closest('[data-mp-card]') as HTMLElement;
+      e.preventDefault(); interrupt(); busy = true;
+      card.style.transition = ''; card.style.transform = '';
+      card.setAttribute('data-drag', ''); card.setAttribute('data-live', '');
+      const sx = e.clientX, sy = e.clientY;
+      let over = -1;
+      grip.setPointerCapture((e as PointerEvent).pointerId);
+      const move = (m: PointerEvent) => {
+        card.style.transform = `translate(${m.clientX - sx}px, ${m.clientY - sy}px) rotate(2deg)`;
+        over = cols.findIndex((c) => { const r = c.getBoundingClientRect(); return m.clientX >= r.left && m.clientX <= r.right && m.clientY >= r.top && m.clientY <= r.bottom; });
+        cols.forEach((c, i) => (i === over ? c.setAttribute('data-over', '') : c.removeAttribute('data-over')));
+      };
+      const up = () => {
+        grip.removeEventListener('pointermove', move); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up);
+        cols.forEach((c) => c.removeAttribute('data-over'));
+        drop(card, over >= 0 ? lists[over] : (card.parentElement as HTMLElement));
+        busy = false;
+      };
+      grip.addEventListener('pointermove', move); grip.addEventListener('pointerup', up); grip.addEventListener('pointercancel', up);
+    });
+
+    // De knop werkt ook echt: de week vult zich met de kaartjes van vorige week
+    copyBtn.addEventListener('click', () => {
+      if (!copies.some((c) => c.hasAttribute('data-hide'))) return;
+      interrupt(); busy = true;
+      reveal((t) => new Promise((r) => setTimeout(r, t))).then(() => { busy = false; });
+    });
+
+    replay.addEventListener('click', () => { if (reduce || !started) return; play(); });
+    if (reduce) { replay.hidden = true; return; } // statische eindstaat blijft staan; slepen blijft werken
+
+    el.addEventListener('inviewchange', (e) => {
+      if ((e as CustomEvent).target !== el || started) return;
+      started = true; play();
+    });
+    reset(); phase('idle');
+    if (el.hasAttribute('data-inview')) { started = true; play(); }
+  }
+</script>
+
+<style>
+  .mp {
+    --mp-pause: 200ms;
+    --mp-move: 550ms;
+    --mp-tip: 450ms;
+    --mp-settle: 300ms;
+    --mp-press: 350ms;
+    --mp-stagger: 90ms;
+    width: min(100%, 48rem);
+    container-type: inline-size;
+  }
+  .mp__stage { position: relative; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .mp__win {
+    background: var(--paper); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow-l);
+    padding: 2.4cqw; color: var(--navy); font-family: var(--font-body); font-size: 1.8cqw; line-height: 1.2;
+  }
+  .mp__win p { margin: 0; }
+  .mp__tool { display: flex; justify-content: space-between; align-items: flex-end; gap: 2cqw; margin-bottom: 2cqw; }
+  .mp__eyebrow { font-weight: 800; font-size: 1.6cqw; letter-spacing: 0.1em; color: var(--orange-dark); }
+  .mp__title { font-family: var(--font-display); font-weight: 800; font-size: 3.8cqw; line-height: 1.05; letter-spacing: -0.02em; }
+  .mp__title .mono { font-family: var(--font-mono); font-weight: 500; font-size: 1.6cqw; color: var(--muted); letter-spacing: 0; margin-left: 1cqw; }
+  .mp__btns { display: flex; gap: 0.8cqw; }
+  .mp__btn {
+    font: inherit; font-weight: 600; font-size: 1.8cqw; padding: 1cqw 1.8cqw; white-space: nowrap; color: var(--navy);
+    background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius-s);
+  }
+  .mp__btn--on { background: var(--orange); box-shadow: var(--shadow-s); cursor: pointer; transition: transform var(--dur-1), box-shadow var(--dur-1); }
+  .mp__btn--on:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow); }
+  .mp__btn--on[data-press] { transform: translate(2px, 2px); box-shadow: none; }
+
+  .mp__week { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1cqw; }
+  .mp__col { background: var(--white); border: 2px solid var(--line); border-radius: var(--radius); padding: 0.8cqw; min-width: 0; transition: background var(--dur-1), border-color var(--dur-1); }
+  .mp__col.is-today { border-color: var(--orange); }
+  .mp__col[data-over] { background: var(--orange-soft); border-color: var(--orange); }
+  .mp__dh { font-weight: 800; font-size: 1.9cqw; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.3cqw 0.4cqw 0.9cqw; display: flex; justify-content: space-between; }
+  .mp__dh b { font-weight: 600; color: var(--muted); }
+  .mp__list { display: grid; gap: 0.8cqw; align-content: start; min-height: 32cqw; }
+
+  .mp__card {
+    position: relative; background: var(--white); border: 2px solid var(--line); border-left: 0.7cqw solid var(--tape);
+    border-radius: var(--radius-s); padding: 0 0.8cqw 0.9cqw; display: flex; flex-direction: column; gap: 0.3cqw; min-width: 0;
+    transition: border-color var(--dur-1), box-shadow var(--dur-1), opacity 300ms var(--ease-out);
+  }
+  .mp__card:hover, .mp__card[data-hover] { border-color: var(--navy); border-left-color: var(--tape); box-shadow: var(--shadow-s); }
+  .mp__card[data-hide] { visibility: hidden; opacity: 0; }
+  .mp__card[data-new] { animation: mp-pop 450ms var(--ease-out) both; }
+  .mp__card[data-drag] { z-index: 6; border-color: var(--navy); box-shadow: var(--shadow); transition: transform var(--mp-move) var(--ease-out); }
+  .mp__card[data-live] { transition: none; }
+  .mp__grip { display: block; height: 2.6cqw; cursor: grab; touch-action: none; color: var(--line); margin: 0 -0.8cqw; }
+  .mp__grip svg { width: 100%; height: 100%; fill: currentColor; }
+  .mp__card:hover .mp__grip, .mp__card[data-hover] .mp__grip, .mp__card[data-drag] .mp__grip { color: var(--orange); }
+  .mp__card[data-drag] .mp__grip { cursor: grabbing; }
+  .mp__name { font-weight: 700; font-size: 1.75cqw; line-height: 1.15; hyphens: manual; overflow-wrap: break-word; }
+  .mp__meta { font-size: 1.65cqw; color: var(--muted); }
+  @keyframes mp-pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* Cursor en tooltip */
+  .mp__cursor {
+    position: absolute; left: 0; top: 0; width: 3.2cqw; z-index: 9; pointer-events: none; visibility: hidden;
+    transition: transform var(--mp-move) var(--ease-out);
+  }
+  .mp__cursor[data-on] { visibility: visible; }
+  .mp__tip { position: absolute; left: 0; top: 0; z-index: 8; pointer-events: none; visibility: hidden; }
+  .mp__tip[data-on] { visibility: visible; }
+  .mp__tip span {
+    position: absolute; left: 0; top: 0; transform: translate(-50%, -190%); white-space: nowrap;
+    background: var(--navy); color: var(--paper); font-weight: 600; font-size: 1.8cqw; padding: 0.8cqw 1.4cqw; border-radius: var(--radius-s);
+    box-shadow: var(--shadow-s);
+  }
+
+  .mp__cap { margin-top: var(--space-3); }
+  .mp__replay {
+    font-size: var(--step--1); color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+  .mp__replay:hover { color: var(--navy); }
+
+  /* Smal: dagen onder elkaar, grotere letters */
+  @container (max-width: 32rem) {
+    .mp__win { padding: 3.4cqw; font-size: 3.4cqw; }
+    .mp__tool { flex-direction: column; align-items: flex-start; gap: 3cqw; margin-bottom: 3.4cqw; }
+    .mp__eyebrow { font-size: 3cqw; }
+    .mp__title { font-size: 7cqw; }
+    .mp__btns > .mp__btn:not(.mp__btn--on) { display: none; }
+    .mp__btn { font-size: 3.4cqw; padding: 1.8cqw 3.4cqw; }
+    .mp__week { grid-template-columns: minmax(0, 1fr); gap: 2.4cqw; }
+    .mp__col { display: grid; grid-template-columns: 12cqw minmax(0, 1fr); gap: 1.6cqw; padding: 1.8cqw; }
+    .mp__dh { display: block; font-size: 3.4cqw; padding: 1cqw 0.6cqw; }
+    .mp__dh b { display: block; }
+    .mp__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6cqw; min-height: 0; }
+    .mp__card { border-left-width: 1.4cqw; padding: 0 1.4cqw 1.6cqw; gap: 0.6cqw; }
+    .mp__grip { height: 4.4cqw; margin: 0 -1.4cqw; }
+    .mp__name { font-size: 3.4cqw; }
+    .mp__meta { font-size: 3.1cqw; }
+    .mp__cursor { width: 6cqw; }
+    .mp__tip span { font-size: 3.4cqw; padding: 1.2cqw 2.4cqw; }
+  }
+</style>

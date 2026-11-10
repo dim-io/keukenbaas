@@ -1,0 +1,35 @@
+---
+// Bron voor public/og.png (1200x630): screenshot van deze pagina op 1200x630. Niet indexeerbaar.
+import '../styles/global.css';
+---
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1200" />
+    <meta name="robots" content="noindex" />
+    <title>OG-afbeelding | Keukenbaas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+  </head>
+  <body>
+    <div class="og">
+      <div class="og__brand">
+        <span class="og__word">Keukenbaas</span>
+        <svg viewBox="0 0 26 12" width="52" height="24" aria-hidden="true"><path d="M1 1h24v10H1l2-5z" fill="#e06633" stroke="#0a0d22" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 4v4M12.5 4v4M16 4v4" stroke="#fffdf8" stroke-width="1.5"/></svg>
+      </div>
+      <h1>Na sluit naar huis, niet achter Excel en WhatsApp.</h1>
+      <div class="og__label"><span>KEUKENBAAS ·</span><b>THT: nooit</b></div>
+    </div>
+  </body>
+</html>
+<style is:global>
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; display: block; min-height: 0; }
+  .og { width: 1200px; height: 630px; box-sizing: border-box; padding: 64px 72px; background-color: var(--paper); background-image: linear-gradient(to right, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px); background-size: 24px 24px; display: grid; grid-template-rows: auto 1fr auto; gap: 24px; align-items: start; }
+  .og__brand { display: flex; align-items: center; gap: 12px; }
+  .og__word { font-family: var(--font-display); font-weight: 900; font-stretch: 62%; font-size: 64px; line-height: 1; color: var(--navy); }
+  .og h1 { font-size: 84px; line-height: 1.02; max-width: 980px; align-self: center; }
+  .og__label { justify-self: start; display: flex; align-items: center; gap: 16px; background: var(--white); border: 3px solid var(--navy); border-radius: 6px; box-shadow: 6px 6px 0 var(--navy); padding: 16px 32px; font-family: var(--font-mono); font-weight: 600; font-size: 38px; color: var(--navy); transform: rotate(-1.5deg); }
+  .og__label b { background: var(--orange-soft); padding: 0 12px; font-weight: 600; }
+</style>

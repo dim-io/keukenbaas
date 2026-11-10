@@ -1,0 +1,562 @@
+---
+/*
+ * VandaagScherm: laptop met het dagdashboard "Vandaag", optioneel met telefoon (medewerkersscherm).
+ * Volgt de STIJLREGELS in DymoLabel.astro. Prop withPhone toont de telefoon rechtsvoor.
+ * Eén keer afspelen zodra data-inview gezet wordt: de drukte loopt vloeiend op naar 78%, de producties worden één voor
+ * één afgevinkt, de knop "Beschikbaarheid opslaan" wordt ingedrukt. Daarna blijft alles in de eindstaat staan
+ * (alles afgevinkt, 78%, opgeslagen); nooit terug naar 0. Klik speelt het kort opnieuw af.
+ * Eindstaat (zonder JS of bij reduced motion) is de standaard. Op smalle schermen (onder 34rem) staat de laptop
+ * in een eenvoudigere, grotere variant (--u) en staat de telefoon onder de laptop.
+ */
+/*
+ * Props
+ * - variant 'laptop' (standaard): het dagdashboard, optioneel met telefoon (withPhone) die naast de laptop staat.
+ * - variant 'controles': laptop met Aandacht nodig, Controles en Avondshift (voor de pagina Keuken en prep).
+ * - variant 'phone': alleen de telefoon met de keukenlijst; na het laatste vinkje verschijnt het venster Race tegen de klok,
+ *   dat zichzelf sluit; de lijst blijft op klaar.
+ */
+interface Props { withPhone?: boolean; variant?: 'laptop' | 'controles' | 'phone' }
+const { withPhone: wp = false, variant = 'laptop' } = Astro.props;
+const withPhone = wp && variant === 'laptop';
+const keuken = [
+  { t: '10:00', n: 'Pizzadeeg', b: '6 kg', who: 'Sanne' },
+  { t: '10:30', n: 'Tomaten-courgettesoep', b: '10 l', who: 'Mehmet' },
+  { t: '11:15', n: 'Focaccia', b: '4 platen', who: 'Sanne' },
+  { t: '11:45', n: 'Aioli', b: '2 l', who: 'Mehmet' },
+  { t: '12:00', n: 'Gepekelde ui', b: '1,5 kg', who: 'Sanne' },
+];
+const avond = [
+  { t: 'Afvoer schoongemaakt', ok: true },
+  { t: 'Koelcel gemeten', ok: true },
+  { t: 'Vloer gedweild', ok: false },
+  { t: 'Pass leeg', ok: false },
+];
+const prods = [
+  { n: 'Pizzadeeg', who: 'Sanne', b: '6 kg' },
+  { n: 'Tomaten-courgettesoep', who: 'Mehmet', b: '10 l' },
+  { n: 'Focaccia', who: 'Sanne', b: '4 platen' },
+  { n: 'Aioli', who: 'Mehmet', b: '2 l' },
+  { n: 'Gepekelde ui', who: 'Sanne', b: '1,5 kg' },
+];
+const week = [
+  { d: 'Ma', n: '9 nov', s: '16:00-23:00' },
+  { d: 'Wo', n: '11 nov', s: '16:00-23:00' },
+  { d: 'Za', n: '14 nov', s: '15:00-23:30' },
+];
+const menu = ['Vandaag', 'MEP-planning', 'Rooster', 'Recepten', 'HACCP', 'Meer'];
+const tiles = [
+  { t: 'Kassa geteld', ok: true },
+  { t: 'Koeling gemeten', ok: true },
+  { t: 'Afval weggebracht', ok: false },
+  { t: 'Keuken schoon', ok: false },
+];
+---
+{variant === 'phone' ? (
+<figure class="vs vs--solo" data-vp data-animate style="margin:0">
+  <div class="vp__stage" role="button" tabindex="0" aria-label="Speel het afvinken van de keukenlijst opnieuw af" data-vp-stage>
+    <div class="vp__phone" aria-hidden="true">
+      <div class="vp__screen">
+        <div class="vp__speaker"></div>
+        <p class="vs__eyebrow vp__eyebrow">VANDAAG &middot; maandag 9 november</p>
+        <p class="vp__h">Keukenlijst</p>
+        <div class="vp__list">
+          {keuken.map((k) => (
+            <div class="vs__row vp__row" data-vp-row data-done>
+              <span class="vs__box"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.5" pathLength="1" fill="none" stroke="#0a0d22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="vp__t mono">{k.t}</span>
+              <span class="vp__n"><b>{k.n}</b><span class="mono">{k.b}</span></span>
+              <span class="vs__who">{k.who}</span>
+            </div>
+          ))}
+        </div>
+        <div class="vp__modal" data-vp-modal>
+          <p class="vs__eyebrow">RACE TEGEN DE KLOK</p>
+          <p class="vp__good">Goed gedaan!</p>
+          <p class="vp__sub">Je hebt weer een scherpe tijd neergezet.</p>
+          <p class="vp__score mono">Score <b>100</b> punten</p>
+          <span class="vp__go">Mooi, door!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="visually-hidden">Het scherm Vandaag op een telefoon: de keukenlijst van maandag 9 november met vijf producties (pizzadeeg, tomaten-courgettesoep, focaccia, aioli en gepekelde ui) die worden afgevinkt. Na het laatste vinkje verschijnt Race tegen de klok: Goed gedaan, score 100 punten.</p>
+</figure>
+) : (
+<figure class:list={['vs', { 'vs--phone': withPhone }]} data-vs data-variant={variant} data-animate style="margin:0">
+  <div class="vs__stage" role="button" tabindex="0" aria-label="Speel de animatie van het dagdashboard opnieuw af" data-vs-stage>
+    <div class="vs__laptop" aria-hidden="true">
+      <div class="vs__lid">
+        <div class="vs__screen">
+          <div class="vs__top">
+            <span class="vs__logo"></span><span class="vs__brand">Keukenbaas</span>
+            <nav class="vs__menu">
+              {menu.map((m, i) => <span class:list={['vs__tab', { 'is-on': i === 0 }]}>{m}</span>)}
+            </nav>
+            <span class="vs__me">Sanne</span>
+          </div>
+          <div class="vs__body">
+            <div class="vs__head">
+              <div>
+                <p class="vs__eyebrow">VANDAAG</p>
+                <p class="vs__date">maandag 9 november</p>
+              </div>
+              <div class="vs__btns"><span class="vs__btn">Weer ophalen</span><span class="vs__btn">GoTable ophalen</span><span class="vs__btn vs__btn--on">Foodticket ophalen</span></div>
+            </div>
+            {variant === 'controles' ? (
+            <div class="vs__grid vs__grid--ctl">
+              <div class="vs__col">
+                <section class="vs__card vs__card--warn">
+                  <div class="vs__ch"><p class="vs__eyebrow">AANDACHT NODIG</p></div>
+                  <p class="vs__alert"><svg viewBox="0 0 16 14" focusable="false" aria-hidden="true"><path d="M8 1.5l6.5 11h-13z" fill="#efe0a8" stroke="#0a0d22" stroke-width="2" stroke-linejoin="round"/><path d="M8 5.5v3" stroke="#0a0d22" stroke-width="2" stroke-linecap="round"/></svg>Koelkast pass nog niet gemeten</p>
+                </section>
+                <section class="vs__card">
+                  <div class="vs__ch"><p class="vs__eyebrow">CONTROLES</p><span class="vs__count mono" data-vc-count>2 van 4 gedaan</span></div>
+                  <div class="vs__bar"><i data-vc-bar style="--p:50"></i></div>
+                </section>
+              </div>
+              <section class="vs__card">
+                <div class="vs__ch"><p class="vs__eyebrow">AVONDSHIFT</p></div>
+                <p class="vs__close mono" data-vc-close>Nog 2 punt(en) voor sluit</p>
+                <div class="vs__tiles vs__tiles--one">
+                  {avond.map((t) => <span class:list={['vs__tile', { 'is-ok': t.ok }]} data-vc-tile><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3.2 3.2L13 4.5" fill="none" stroke="#0a0d22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>{t.t}</span>)}
+                </div>
+              </section>
+            </div>
+            ) : (
+            <div class="vs__grid">
+              <section class="vs__card vs__list">
+                <div class="vs__ch"><p class="vs__eyebrow">KEUKENLIJST</p><span class="vs__count mono" data-vs-count>5 van 5 af</span></div>
+                {prods.map((p) => (
+                  <div class="vs__row" data-vs-row data-done>
+                    <span class="vs__box"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.5" pathLength="1" fill="none" stroke="#0a0d22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span class="vs__name">{p.n}</span>
+                    <span class="vs__batch mono">{p.b}</span>
+                    <span class="vs__who">{p.who}</span>
+                  </div>
+                ))}
+                <div class="vs__add"><span class="vs__btn">Producten kiezen</span><span class="vs__btn vs__btn--on">Toevoegen</span></div>
+              </section>
+              <div class="vs__col">
+                <section class="vs__card">
+                  <div class="vs__ch"><p class="vs__eyebrow">VERWACHTE DRUKTE</p><span class="vs__tag">Druk</span></div>
+                  <div class="vs__big"><span class="vs__pct mono" data-vs-pct>78%</span></div>
+                  <div class="vs__bar"><i data-vs-bar style="--p:78"></i></div>
+                  <p class="vs__src mono">Droog, 11 °C · 42 reserveringen via GoTable</p>
+                </section>
+                <section class="vs__card">
+                  <div class="vs__ch"><p class="vs__eyebrow">CONTROLES</p></div>
+                  <div class="vs__ctl" data-vs-temp data-on>
+                    <span class="vs__ctlname">Koelcel 1</span>
+                    <span class="vs__val mono">3,8 °C</span>
+                    <span class="vs__ok">OK</span>
+                  </div>
+                </section>
+                <section class="vs__card">
+                  <div class="vs__ch"><p class="vs__eyebrow">DAGAFSLUITING</p></div>
+                  <p class="vs__close mono">Nog 2 punt(en) voor sluit</p>
+                  <div class="vs__tiles">
+                    {tiles.map((t) => <span class:list={['vs__tile', { 'is-ok': t.ok }]}>{t.t}</span>)}
+                  </div>
+                </section>
+              </div>
+            </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <div class="vs__base"></div>
+    </div>
+
+    {withPhone && (
+      <div class="vs__phone" aria-hidden="true">
+        <div class="vs__pscreen">
+          <div class="vs__speaker"></div>
+          <p class="vs__hoi">Hoi Sanne</p>
+          <p class="vs__psub mono">Week 46 · 9 t/m 15 november</p>
+          <div class="vs__days">
+            {week.map((w) => (
+              <div class="vs__day is-shift">
+                <span class="vs__dd">{w.d} <b class="mono">{w.n}</b></span>
+                <span class="vs__ty">Avond keuken</span>
+                <span class="vs__ds mono">{w.s}</span>
+              </div>
+            ))}
+          </div>
+          <div class="vs__save" data-vs-btn data-saved>
+            <span class="vs__save-a">Beschikbaarheid opslaan</span>
+            <span class="vs__save-b">Opgeslagen</span>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+  <p class="visually-hidden">{variant === 'controles' ? 'Het scherm Vandaag met Aandacht nodig: koelkast pass nog niet gemeten. Twee van vier controles zijn gedaan. Bij de avondshift staan nog twee punten voor sluit open: vloer gedweild en pass leeg. Afvoer schoongemaakt en koelcel gemeten zijn klaar.' : ''}{variant !== 'controles' && 'Het dagdashboard Vandaag van maandag 9 november: de keukenlijst met vijf producties die worden afgevinkt, een verwachte drukte van 78 procent, koelcel 1 op 3,8 graden en nog 2 punten voor sluit.'}{withPhone && ' Op de telefoon ziet Sanne haar diensten van maandag 9, woensdag 11 en zaterdag 14 november en slaat ze haar beschikbaarheid op.'}</p>
+</figure>
+)}
+
+<script>
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('[data-vs]').forEach((el) => {
+    if (reduced) return; // eindstaat blijft staan
+    if ((el as HTMLElement).dataset.variant === 'controles') controles(el as HTMLElement);
+    else init(el as HTMLElement);
+  });
+  document.querySelectorAll('[data-vp]').forEach((el) => { if (!reduced) phoneInit(el as HTMLElement); });
+
+  // Planner: elke play() annuleert de vorige; fn's die te laat komen draaien niet meer.
+  function planner() {
+    let gen = 0, timers: number[] = [];
+    return () => {
+      timers.forEach(clearTimeout); timers = [];
+      const g = ++gen;
+      return (fn: () => void, t: number) => { timers.push(window.setTimeout(() => { if (g === gen) fn(); }, t)); };
+    };
+  }
+  // Teller met ease-out (requestAnimationFrame)
+  function tween(dur: number, cb: (e: number) => void) {
+    const t0 = performance.now();
+    let id = 0;
+    const step = (now: number) => {
+      const p = Math.min(1, (now - t0) / dur);
+      cb(1 - Math.pow(1 - p, 3));
+      if (p < 1) id = requestAnimationFrame(step);
+    };
+    id = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(id);
+  }
+  // Eén keer afspelen zodra de illustratie in beeld is; klik speelt opnieuw af.
+  function once(el: HTMLElement, play: () => void, again: HTMLElement) {
+    let started = false, cooling = false;
+    el.addEventListener('inviewchange', (e) => {
+      if ((e as CustomEvent).target !== el || started) return;
+      started = true; play();
+    });
+    if (el.hasAttribute('data-inview')) { started = true; play(); }
+    const restart = () => { if (!started || cooling) return; cooling = true; setTimeout(() => (cooling = false), 900); play(); };
+    again.addEventListener('click', restart);
+    again.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') { e.preventDefault(); restart(); } });
+  }
+  function msOf(el: HTMLElement) { const cs = getComputedStyle(el); return (n: string) => parseFloat(cs.getPropertyValue(n)) || 0; }
+
+  function phoneInit(el: HTMLElement) {
+    const rows = [...el.querySelectorAll('[data-vp-row]')] as HTMLElement[];
+    const ms = msOf(el);
+    const plan = planner();
+    const phase = (p: string) => el.setAttribute('data-phase', p);
+    const reset = () => { rows.forEach((r) => r.removeAttribute('data-done')); phase('idle'); };
+    reset();
+    once(el, () => {
+      const at = plan();
+      reset();
+      let t = ms('--vs-pause');
+      rows.forEach((r) => { t += ms('--vs-check'); at(() => r.setAttribute('data-done', ''), t); });
+      t += 250;
+      at(() => phase('modal'), t);
+      t += ms('--vs-modal');
+      at(() => phase('close'), t);
+      t += ms('--vs-close');
+      at(() => phase('done'), t);
+    }, el.querySelector('[data-vp-stage]') as HTMLElement);
+  }
+
+  function controles(el: HTMLElement) {
+    const tiles = [...el.querySelectorAll('[data-vc-tile]')] as HTMLElement[];
+    const count = el.querySelector('[data-vc-count]') as HTMLElement;
+    const bar = el.querySelector('[data-vc-bar]') as HTMLElement;
+    const close = el.querySelector('[data-vc-close]') as HTMLElement;
+    const ms = msOf(el);
+    const plan = planner();
+    const paint = () => {
+      const open = tiles.filter((t) => !t.classList.contains('is-ok')).length;
+      close.textContent = 'Nog ' + open + ' punt(en) voor sluit';
+      const done = 4 - open;
+      count.textContent = done + ' van 4 gedaan';
+      bar.style.setProperty('--p', String(done * 25));
+    };
+    const first = tiles.slice(0, 2);
+    const reset = () => { first.forEach((t) => t.classList.remove('is-ok')); paint(); };
+    reset();
+    once(el, () => {
+      const at = plan();
+      reset();
+      let t = ms('--vs-pause') + 200;
+      first.forEach((tile) => { t += ms('--vs-check'); at(() => { tile.classList.add('is-ok'); paint(); }, t); });
+    }, el.querySelector('[data-vs-stage]') as HTMLElement);
+  }
+
+  function init(el: HTMLElement) {
+    const $ = (s: string) => el.querySelector(s) as HTMLElement | null;
+    const rows = [...el.querySelectorAll('[data-vs-row]')] as HTMLElement[];
+    const bar = $('[data-vs-bar]')!, pct = $('[data-vs-pct]')!, cnt = $('[data-vs-count]')!;
+    const temp = $('[data-vs-temp]')!, btn = $('[data-vs-btn]');
+    const ms = msOf(el);
+    const plan = planner();
+    let stop = () => {};
+    const phase = (p: string) => el.setAttribute('data-phase', p);
+    const setP = (v: number) => { bar.style.setProperty('--p', String(v)); pct.textContent = Math.round(v) + '%'; };
+    const setCount = () => { cnt.textContent = rows.filter((r) => r.hasAttribute('data-done')).length + ' van ' + rows.length + ' af'; };
+
+    function reset() {
+      stop();
+      rows.forEach((r) => r.removeAttribute('data-done'));
+      temp.removeAttribute('data-on');
+      btn?.removeAttribute('data-saved');
+      btn?.removeAttribute('data-press');
+      el.setAttribute('data-reset', '');
+      setP(0); setCount(); phase('idle');
+      void el.offsetWidth;
+      el.removeAttribute('data-reset');
+    }
+
+    function play() {
+      const at = plan();
+      reset();
+      at(() => { phase('fill'); stop = tween(ms('--vs-fill'), (e) => setP(78 * e)); }, ms('--vs-pause'));
+      let t = ms('--vs-pause') + 450;
+      at(() => { phase('check'); temp.setAttribute('data-on', ''); }, t);
+      rows.forEach((r) => { t += ms('--vs-check'); at(() => { r.setAttribute('data-done', ''); setCount(); }, t); });
+      if (btn) {
+        t += 300;
+        at(() => { phase('phone'); btn.setAttribute('data-press', ''); }, t);
+        t += ms('--vs-press');
+        at(() => { btn.removeAttribute('data-press'); btn.setAttribute('data-saved', ''); }, t);
+      }
+      t += 250;
+      at(() => { setP(78); phase('done'); }, t);
+    }
+
+    reset();
+    once(el, play, $('[data-vs-stage]')!);
+  }
+</script>
+
+<style>
+  .vs {
+    --vs-pause: 200ms;
+    --vs-fill: 1000ms;
+    --vs-check: 280ms;
+    --vs-draw: 380ms;
+    --vs-press: 350ms;
+    --vs-modal: 1250ms;
+    --vs-close: 380ms;
+    width: min(100%, 60rem);
+    container-type: inline-size;
+    position: relative;
+  }
+  .vs--phone { padding-bottom: 2cqw; }
+  .vs__stage { position: relative; cursor: pointer; }
+
+  /* Laptop */
+  .vs__laptop { width: 100%; }
+  .vs--phone .vs__laptop { width: 74cqw; }
+  .vs__lid {
+    width: 94%;
+    margin: 0 auto;
+    background: var(--navy);
+    border: 2px solid var(--navy);
+    border-radius: 12px 12px 0 0;
+    padding: 1.1cqw 1.1cqw 0.6cqw;
+    box-shadow: var(--shadow-l);
+  }
+  .vs__base {
+    height: 2.2cqw;
+    background: var(--white);
+    border: 2px solid var(--navy);
+    border-radius: 2px 2px 14px 14px;
+    box-shadow: 4px 4px 0 var(--navy);
+    position: relative;
+  }
+  .vs__base::after {
+    content: ""; position: absolute; left: 50%; top: -2px; width: 12cqw; height: 0.9cqw; transform: translateX(-50%);
+    background: var(--paper); border: 2px solid var(--navy); border-top: 0; border-radius: 0 0 6px 6px;
+  }
+
+  /* Schermscherm: alle maten in cqw van het scherm zelf */
+  .vs__screen {
+    --u: 1cqw;
+    container-type: inline-size;
+    aspect-ratio: 16 / 10;
+    overflow: visible;
+    background: var(--paper);
+    border-radius: var(--radius-s);
+    color: var(--navy);
+    font-family: var(--font-body);
+    font-size: 1.6cqw;
+    line-height: 1.25;
+    display: flex; flex-direction: column;
+  }
+  .vs__screen p { margin: 0; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .vs__top {
+    flex: none; height: calc(6.4 * var(--u)); display: flex; align-items: center; gap: calc(1.2 * var(--u)); padding: 0 calc(2 * var(--u));
+    background: var(--white); border-bottom: 2px solid var(--line);
+  }
+  .vs__logo { width: calc(2.4 * var(--u)); height: calc(2.4 * var(--u)); background: var(--orange); border: 2px solid var(--navy); border-radius: var(--radius-s); }
+  .vs__brand { font-family: var(--font-display); font-weight: 800; font-size: calc(2 * var(--u)); letter-spacing: -0.01em; }
+  .vs__menu { display: flex; gap: calc(0.4 * var(--u)); margin-left: calc(2 * var(--u)); flex: 1; }
+  .vs__tab { padding: calc(0.8 * var(--u)) calc(1.3 * var(--u)); border-radius: var(--radius-s); font-weight: 600; font-size: calc(1.5 * var(--u)); color: var(--ink); white-space: nowrap; }
+  .vs__tab.is-on { background: var(--orange-soft); color: var(--orange-dark); }
+  .vs__me { font-weight: 700; font-size: calc(1.5 * var(--u)); padding: calc(0.7 * var(--u)) calc(1.3 * var(--u)); border: 2px solid var(--line); border-radius: 99px; }
+  .vs__body { flex: 1; padding: calc(2 * var(--u)) calc(2.4 * var(--u)) 0; min-height: 0; }
+  .vs__head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: calc(1.6 * var(--u)); }
+  .vs__eyebrow { font-weight: 800; font-size: calc(1.3 * var(--u)); letter-spacing: 0.1em; color: var(--orange-dark); }
+  .vs__date { font-family: var(--font-display); font-weight: 800; font-size: calc(3.6 * var(--u)); line-height: 1.05; letter-spacing: -0.02em; }
+  .vs__btns, .vs__add { display: flex; gap: calc(0.8 * var(--u)); }
+  .vs__btn { font-weight: 600; font-size: calc(1.4 * var(--u)); padding: calc(0.8 * var(--u)) calc(1.4 * var(--u)); border: 2px solid var(--navy); border-radius: var(--radius-s); background: var(--white); white-space: nowrap; }
+  .vs__btn--on { background: var(--orange); color: var(--navy); box-shadow: var(--shadow-s); }
+  .vs__grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: calc(1.8 * var(--u)); align-items: start; }
+  .vs__col { display: grid; gap: calc(1.4 * var(--u)); }
+  .vs__card { background: var(--white); border: 2px solid var(--line); border-radius: var(--radius); padding: calc(1.6 * var(--u)) calc(1.8 * var(--u)); }
+  .vs__ch { display: flex; justify-content: space-between; align-items: center; margin-bottom: calc(1 * var(--u)); }
+  .vs__count { font-size: calc(1.4 * var(--u)); font-weight: 600; color: var(--muted); }
+  .vs__tag { font-size: calc(1.3 * var(--u)); font-weight: 700; background: var(--orange); border: 2px solid var(--navy); padding: calc(0.1 * var(--u)) calc(1 * var(--u)); border-radius: 99px; }
+
+  /* Keukenlijst */
+  .vs__row {
+    display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: calc(1.3 * var(--u));
+    padding: calc(1.2 * var(--u)) calc(1 * var(--u)); margin: 0 calc(-1 * var(--u)); border-radius: var(--radius-s);
+    transition: background var(--dur-2) var(--ease-out);
+  }
+  .vs__row + .vs__row { border-top: 2px solid var(--paper); }
+  .vs__row:hover { background: var(--paper); }
+  .vs__row[data-done] { background: var(--green-soft); }
+  .vs__box { width: calc(3 * var(--u)); height: calc(3 * var(--u)); border: 2px solid var(--navy); border-radius: var(--radius-s); background: var(--white); display: grid; place-items: center; transition: background var(--dur-1); }
+  .vs__box svg { width: 80%; height: 80%; }
+  .vs__box path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset var(--vs-draw) var(--ease-out); }
+  .vs__row[data-done] .vs__box { background: var(--green); }
+  .vs__row[data-done] .vs__box path { stroke-dashoffset: 0; }
+  .vs__name { font-weight: 700; font-size: calc(1.8 * var(--u)); }
+  .vs__batch { font-size: calc(1.4 * var(--u)); color: var(--muted); }
+  .vs__who { font-size: calc(1.3 * var(--u)); font-weight: 700; padding: calc(0.3 * var(--u)) calc(1.1 * var(--u)); border-radius: 99px; background: var(--paper); border: 2px solid var(--line); }
+  .vs__add { margin-top: calc(1.2 * var(--u)); }
+
+  /* Drukte, controles, dagafsluiting */
+  .vs__big { display: flex; align-items: baseline; gap: calc(1 * var(--u)); }
+  .vs__pct { font-size: calc(5 * var(--u)); font-weight: 600; line-height: 1; }
+  .vs__bar { height: calc(2.2 * var(--u)); margin: calc(1 * var(--u)) 0; border: 2px solid var(--navy); border-radius: var(--radius-s); background: var(--paper); overflow: hidden; }
+  .vs__bar i { display: block; height: 100%; width: calc(var(--p) * 1%); background: var(--orange); border-right: 2px solid var(--navy); }
+  .vs__src { font-size: calc(1.25 * var(--u)); color: var(--muted); }
+  .vs__ctl { display: flex; align-items: center; gap: calc(1.2 * var(--u)); }
+  .vs__ctl:not([data-on]) .vs__val, .vs__ctl:not([data-on]) .vs__ok { visibility: hidden; }
+  .vs__ctl[data-on] .vs__ok { animation: vs-pop 450ms var(--ease-out) both; }
+  .vs__ctlname { font-weight: 700; font-size: calc(1.7 * var(--u)); flex: 1; }
+  .vs__val { font-weight: 600; font-size: calc(2.2 * var(--u)); }
+  .vs__ok { font-weight: 800; font-size: calc(1.3 * var(--u)); background: var(--green); border: 2px solid var(--navy); border-radius: 99px; padding: calc(0.2 * var(--u)) calc(1.2 * var(--u)); }
+  .vs__close { font-weight: 600; font-size: 1.6cqw; margin-bottom: calc(1 * var(--u)); }
+  .vs__tiles { display: grid; grid-template-columns: 1fr 1fr; gap: calc(0.8 * var(--u)); }
+  .vs__tile { font-size: calc(1.3 * var(--u)); font-weight: 600; padding: calc(0.9 * var(--u)) calc(1.1 * var(--u)); border-radius: var(--radius-s); background: var(--orange-soft); border: 2px solid var(--orange); }
+  .vs__tile.is-ok { background: var(--green-soft); border-color: var(--green); }
+  @keyframes vs-pop { from { transform: scale(0.4); } to { transform: scale(1); } }
+
+  /* Telefoon */
+  .vs__phone {
+    position: absolute; right: 0; bottom: 0; width: 24cqw;
+    background: var(--navy); border: 2px solid var(--navy); border-radius: 3.4cqw; padding: 0.9cqw;
+    box-shadow: var(--shadow-l);
+  }
+  .vs__pscreen {
+    container-type: inline-size; background: var(--paper); border-radius: 2.6cqw; padding: 0 5cqw 5cqw;
+    font-family: var(--font-body); font-size: 5.6cqw; color: var(--navy);
+  }
+  .vs__pscreen { min-height: 33cqw; }
+  .vs__pscreen p { margin: 0; }
+  .vs__speaker { width: 14cqw; height: 1.8cqw; margin: 3cqw auto 4cqw; background: var(--line); border-radius: 1cqw; }
+  .vs__hoi { font-family: var(--font-display); font-weight: 800; font-size: 11cqw; line-height: 1; letter-spacing: -0.02em; }
+  .vs__psub { font-size: 5cqw; color: var(--muted); margin: 1.5cqw 0 4cqw; }
+  .vs__days { display: grid; gap: 1.8cqw; }
+  .vs__day { display: flex; justify-content: space-between; align-items: center; background: var(--white); border: 2px solid var(--line); border-radius: var(--radius-s); padding: 2.2cqw 3cqw; }
+  .vs__dd { font-weight: 700; font-size: 6cqw; }
+  .vs__dd b { font-weight: 600; color: var(--muted); margin-left: 1cqw; font-size: 5.2cqw; }
+  .vs__ds { font-size: 4.8cqw; font-weight: 600; color: var(--green-dark); }
+  .vs__day.is-shift { background: var(--orange-soft); border-color: var(--orange); }
+  .vs__day.is-shift .vs__ds { color: var(--navy); }
+  .vs__day.is-off .vs__ds { color: var(--muted); }
+  .vs__save {
+    position: relative; margin-top: 4cqw; text-align: center; background: var(--orange); color: var(--navy);
+    border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s);
+    padding: 3cqw 2cqw; font-weight: 800; font-size: 5.6cqw; transition: transform var(--dur-1), box-shadow var(--dur-1);
+  }
+  .vs__save-b { display: none; }
+  .vs__save[data-saved] { background: var(--green); }
+  .vs__save[data-saved] .vs__save-a { display: none; }
+  .vs__save[data-saved] .vs__save-b { display: inline; }
+  .vs__save[data-press] { transform: translate(2px, 2px); box-shadow: none; }
+
+  .vs__day { flex-wrap: wrap; row-gap: 0.6cqw; }
+  .vs__dd { flex-basis: 100%; }
+  .vs__ty { font-size: 4.8cqw; font-weight: 600; }
+  /* Variant controles */
+  .vs__grid--ctl { grid-template-columns: 1fr 1fr; }
+  .vs__card--warn { border-color: var(--orange); background: var(--orange-soft); }
+  .vs__alert { display: flex; align-items: center; gap: calc(1 * var(--u)); font-weight: 700; font-size: calc(1.9 * var(--u)); }
+  .vs__alert svg { width: calc(2.6 * var(--u)); height: calc(2.6 * var(--u)); flex: none; }
+  .vs__tiles--one { grid-template-columns: 1fr; }
+  .vs__tile { display: flex; align-items: center; gap: calc(1 * var(--u)); font-size: calc(1.7 * var(--u)); padding: calc(1.1 * var(--u)) calc(1.3 * var(--u)); }
+  .vs__tile svg { display: none; width: calc(2 * var(--u)); height: calc(2 * var(--u)); flex: none; }
+  .vs__tile.is-ok svg { display: block; }
+  .vs__close { font-size: calc(1.9 * var(--u)); }
+    .vs__grid--ctl .vs__bar i { transition: width 450ms var(--ease-out); }
+
+  /* Variant phone: alleen de telefoon */
+  .vs--solo { width: min(100%, 21rem); margin-inline: auto; }
+  .vp__stage { cursor: pointer; }
+  .vp__phone { background: var(--navy); border: 2px solid var(--navy); border-radius: 9cqw; padding: 2.4cqw; box-shadow: var(--shadow-l); }
+  .vp__screen {
+    position: relative; overflow: hidden; background: var(--paper); border-radius: 7cqw; padding: 0 5cqw 6cqw;
+    font-family: var(--font-body); color: var(--navy); min-height: 150cqw;
+  }
+  .vp__screen p { margin: 0; }
+  .vp__speaker { width: 16cqw; height: 2cqw; margin: 4cqw auto 5cqw; background: var(--line); border-radius: 1cqw; }
+  .vp__eyebrow { font-size: 3.6cqw !important; }
+  .vp__h { font-family: var(--font-display); font-weight: 800; font-size: 9cqw; line-height: 1.05; letter-spacing: -0.02em; margin: 1cqw 0 4cqw !important; }
+  .vp__list { display: grid; gap: 2cqw; }
+  .vp__row { grid-template-columns: auto auto 1fr auto; margin: 0; padding: 2.6cqw 2.6cqw; background: var(--white); border: 2px solid var(--line); gap: 2.6cqw; }
+  .vp__row + .vs__row { border-top: 2px solid var(--line); }
+  .vp__row[data-done] { background: var(--green-soft); border-color: var(--green); }
+  .vp__row .vs__box { width: 7cqw; height: 7cqw; }
+  .vp__t { font-size: 3.6cqw; color: var(--muted); }
+  .vp__n { display: grid; gap: 0; min-width: 0; }
+  .vp__n b { font-size: 4.2cqw; line-height: 1.15; }
+  .vp__n .mono { font-size: 3.4cqw; color: var(--muted); }
+  .vp__row .vs__who { font-size: 3.4cqw; padding: 0.8cqw 2.4cqw; }
+  .vp__modal {
+    position: absolute; left: 7cqw; right: 7cqw; top: 50%; transform: translateY(-50%); z-index: 3; text-align: center;
+    background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow-l); padding: 6cqw 5cqw 5cqw;
+  }
+  .vp__modal { display: none; }
+  .vs[data-phase="modal"] .vp__modal, .vs[data-phase="close"] .vp__modal { display: block; }
+  .vs[data-phase="modal"] .vp__modal { animation: vp-pop 520ms var(--ease-out) both; }
+  .vs[data-phase="close"] .vp__modal { animation: vp-out var(--vs-close) var(--ease-out) forwards; }
+  .vp__good { font-family: var(--font-display); font-weight: 900; font-size: 10cqw; line-height: 1; letter-spacing: -0.02em; margin: 2cqw 0 !important; }
+  .vp__sub { font-size: 4.2cqw; }
+  .vp__score { display: inline-block; margin: 4cqw 0 !important; font-size: 4.4cqw; font-weight: 600; background: var(--orange-soft); border: 2px solid var(--orange); border-radius: var(--radius-s); padding: 1cqw 3.4cqw; }
+  .vp__score b { font-size: 6cqw; font-weight: 600; }
+  .vp__go { display: block; font-weight: 800; font-size: 4.6cqw; padding: 2.4cqw 4cqw; background: var(--orange); border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow); }
+  @keyframes vp-out { from { opacity: 1; transform: translateY(-50%) scale(1); } to { opacity: 0; transform: translateY(-50%) scale(0.94); } }
+  @keyframes vp-pop { from { transform: translateY(-50%) scale(0.6); } to { transform: translateY(-50%) scale(1); } }
+
+  /* Smal */
+  @container (max-width: 46rem) {
+    .vs--phone .vs__laptop { width: 100%; }
+    .vs--phone .vs__phone { position: static; width: 80cqw; margin: 5cqw 0 0 auto; }
+    .vs__screen { --u: 1.7cqw; aspect-ratio: auto; }
+    .vs__row { gap: calc(0.9 * var(--u)); padding-inline: calc(0.6 * var(--u)); margin-inline: calc(-0.6 * var(--u)); }
+    .vs__box { width: calc(2.6 * var(--u)); height: calc(2.6 * var(--u)); }
+    .vs__name { min-width: 0; }
+    .vs__batch, .vs__who { white-space: nowrap; }
+    .vs__menu, .vs__btns, .vs__add { display: none; }
+    .vs__brand { flex: 1; }
+    .vs__grid, .vs__grid--ctl { grid-template-columns: minmax(0, 1fr); }
+    .vs__body { padding-bottom: calc(2.4 * var(--u)); }
+    .vs__head { margin-bottom: calc(1.2 * var(--u)); }
+    .vs__col { gap: calc(1.2 * var(--u)); }
+    .vs[data-variant="laptop"] .vs__col > .vs__card:last-child { display: none; }
+    .vs__base { height: 5cqw; }
+  }
+  @container (max-width: 34rem) {
+    .vs__screen { --u: 2.5cqw; }
+  }
+  @container (max-width: 20rem) {
+    .vs__screen { --u: 3.2cqw; }
+  }
+</style>

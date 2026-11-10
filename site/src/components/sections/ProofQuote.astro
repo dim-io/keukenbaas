@@ -1,0 +1,52 @@
+---
+// Citaat als bon. Zonder quote toont hij een duidelijke placeholder-bon met de tekst uit "placeholder".
+import Reveal from './Reveal.astro';
+import Eyebrow from '../Eyebrow.astro';
+const { eyebrow, quote, attribution, placeholder = 'Citaat volgt', link, note } = Astro.props;
+---
+<section class="pq">
+  <div class="container">
+    <Reveal class="pq__in">
+      <div class="pq__side" style="--i:0">
+        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+        {link && <a class="pq__link" href={link.href}>{link.label}<span aria-hidden="true"> →</span></a>}
+      </div>
+      <div class="receipt-shadow pq__bon" style="--i:1">
+        <figure class="receipt" aria-label={quote ? undefined : placeholder}>
+          {quote ? (
+            <>
+              <blockquote class="pq__quote">{quote}</blockquote>
+              {attribution && <figcaption class="pq__who">{attribution}</figcaption>}
+            </>
+          ) : (
+            <>
+              <p class="pq__mark" aria-hidden="true">“</p>
+              <p class="pq__ph">{placeholder}</p>
+              <p class="pq__lines" aria-hidden="true"><i></i><i></i><i></i></p>
+              <p class="pq__sign mono" aria-hidden="true">- - - - - - - - - -</p>
+            </>
+          )}
+        </figure>
+      </div>
+    </Reveal>
+    {note && <Fragment set:html={`<!-- ${note} -->`} />}
+  </div>
+</section>
+<style>
+  .pq { background: var(--paper); padding-block: var(--space-8); }
+  .pq :global(.pq__in) { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: var(--space-7); align-items: center; }
+  .pq__side { display: grid; gap: var(--space-5); justify-items: start; }
+  .pq__link { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: var(--step-1); }
+  .pq__bon { transform: rotate(-1.2deg); max-width: 36rem; }
+  .pq__bon .receipt { margin: 0; padding: var(--space-6) var(--space-6) calc(var(--space-6) + 8px); }
+  .pq__quote { font-family: var(--font-display); font-weight: 700; font-stretch: 85%; font-size: var(--step-2); color: var(--navy); line-height: 1.15; }
+  .pq__who { font-family: var(--font-mono); font-size: var(--step--1); margin-top: var(--space-4); }
+  .pq__mark { font-family: var(--font-display); font-weight: 900; font-size: 5rem; line-height: 0.6; color: var(--orange); margin: 0; }
+  .pq__ph { font-family: var(--font-display); font-weight: 900; font-stretch: 70%; font-size: var(--step-4); color: var(--navy); line-height: 1; margin-block: var(--space-3) var(--space-5); }
+  .pq__lines { display: grid; gap: 0.7rem; max-width: none; }
+  .pq__lines i { display: block; height: 0; border-top: 3px dotted var(--line); }
+  .pq__lines i:nth-child(2) { width: 85%; }
+  .pq__lines i:nth-child(3) { width: 60%; }
+  .pq__sign { color: var(--muted); margin-top: var(--space-5); font-size: var(--step--1); }
+  @media (max-width: 56rem) { .pq :global(.pq__in) { grid-template-columns: 1fr; gap: var(--space-6); } .pq__bon { transform: none; } }
+</style>

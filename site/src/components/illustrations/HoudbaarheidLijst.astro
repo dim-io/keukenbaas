@@ -1,0 +1,232 @@
+---
+/*
+ * HoudbaarheidLijst: lijst productielabels met THT-badges (Houdbaarheid).
+ * Stijl volgens STIJLREGELS in DymoLabel.astro.
+ * Props: geen. Teksten volgen docs/copy/haccp.md (C6). Eindstaat (zonder JS of bij reduced motion): drie regels,
+ * focaccia verloopt vandaag, onderaan "Weggegooid in 30 dagen: 4%".
+ * Het verhaal speelt één keer: focaccia verloopt vandaag, de knop Opgemaakt wordt ingedrukt, de rij staat doorgestreept. Klik of Enter speelt het opnieuw af.
+ */
+const rows = [
+  { name: 'Tomaten-courgettesoep', batch: '10 l', made: '09-11', tht: '12-11', who: 'Mehmet', tone: 'ok', status: 'Op tijd' },
+  { name: 'Gepekelde ui', batch: '1,5 kg', made: '02-11', tht: '16-11', who: 'Sanne', tone: 'ok', status: 'Op tijd' },
+  { name: 'Focaccia', batch: '4 platen', made: '07-11', tht: '09-11', who: 'Sanne', tone: 'today', status: 'Verloopt vandaag' },
+];
+---
+<figure class="hl" data-hl data-animate style="margin:0">
+  <div class="hl__card" role="button" tabindex="0" aria-label="Ga naar de volgende stap" data-hl-card>
+    <div class="hl__head" aria-hidden="true">
+      <b>Houdbaarheid</b>
+      <span class="hl__day mono">maandag 9 november</span>
+    </div>
+    <div class="hl__cols mono" aria-hidden="true">
+      <span>Product</span><span>Batch</span><span>Gemaakt</span><span>THT</span><span>Door</span><span>Status</span>
+    </div>
+    <div class="hl__rows" aria-hidden="true">
+      {rows.map((r) => (
+        <div class="hl__row mono" data-hl-row data-st={r.tone === 'today' ? 'opgemaakt' : ''}>
+          <span class="hl__name"><span class="hl__nm">{r.name}</span></span>
+          <span class="hl__m"><span class="hl__batch">{r.batch}</span><span class="hl__made"><i>gemaakt </i>{r.made}</span></span>
+          <span class="hl__tht"><span class="hl__date"><i>THT </i>{r.tht}</span></span>
+          <span class="hl__who">{r.who}</span>
+          <span class="hl__status"><span class={`hl__badge hl__badge--${r.tone === 'today' ? 'ok' : r.tone}`} data-badge data-orig={r.status}>{r.tone === 'today' ? 'Opgemaakt' : r.status}</span></span>
+        </div>
+      ))}
+    </div>
+    <div class="hl__btns mono" aria-hidden="true"><span class="hl__btn" data-hl-btn>Opgemaakt</span><span class="hl__btn">Weggegooid</span></div>
+    <div class="hl__foot mono" aria-hidden="true">
+      <span>Weggegooid in 30 dagen:</span><b data-hl-pct>4%</b>
+    </div>
+  </div>
+  <figcaption class="hl__cap mono">Klik op het kaartje om een stap verder te gaan.</figcaption>
+  <p class="visually-hidden">Overzicht houdbaarheid van maandag 9 november. Tomaten-courgettesoep, 10 liter, gemaakt 09-11, THT 12-11, door Mehmet: op tijd. Gepekelde ui, 1,5 kilo, gemaakt 02-11, THT 16-11, door Sanne: op tijd. Focaccia, 4 platen, gemaakt 07-11, THT 09-11, door Sanne: verliep vandaag en is opgemaakt. Knoppen Opgemaakt en Weggegooid. Weggegooid in 30 dagen: 4%.</p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-hl]').forEach((el) => init(el as HTMLElement));
+
+  function init(el: HTMLElement) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const cs = getComputedStyle(el);
+    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const rows = Array.from(el.querySelectorAll<HTMLElement>('[data-hl-row]'));
+    const card = el.querySelector<HTMLElement>('[data-hl-card]')!;
+    const target = rows[rows.length - 1];
+    const b = target.querySelector<HTMLElement>('[data-badge]')!;
+
+    let run = 0, started = false;
+    const sleep = (t: number, id: number) => new Promise<void>((ok, no) => {
+      setTimeout(() => (id !== run ? no() : ok()), t);
+    });
+
+    // Beginstaat: focaccia verloopt vandaag. De eindstaat (Opgemaakt) staat in de HTML.
+    function reset() {
+      el.dataset.phase = 'idle';
+      target.dataset.st = '';
+      b.textContent = b.dataset.orig!;
+      b.className = 'hl__badge hl__badge--today';
+      b.removeAttribute('data-flip');
+    }
+
+    async function cycle(id: number) {
+      reset();
+      await sleep(ms('--hl-idle'), id);
+      el.dataset.phase = 'mark';
+      await sleep(ms('--hl-press'), id);
+      target.dataset.st = 'opgemaakt';
+      b.textContent = 'Opgemaakt';
+      b.className = 'hl__badge hl__badge--ok';
+      void b.offsetWidth;
+      b.setAttribute('data-flip', '');
+      await sleep(ms('--hl-mark'), id);
+      el.dataset.phase = 'hold';
+    }
+
+    async function play() {
+      const id = ++run;
+      try { await cycle(id); } catch { /* onderbroken door een nieuwe ronde */ }
+    }
+
+    reset();
+    const start = () => { if (!started) { started = true; play(); } };
+    el.addEventListener('inviewchange', (e) => { if ((e as CustomEvent).target === el) start(); });
+    if (el.hasAttribute('data-inview')) start();
+
+    card.addEventListener('click', () => started && play());
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); started && play(); }
+    });
+  }
+</script>
+
+<style>
+  .hl {
+    --hl-idle: 400ms;
+    --hl-press: 500ms;
+    --hl-mark: 700ms;
+    --hl-strike: 600ms;
+    --hl-flip: 400ms;
+    width: min(100%, 36rem);
+  }
+  .hl__card {
+    container-type: inline-size;
+    background: var(--white);
+    border: 2px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    cursor: pointer;
+    color: var(--navy);
+  }
+  .hl__head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw; flex-wrap: wrap;
+    background: var(--paper);
+    border-bottom: 2px solid var(--navy);
+    padding: 2.6cqw 3.4cqw;
+    font-family: var(--font-display);
+  }
+  .hl__head b { font-size: 4.6cqw; }
+  .hl__day { font-size: 3cqw; font-weight: 600; background: var(--tape); padding: 0.4cqw 1.6cqw; border: 2px solid var(--navy); border-radius: var(--radius-s); white-space: nowrap; }
+
+  .hl__cols { display: none; }
+  .hl__row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "p t" "m w" "s s";
+    gap: 1.2cqw 2cqw;
+    align-items: center;
+    padding: 2.4cqw 3.4cqw;
+    border-bottom: 2px solid var(--line);
+    border-left: 1cqw solid transparent;
+    font-size: 3.3cqw;
+    position: relative;
+  }
+  .hl__name { grid-area: p; font-weight: 600; font-size: 3.7cqw; min-width: 0; }
+  .hl__nm { position: relative; display: inline-block; max-width: 100%; white-space: normal; overflow-wrap: break-word; vertical-align: bottom; }
+  .hl__nm::after {
+    content: ""; position: absolute; left: -2%; right: -2%; top: 52%; height: 2px; background: var(--navy);
+    transform: scaleX(0); transform-origin: left;
+  }
+  .hl__m { grid-area: m; display: flex; gap: 2.4cqw; color: var(--ink); font-size: 2.9cqw; white-space: nowrap; }
+  .hl__made i { font-style: normal; color: var(--muted); }
+  .hl__tht { grid-area: t; display: flex; align-items: center; gap: 1.6cqw; justify-content: flex-end; }
+  .hl__date { font-size: 2.9cqw; color: var(--ink); white-space: nowrap; }
+  .hl__date i { font-style: normal; color: var(--muted); }
+  .hl__who { grid-area: w; justify-self: end; font-size: 2.9cqw; color: var(--ink); }
+  .hl__status { grid-area: s; justify-self: start; }
+
+  .hl__badge {
+    font-size: 2.8cqw; font-weight: 600; line-height: 1.2;
+    padding: 0.5cqw 1.8cqw;
+    border: 2px solid var(--navy);
+    border-radius: var(--radius-s);
+    white-space: nowrap;
+    color: var(--navy);
+    box-shadow: 2px 2px 0 var(--navy);
+  }
+  .hl__badge--ok { background: var(--green-soft); }
+  .hl__badge--today { background: var(--orange); }
+  .hl__badge--late { background: var(--red); }
+  .hl__badge[data-flip] { animation: hl-flip var(--hl-flip) var(--ease-out); }
+
+  /* Afgehandelde rijen: doorgestreept als een bon */
+  .hl__row[data-st="opgemaakt"],
+  .hl__row[data-st="weggegooid"] { background: var(--paper); color: var(--muted); }
+  .hl__row[data-st="opgemaakt"] { border-left-color: var(--green); }
+  .hl__row[data-st="weggegooid"] { border-left-color: var(--red); }
+  .hl__row[data-st="opgemaakt"] .hl__nm::after,
+  .hl__row[data-st="weggegooid"] .hl__nm::after { transform: scaleX(1); animation: hl-strike var(--hl-strike) var(--ease-out); }
+
+  .hl__btns { display: flex; gap: 2cqw; padding: 2.4cqw 3.4cqw; border-top: 2px solid var(--navy); }
+  .hl__btn { font-size: 2.8cqw; font-weight: 600; padding: 0.7cqw 2.6cqw; border: 2px solid var(--navy); border-radius: var(--radius-s); background: var(--white); box-shadow: 2px 2px 0 var(--navy); }
+  .hl__btn { transition: transform 150ms var(--ease-out), background-color 150ms var(--ease-out); }
+  .hl[data-phase="mark"] .hl__btn[data-hl-btn] { background: var(--orange); box-shadow: none; transform: translate(2px, 2px); }
+  .hl__foot {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw; flex-wrap: wrap;
+    padding: 2.6cqw 3.4cqw; background: var(--paper); border-top: 2px solid var(--navy);
+    font-size: 3.1cqw;
+  }
+  .hl__foot b { font-size: 5cqw; }
+
+  /* Smal: iets grotere letters, zodat niets kleiner dan ~10px wordt */
+  @container (max-width: 27.99rem) {
+    .hl__day { font-size: 3.4cqw; }
+    .hl__m, .hl__date, .hl__who { font-size: 3.4cqw; }
+    .hl__badge { font-size: 3.4cqw; }
+    .hl__btn { font-size: 3.4cqw; }
+    .hl__foot { font-size: 3.5cqw; }
+  }
+
+  /* Brede kaart: echte kolommen met kopregel */
+  @container (min-width: 28rem) {
+    .hl__cols {
+      display: grid; grid-template-columns: var(--hl-grid);
+      gap: 2cqw; padding: 1.6cqw 3.4cqw 1.6cqw calc(3.4cqw + 1cqw);
+      border-bottom: 2px solid var(--navy); font-size: 2.3cqw; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .hl__row {
+      grid-template-columns: var(--hl-grid);
+      grid-template-areas: "p b g t w s";
+      font-size: 2.7cqw;
+    }
+    .hl__name { font-size: 2.9cqw; }
+    .hl__m { display: contents; }
+    .hl__batch { grid-area: b; }
+    .hl__made { grid-area: g; }
+    .hl__made i, .hl__date i { display: none; }
+    .hl__date, .hl__m { font-size: 2.6cqw; }
+    .hl__tht { justify-content: flex-start; }
+    .hl__badge { font-size: 2.3cqw; }
+    .hl__status { font-size: 2.3cqw; justify-self: start; }
+    .hl__who { justify-self: start; font-size: 2.6cqw; }
+    .hl__foot { font-size: 2.7cqw; }
+    .hl__foot b { font-size: 4cqw; }
+  }
+  .hl__card { --hl-grid: 36fr 10fr 10fr 10fr 11fr 23fr; }
+
+  @keyframes hl-flip { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+  @keyframes hl-strike { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  .hl__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

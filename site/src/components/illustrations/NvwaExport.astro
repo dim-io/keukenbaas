@@ -1,0 +1,250 @@
+---
+/*
+ * NvwaExport: scherm "Rapportage/export" (periode, vier onderdelen, "Print / PDF") waarna een A4-vel uit een
+ * printer schuift met kopjes en tabelregels en een stempel met vinkje.
+ * Stijl volgens STIJLREGELS in DymoLabel.astro.
+ * Props: geen. Eindstaat (zonder JS of bij reduced motion): alle vinkjes gezet, vel uit de printer, stempel erop.
+ * Het verhaal speelt één keer (vinkjes, Print / PDF, vel schuift eruit, stempel) en blijft dan liggen.
+ * Klik of Enter op de illustratie print het opnieuw.
+ */
+const checks = ['HACCP-logboek', 'Productie', 'Labels', 'Taken & schoonmaak'];
+const sections = [
+  { h: 'HACCP-logboek', rows: [[34, 18, 22], [30, 22, 18], [36, 14, 26]] },
+  { h: 'Productie', rows: [[40, 12, 20], [28, 20, 24], [34, 16, 22]] },
+  { h: 'Labels', rows: [[32, 24, 16], [38, 14, 24], [26, 22, 20]] },
+  { h: 'Taken & schoonmaak', rows: [[36, 20, 18], [30, 16, 26], [40, 18, 14]] },
+];
+---
+<figure class="nv" data-nv data-animate style="margin:0">
+  <div class="nv__stage" role="button" tabindex="0" aria-label="Print het rapport opnieuw" data-nv-stage>
+    <div class="nv__screen" aria-hidden="true">
+      <div class="nv__head"><b>Rapportage/export</b></div>
+      <div class="nv__body">
+        <div class="nv__field">
+          <span class="nv__lbl mono">Periode</span>
+          <span class="nv__select mono">Vorige maand (oktober 2026)<i class="nv__caret"></i></span>
+        </div>
+        <div class="nv__checks">
+          {checks.map((c) => (
+            <div class="nv__chk" data-nv-chk>
+              <svg class="nv__box" viewBox="0 0 20 20" focusable="false">
+                <rect x="2" y="2" width="16" height="16" rx="3" fill="#fffdf8" stroke="#0a0d22" stroke-width="2"/>
+                <path class="nv__tick" d="M5.5 10.5l3.2 3.2 6-7.2" fill="none" stroke="#e06633" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>
+              </svg>
+              <span>{c}</span>
+            </div>
+          ))}
+        </div>
+        <span class="nv__btn mono" data-nv-btn>Print / PDF</span>
+      </div>
+    </div>
+
+    <div class="nv__printer" aria-hidden="true">
+      <span class="nv__led"></span>
+      <span class="nv__label mono">KB-PRINT</span>
+      <span class="nv__slot"></span>
+    </div>
+
+    <div class="nv__zone" aria-hidden="true">
+      <div class="nv__sheet" data-nv-sheet>
+        <div class="nv__top"><b>RAPPORTAGE</b><span>01-10 t/m 31-10</span></div>
+        {sections.map((s) => (
+          <div class="nv__sec">
+            <p class="nv__h">{s.h}</p>
+            <div class="nv__tr nv__tr--head"><i style="width:30%"></i><i style="width:22%"></i><i style="width:18%"></i></div>
+            {s.rows.map((r) => (
+              <div class="nv__tr"><i style={`width:${r[0]}%`}></i><i style={`width:${r[1]}%`}></i><i style={`width:${r[2]}%`}></i></div>
+            ))}
+          </div>
+        ))}
+        <div class="nv__stamp">
+          <svg viewBox="0 0 60 60" focusable="false">
+            <circle cx="30" cy="30" r="27" fill="none" stroke="#207657" stroke-width="3"/>
+            <circle cx="30" cy="30" r="21" fill="none" stroke="#207657" stroke-width="2"/>
+            <path d="M17 31l9 9 17-21" fill="none" stroke="#207657" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption class="nv__cap mono">Klik op de illustratie om opnieuw te printen.</figcaption>
+  <p class="visually-hidden">Het scherm Rapportage/export met periode Vorige maand (oktober 2026) en de onderdelen HACCP-logboek, Productie, Labels en Taken en schoonmaak aangevinkt. Na Print / PDF schuift een A4-vel uit de printer met het rapport en een stempel met vinkje, bedoeld voor controle door de NVWA of een auditor.</p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-nv]').forEach((el) => init(el as HTMLElement));
+
+  function init(el: HTMLElement) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const cs = getComputedStyle(el);
+    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const chks = Array.from(el.querySelectorAll<HTMLElement>('[data-nv-chk]'));
+    const stage = el.querySelector<HTMLElement>('[data-nv-stage]')!;
+
+    let run = 0, started = false;
+    const sleep = (t: number, id: number) => new Promise<void>((ok, no) => {
+      setTimeout(() => (id !== run ? no() : ok()), t);
+    });
+
+    // Beginstaat: niets aangevinkt, geen vel. De eindstaat staat in de HTML.
+    function reset() {
+      el.dataset.phase = 'idle';
+      chks.forEach((c) => (c.dataset.on = ''));
+    }
+
+    async function cycle(id: number, again: boolean) {
+      if (again) {
+        el.dataset.phase = 'exit';
+        await sleep(ms('--nv-exit'), id);
+      } else {
+        await sleep(ms('--nv-idle'), id);
+        el.dataset.phase = 'check';
+        for (const c of chks) {
+          c.dataset.on = '1';
+          await sleep(ms('--nv-tick'), id);
+        }
+      }
+      el.dataset.phase = 'press';
+      await sleep(ms('--nv-press'), id);
+      el.dataset.phase = 'print';
+      await sleep(ms('--nv-print'), id);
+      el.dataset.phase = 'stamp';
+      await sleep(ms('--nv-stamp'), id);
+      el.dataset.phase = 'hold';
+    }
+
+    async function play(again = false) {
+      const id = ++run;
+      try { await cycle(id, again); } catch { /* onderbroken door een nieuwe ronde */ }
+    }
+
+    reset();
+    const start = () => { if (!started) { started = true; play(); } };
+    el.addEventListener('inviewchange', (e) => { if ((e as CustomEvent).target === el) start(); });
+    if (el.hasAttribute('data-inview')) start();
+
+    const again = () => { if (started && el.dataset.phase === 'hold') play(true); };
+    stage.addEventListener('click', again);
+    stage.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); again(); }
+    });
+  }
+</script>
+
+<style>
+  .nv {
+    --nv-idle: 300ms;
+    --nv-tick: 250ms;
+    --nv-press: 350ms;
+    --nv-print: 1500ms;
+    --nv-stamp: 400ms;
+    --nv-exit: 500ms;
+    width: min(100%, 28rem);
+  }
+  .nv__stage { container-type: inline-size; cursor: pointer; border-radius: var(--radius); }
+
+  .nv__screen {
+    background: var(--white);
+    border: 2px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    color: var(--navy);
+  }
+  .nv__head { background: var(--paper); border-bottom: 2px solid var(--navy); padding: 2.6cqw 4cqw; font-family: var(--font-display); font-size: 4.6cqw; }
+  .nv__body { padding: 3.6cqw 4cqw 4cqw; display: grid; gap: 3cqw; }
+  .nv__field { display: flex; align-items: center; justify-content: space-between; gap: 3cqw; }
+  .nv__lbl { font-size: 3cqw; color: var(--muted); }
+  .nv__select {
+    display: flex; align-items: center; gap: 3cqw;
+    font-size: 3.4cqw; font-weight: 600;
+    border: 2px solid var(--navy); border-radius: var(--radius-s); padding: 1.2cqw 2.6cqw; background: var(--white);
+  }
+  .nv__caret { width: 0; height: 0; border-left: 1.2cqw solid transparent; border-right: 1.2cqw solid transparent; border-top: 1.6cqw solid var(--navy); }
+  .nv__checks { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4cqw 3cqw; }
+  .nv__chk { display: flex; align-items: center; gap: 2cqw; font-family: var(--font-body); font-weight: 600; font-size: 3.3cqw; line-height: 1.15; }
+  .nv__box { width: 5.2cqw; height: 5.2cqw; flex: none; }
+  .nv__tick { stroke-dasharray: 1; stroke-dashoffset: 0; }
+  .nv__chk[data-on=""] .nv__tick { visibility: hidden; }
+  .nv__chk[data-on="1"] .nv__tick { animation: nv-tick 300ms var(--ease-out) both; }
+  .nv__btn {
+    justify-self: end;
+    background: var(--orange); color: var(--navy);
+    border: 2px solid var(--navy); border-radius: var(--radius-s);
+    box-shadow: var(--shadow-s);
+    padding: 1.8cqw 4.6cqw; font-size: 3.6cqw; font-weight: 600;
+  }
+
+  /* Printer: romp met uitvoersleuf, het vel schuift eronder vandaan */
+  .nv__printer {
+    position: relative; z-index: 2;
+    width: 78%; height: 13cqw; margin: 4cqw auto 0;
+    background: var(--white);
+    border: 2px solid var(--navy); border-radius: 10px;
+    box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 4cqw 3cqw;
+  }
+  .nv__printer::before { content: ""; position: absolute; left: 0; right: 0; top: 4.6cqw; height: 2.4cqw; background: var(--orange); }
+  .nv__slot { position: absolute; left: 4cqw; right: 4cqw; bottom: 2.2cqw; height: 2cqw; background: var(--navy); border-radius: 3px; }
+  .nv__led { width: 2.6cqw; height: 2.6cqw; border-radius: 50%; background: var(--green); border: 2px solid var(--navy); position: relative; z-index: 1; }
+  .nv__label { font-size: 3.2cqw; font-weight: 600; color: var(--navy); position: relative; z-index: 1; background: var(--white); padding: 0 1.2cqw; }
+
+  .nv__zone { position: relative; z-index: 1; height: 90cqw; overflow: hidden; margin-top: 0; }
+  .nv__sheet {
+    container-type: inline-size;
+    position: absolute; left: 50%; top: 0; margin-left: -31cqw;
+    width: 62cqw; aspect-ratio: 210 / 297;
+    background: var(--white);
+    border: 2px solid var(--navy);
+    border-radius: 2px;
+    box-shadow: var(--shadow-s);
+    padding: 5cqw 5cqw 0;
+    color: var(--navy);
+    display: grid; align-content: start; gap: 3cqw;
+    font-family: var(--font-mono);
+  }
+  .nv__top { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--navy); padding-bottom: 2cqw; font-size: 4.6cqw; }
+  .nv__top span { font-size: 4.4cqw; color: var(--ink); }
+  .nv__h { margin: 0 0 1.4cqw; font-size: 4.6cqw; font-weight: 600; }
+  .nv__tr { display: flex; gap: 3cqw; height: 2.6cqw; margin-bottom: 1cqw; }
+  .nv__tr i { display: block; height: 100%; background: var(--line); }
+  .nv__tr--head i { background: var(--ink); }
+  .nv__stamp { position: absolute; right: 6cqw; bottom: 6cqw; width: 25cqw; transform: rotate(-12deg); }
+  .nv__stamp svg { display: block; width: 100%; height: auto; }
+
+  /* Fases */
+  .nv[data-phase="idle"] .nv__sheet,
+  .nv[data-phase="check"] .nv__sheet,
+  .nv[data-phase="press"] .nv__sheet { transform: translateY(-101%); }
+  .nv[data-phase="print"] .nv__sheet { animation: nv-print var(--nv-print) cubic-bezier(0.3, 0.1, 0.3, 1) both; }
+  .nv[data-phase="exit"] .nv__sheet { animation: nv-exit var(--nv-exit) var(--ease-out) both; }
+  .nv[data-phase="idle"] .nv__stamp,
+  .nv[data-phase="check"] .nv__stamp,
+  .nv[data-phase="press"] .nv__stamp,
+  .nv[data-phase="print"] .nv__stamp { visibility: hidden; }
+  .nv[data-phase="stamp"] .nv__stamp { animation: nv-stamp var(--nv-stamp) var(--ease-out) both; }
+  .nv[data-phase="press"] .nv__btn { animation: nv-press var(--nv-press) var(--ease-out) both; }
+
+  @keyframes nv-tick { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes nv-print { from { transform: translateY(-101%); } to { transform: translateY(0); } }
+  @keyframes nv-exit { from { transform: translateY(0); } to { transform: translateY(105%); } }
+  @keyframes nv-stamp {
+    from { opacity: 0; transform: rotate(-12deg) scale(1.8); }
+    to { opacity: 1; transform: rotate(-12deg) scale(1); }
+  }
+  @keyframes nv-press {
+    0% { transform: translate(0, 0); box-shadow: var(--shadow-s); }
+    50% { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--navy); }
+    100% { transform: translate(0, 0); box-shadow: var(--shadow-s); }
+  }
+
+  /* Smal: het vel wordt breder, zodat de tekst erop leesbaar blijft */
+  @container (max-width: 26rem) {
+    .nv__zone { height: 110cqw; }
+    .nv__sheet { width: 76cqw; margin-left: -38cqw; }
+  }
+
+  .nv__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

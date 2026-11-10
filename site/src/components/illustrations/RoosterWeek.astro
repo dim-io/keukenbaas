@@ -1,0 +1,455 @@
+---
+/*
+ * RoosterWeek: het rooster in drie varianten. Stijl: zie STIJLREGELS in DymoLabel.astro.
+ *
+ * Props
+ * - variant: 'week' (standaard) | 'dag' | 'assistent'. (`assistent` als boolean blijft werken en geeft variant 'assistent'.)
+ *   week      Week 46, vier dagen. Lotte's dienst wordt van donderdag naar de lege vrijdag gesleept, de open dienst
+ *             op zaterdag knippert twee keer oranje en er vliegt een mail naar Lotte ("Medewerker informeren").
+ *   dag       Vrijdag 13 nov: Lotte staat erop, Mehmet en Joris zijn beschikbaar (groen). Eén keer zet het
+ *             voorbeeld Mehmet op de open dienst. Hover of klik op een beschikbare naam kiest zelf.
+ *   assistent Voorstel van de assistent voor week 47. De knop Toepassen wordt ingedrukt en de voorgestelde
+ *             diensten worden vast (vinkje). Klik op Toepassen speelt het opnieuw af.
+ *
+ * Alles speelt één keer zodra data-inview gezet wordt en blijft dan in de eindstaat (geen lus, nooit terug naar 0).
+ * Eindstaat zonder JS of bij prefers-reduced-motion (de standaard):
+ *   week: Lotte op vrijdag, mail zichtbaar. dag: Mehmet op de dienst. assistent: alle diensten vast (vinkje).
+ * week (data-phase): idle, reach, carry, drop, mail, done. Klik of Enter speelt het kort opnieuw af.
+ */
+const { variant: v = 'week', assistent = false } = Astro.props;
+const variant = assistent ? 'assistent' : v;
+
+const weekCols = [
+  { d: 'Ma', n: '9 nov', chips: [
+    { who: 'Sanne', type: 'Avond keuken', t: '16:00-23:00', k: 'a' },
+    { who: 'Mehmet', type: 'Avond keuken', t: '16:00-23:00', k: 'a' },
+    { who: 'Fatima', type: 'Kassa dienst', t: '16:30-22:30', k: 'k' },
+  ] },
+  { d: 'Do', n: '12 nov', src: true },
+  { d: 'Vr', n: '13 nov', tgt: true },
+  { d: 'Za', n: '14 nov', open: true },
+];
+
+const assist = [
+  { day: 'Ma 16 nov', rows: [
+    { type: 'Avond keuken', who: ['Sanne', 'Mehmet'] },
+    { type: 'Bezorgdienst', who: ['Joris'] },
+    { type: 'Kassa dienst', who: ['Fatima'] },
+  ] },
+  { day: 'Di 17 nov', rows: [
+    { type: 'Avond keuken', who: ['Sanne', 'Lotte'], note: 'Mehmet heeft vrij' },
+  ] },
+];
+let ai = 0;
+
+const okSvg = '<svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+---
+{variant === 'week' && (
+<figure class="rw" data-rw data-variant="week" data-animate style="margin:0">
+  <div class="rw__stage" role="button" tabindex="0" aria-label="Speel het verplaatsen van de dienst opnieuw af" data-rw-stage>
+    <div class="rw__app" aria-hidden="true">
+      <div class="rw__bar"><span class="rw__week">Rooster &middot; Week 46 &middot; 9 t/m 15 november</span></div>
+      <div class="rw__cols">
+        {weekCols.map((c) => (
+          <div class="rw__col">
+            <p class="rw__dh"><b>{c.d}</b> {c.n}</p>
+            <div class="rw__body">
+              {c.chips && c.chips.map((x) => (
+                <div class="rw__chip" data-kind={x.k}><b>{x.who}</b><span>{x.type}</span><span>{x.t}</span></div>
+              ))}
+              {c.src && (
+                <div class="rw__slot" data-src data-state="gone">
+                  <div class="rw__chip" data-kind="a"><b>Lotte</b><span>Bediening</span><span>17:00-23:00</span></div>
+                </div>
+              )}
+              {c.tgt && (
+                <div class="rw__slot" data-tgt data-state="filled">
+                  <div class="rw__chip" data-kind="a"><b>Lotte</b><span>Bediening</span><span>17:00-23:00</span></div>
+                  <p class="rw__hint">Sleep hier een dienst naartoe.</p>
+                </div>
+              )}
+              {c.open && (
+                <div class="rw__chip rw__chip--open" data-open><b>Open dienst</b><span>Bezorgdienst</span><span>17:00-22:00</span></div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="rw__mailcard" data-card>
+        <svg class="rw__mailicon" viewBox="0 0 20 14" focusable="false" data-card-icon><rect x="1" y="1" width="18" height="12" rx="2" fill="#efe0a8" stroke="#0a0d22" stroke-width="2" stroke-linejoin="round"/><path d="M2 2.5l8 6 8-6" fill="none" stroke="#0a0d22" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        <div>
+          <b>Medewerker informeren</b>
+          <span>Aan: Lotte</span>
+          <span>Je dienst is verplaatst naar vrijdag 13 november, 17:00-23:00.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rw__held rw__chip" data-held aria-hidden="true" data-kind="a"><b>Lotte</b><span>Bediening</span><span>17:00-23:00</span></div>
+    <svg class="rw__mail" data-mail viewBox="0 0 20 14" aria-hidden="true" focusable="false"><rect x="1" y="1" width="18" height="12" rx="2" fill="#fffdf8" stroke="#0a0d22" stroke-width="2" stroke-linejoin="round"/><path d="M2 2.5l8 6 8-6" fill="none" stroke="#e06633" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <span class="rw__cur" data-cur aria-hidden="true">
+      <span class="rw__ring"></span>
+      <svg viewBox="0 0 20 24" focusable="false"><path d="M2 2v17l5-4.5 3.5 7.5 3.5-1.5-3.5-7.5H17z" fill="#fffdf8" stroke="#0a0d22" stroke-width="2" stroke-linejoin="round"/></svg>
+    </span>
+  </div>
+  <figcaption class="rw__cap mono">Klik op het rooster om het nog een keer te zien.</figcaption>
+  <p class="visually-hidden">
+    Het rooster van week 46, van 9 tot en met 15 november. Op maandag werken Sanne en Mehmet de avond in de keuken en Fatima doet de kassa.
+    Lotte's dienst Bediening van donderdag, 17:00 tot 23:00, wordt naar de lege vrijdag gesleept. Zaterdag staat de open dienst Bezorgdienst
+    van 17:00 tot 22:00 oranje te knipperen. Daarna gaat er een mail naar Lotte: Medewerker informeren, je dienst is verplaatst naar vrijdag 13 november.
+  </p>
+</figure>
+)}
+
+{variant === 'dag' && (
+<figure class="rw rw--dag" data-rw data-variant="dag" data-animate style="margin:0">
+  <div class="rw__stage">
+    <div class="rw__app">
+      <div class="rw__bar"><span class="rw__week">Rooster: slepen en kopiëren</span></div>
+      <p class="rw__dayh"><b>Vr</b> 13 nov</p>
+      <ul class="rw__people" role="list">
+        <li class="rw__person rw__person--in">
+          <span class="rw__pn">Lotte</span>
+          <span class="rw__ps"><svg viewBox="0 0 12 12" focusable="false"><path d="M2 6.5l3 3 5-6.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>ingeroosterd</span>
+        </li>
+        <li><button type="button" class="rw__person rw__person--free is-on" data-pick="Mehmet"><span class="rw__pn">Mehmet</span><span class="rw__ps">beschikbaar</span></button></li>
+        <li><button type="button" class="rw__person rw__person--free" data-pick="Joris"><span class="rw__pn">Joris</span><span class="rw__ps">beschikbaar</span></button></li>
+      </ul>
+      <div class="rw__chip rw__chip--open rw__chip--wide" data-open data-filled="1">
+        <b data-open-title>Dienst</b><span>Bezorgdienst</span><span>17:00-22:00</span>
+        <span class="rw__fill" data-open-who aria-hidden="true">Mehmet</span>
+      </div>
+    </div>
+  </div>
+  <figcaption class="rw__cap mono">Ga op een beschikbare naam staan om de open dienst te vullen.</figcaption>
+  <p class="visually-hidden">
+    Vrijdag 13 november. Lotte staat ingeroosterd, Mehmet en Joris zijn beschikbaar en staan groen. De open dienst Bezorgdienst van 17:00 tot 22:00
+    valt op in oranje. Met een klik op een beschikbare naam zet je die persoon op de dienst; in het voorbeeld staat Mehmet erop.
+  </p>
+</figure>
+)}
+
+{variant === 'assistent' && (
+<figure class="rw rw--ass" data-rw data-variant="assistent" data-animate style="margin:0">
+  <div class="rw__stage">
+    <div class="rw__app">
+      <div class="rw__bar">
+        <span class="rw__week">Voorstel van de assistent &middot; Week 47</span>
+      </div>
+      {assist.map((d) => (
+        <section class="rw__aday">
+          <p class="rw__dayh"><b>{d.day.split(' ')[0]}</b> {d.day.split(' ').slice(1).join(' ')}</p>
+          {d.rows.map((r) => (
+            <div class="rw__arow">
+              <span class="rw__atype">{r.type}</span>
+              <span class="rw__awho">
+                {r.who.map((w) => (
+                  <span class="rw__pill" data-prop data-done style={`--i:${ai++}`}>{w}<span class="rw__pok" set:html={okSvg}></span></span>
+                ))}
+                {r.note && <span class="rw__anote">({r.note})</span>}
+              </span>
+            </div>
+          ))}
+        </section>
+      ))}
+      <div class="rw__abtns">
+        <span class="rw__btn">Voorbeeld</span>
+        <button type="button" class="rw__btn rw__btn--go" data-apply>Toepassen</button>
+      </div>
+    </div>
+  </div>
+  <figcaption class="rw__cap mono">Het voorstel is een voorbeeld tot jij op Toepassen drukt.</figcaption>
+  <p class="visually-hidden">
+    Voorstel van de assistent voor week 47. Maandag 16 november: Avond keuken met Sanne en Mehmet, Bezorgdienst met Joris, Kassa dienst met Fatima.
+    Dinsdag 17 november: Avond keuken met Sanne en Lotte, omdat Mehmet vrij heeft. Met Toepassen komt het voorstel in het rooster.
+  </p>
+</figure>
+)}
+
+<script>
+  document.querySelectorAll('[data-rw]').forEach((el) => {
+    const v = (el as HTMLElement).dataset.variant;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (v === 'dag') dag(el as HTMLElement, !reduced);
+    else if (reduced) return;
+    else if (v === 'week') week(el as HTMLElement);
+    else if (v === 'assistent') ass(el as HTMLElement);
+  });
+
+  /* ---------- week: dienst slepen, mail eruit ---------- */
+  function week(el: HTMLElement) {
+    const q = (s: string) => el.querySelector(s) as HTMLElement;
+    const stage = q('[data-rw-stage]'), src = q('[data-src]'), tgt = q('[data-tgt]'), held = q('[data-held]');
+    const mail = q('[data-mail]'), cur = q('[data-cur]'), ring = q('.rw__ring'), card = q('[data-card]'), cardIcon = q('[data-card-icon]');
+    const cs = getComputedStyle(el);
+    const ms = (n: string) => parseFloat(cs.getPropertyValue(n)) || 0;
+    let gen = 0, timers: number[] = [], started = false, cooling = false;
+    const later = (fn: () => void, t: number, g: number) => { timers.push(window.setTimeout(() => { if (g === gen) fn(); }, t)); };
+    const phase = (p: string) => el.setAttribute('data-phase', p);
+    const rel = (n: HTMLElement) => {
+      const s = stage.getBoundingClientRect(), r = n.getBoundingClientRect();
+      return { x: r.left - s.left, y: r.top - s.top, w: r.width, h: r.height };
+    };
+    const put = (n: HTMLElement, x: number, y: number, dur: number, extra = '') => {
+      n.style.transition = dur ? `transform ${dur}ms var(--ease-out)` : 'none';
+      n.style.transform = `translate(${x}px, ${y}px) ${extra}`;
+    };
+    const curTo = (node: HTMLElement, fx: number, fy: number, dur: number) => { const r = rel(node); put(cur, r.x + r.w * fx, r.y + r.h * fy, dur); };
+    const tap = () => { ring.classList.remove('is-tap'); void ring.offsetWidth; ring.classList.add('is-tap'); };
+    const pop = (c: HTMLElement) => { c.classList.remove('is-pop'); void c.offsetWidth; c.classList.add('is-pop'); };
+
+    function reset() {
+      src.dataset.state = 'here'; tgt.dataset.state = 'empty';
+      held.classList.remove('is-on'); mail.classList.remove('is-on');
+      card.setAttribute('data-off', '');
+      const s = stage.getBoundingClientRect();
+      put(cur, s.width * 0.9, s.height * 0.62, 0);
+    }
+    const steps: Array<[string, () => void, number]> = [
+      ['reach', () => curTo(src, 0.3, 0.45, ms('--rw-reach')), ms('--rw-reach') + 60],
+      ['carry', () => {
+        const o = rel(src);
+        held.style.width = o.w + 'px'; held.style.height = o.h + 'px';
+        put(held, o.x, o.y, 0, 'rotate(-2deg)');
+        held.classList.add('is-on');
+        src.dataset.state = 'lifted';
+        void held.offsetWidth;
+        const c = rel(tgt);
+        put(held, c.x, c.y, ms('--rw-carry'), 'rotate(-2deg)');
+        put(cur, c.x + c.w * 0.3, c.y + c.h * 0.45, ms('--rw-carry'));
+      }, ms('--rw-carry') + 40],
+      ['drop', () => {
+        tap();
+        src.dataset.state = 'gone'; tgt.dataset.state = 'filled'; pop(tgt);
+        held.classList.remove('is-on');
+        const c = rel(tgt);
+        put(cur, c.x + c.w * 0.7, c.y + c.h * 1.05, ms('--rw-drop'));
+      }, ms('--rw-drop') + 40],
+      ['mail', () => {
+        const a = rel(tgt), b = rel(cardIcon), s = stage.getBoundingClientRect();
+        const d = ms('--rw-mail');
+        mail.classList.add('is-on');
+        mail.animate([
+          { transform: `translate(${a.x + a.w / 2}px, ${a.y + a.h}px) rotate(-10deg)` },
+          { transform: `translate(${(a.x + b.x) / 2 + s.width * 0.04}px, ${(a.y + a.h + b.y) / 2 - s.width * 0.03}px) rotate(8deg)`, offset: 0.5 },
+          { transform: `translate(${b.x}px, ${b.y}px) rotate(0deg)` },
+        ], { duration: d, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
+        later(() => { mail.classList.remove('is-on'); card.removeAttribute('data-off'); }, d, gen);
+        put(cur, s.width * 0.9, s.height * 0.3, d);
+      }, ms('--rw-mail') + 200],
+    ];
+    function play() {
+      timers.forEach(clearTimeout); timers = [];
+      const g = ++gen;
+      reset(); phase('idle');
+      let t = ms('--rw-pause');
+      for (const [name, fn, dur] of steps) {
+        later(() => { phase(name); fn(); }, t, g);
+        t += dur;
+      }
+      later(() => phase('done'), t, g);
+    }
+    el.addEventListener('inviewchange', (e) => {
+      if ((e as any).target !== el || started) return;
+      started = true; play();
+    });
+    reset(); phase('idle');
+    if (el.hasAttribute('data-inview')) { started = true; play(); }
+    const again = () => {
+      if (!started || cooling) return;
+      cooling = true; setTimeout(() => (cooling = false), 900);
+      play();
+    };
+    stage.addEventListener('click', again);
+    stage.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); again(); } });
+  }
+
+  /* ---------- dag: kies wie de open dienst krijgt ---------- */
+  function dag(el: HTMLElement, auto: boolean) {
+    const open = el.querySelector('[data-open]') as HTMLElement;
+    const title = el.querySelector('[data-open-title]') as HTMLElement;
+    const who = el.querySelector('[data-open-who]') as HTMLElement;
+    const btns = [...el.querySelectorAll('[data-pick]')] as HTMLElement[];
+    let manual = false, timer: number = 0, started = false, on = 'Mehmet';
+    const set = (name: string) => {
+      on = name;
+      btns.forEach((b) => b.classList.toggle('is-on', b.dataset.pick === name));
+      open.dataset.filled = name ? '1' : '0';
+      title.textContent = name ? 'Dienst' : 'Open dienst';
+      who.textContent = name;
+    };
+    btns.forEach((b) => {
+      const pick = () => { manual = true; clearTimeout(timer); set(on === b.dataset.pick ? '' : b.dataset.pick!); };
+      b.addEventListener('click', pick);
+      b.addEventListener('mouseenter', () => { manual = true; clearTimeout(timer); set(b.dataset.pick!); });
+    });
+    if (!auto) return;
+    // Startstaat: dienst nog open. Eén keer in beeld zet het voorbeeld Mehmet erop en dat blijft zo.
+    set('');
+    const run = () => {
+      if (started) return;
+      started = true;
+      timer = window.setTimeout(() => { if (!manual) set('Mehmet'); }, 1800);
+    };
+    el.addEventListener('inviewchange', (e) => { if ((e as any).target === el) run(); });
+    if (el.hasAttribute('data-inview')) run();
+  }
+
+  /* ---------- assistent: voorstel toepassen ---------- */
+  function ass(el: HTMLElement) {
+    const pills = [...el.querySelectorAll('[data-prop]')] as HTMLElement[];
+    const btn = el.querySelector('[data-apply]') as HTMLElement;
+    let pending: number[] = [], started = false, cooling = false;
+    const later = (fn: () => void, t: number) => pending.push(window.setTimeout(fn, t));
+    const clearAll = () => { pending.forEach(clearTimeout); pending = []; };
+    const reset = () => { pills.forEach((p) => p.removeAttribute('data-done')); btn.classList.remove('is-pressed'); };
+    const apply = () => {
+      btn.classList.add('is-pressed'); later(() => btn.classList.remove('is-pressed'), 260);
+      pills.forEach((p, i) => later(() => p.setAttribute('data-done', ''), 250 + i * 150));
+    };
+    const play = () => { clearAll(); reset(); later(apply, 700); };
+    reset(); // startstaat: voorstel gestippeld; de eindstaat is vast
+    btn.addEventListener('click', () => {
+      if (cooling) return;
+      cooling = true; setTimeout(() => (cooling = false), 900);
+      started = true; play();
+    });
+    const run = () => { if (started) return; started = true; play(); };
+    el.addEventListener('inviewchange', (e) => { if ((e as any).target === el) run(); });
+    if (el.hasAttribute('data-inview')) run();
+  }
+</script>
+
+<style>
+  .rw {
+    --rw-reach: 600ms;
+    --rw-carry: 750ms;
+    --rw-drop: 350ms;
+    --rw-mail: 800ms;
+    --rw-pause: 250ms;
+    width: min(100%, 36rem);
+  }
+  .rw--dag, .rw--ass { width: min(100%, 28rem); }
+  .rw__stage { position: relative; container-type: inline-size; padding: 0 3px 3px 0; }
+  .rw[data-variant="week"] .rw__stage { cursor: pointer; }
+  .rw__app {
+    background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 2.6cqw; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--navy);
+  }
+  .rw__bar { display: flex; align-items: center; justify-content: space-between; gap: 1.5cqw; margin-bottom: 2.4cqw; }
+  .rw__week { font-family: var(--font-display); font-weight: 800; font-size: 3.6cqw; line-height: 1.15; }
+  .rw--dag .rw__week, .rw--ass .rw__week { font-size: 4.6cqw; }
+
+  /* chips */
+  .rw__chip {
+    display: grid; gap: 0.2cqw; padding: 1.2cqw 1.2cqw; font-size: 2.1cqw; line-height: 1.3; overflow-wrap: anywhere;
+    border: 2px solid var(--navy); border-radius: var(--radius-s); background: var(--white); min-width: 0;
+  }
+  .rw__chip b { font-weight: 700; font-size: 2.6cqw; }
+  .rw__chip[data-kind="a"] { background: var(--orange-soft); }
+  .rw__chip--open { border: 2px dashed var(--orange); background: var(--orange-soft); }
+  .rw[data-inview] .rw__chip--open:not([data-filled="1"]) { animation: rw-blink 1000ms var(--ease-out) 400ms 2; }
+  @keyframes rw-blink { 0%, 100% { background: var(--orange-soft); } 50% { background: var(--white); } }
+
+  /* week */
+  .rw__cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.6cqw; align-items: stretch; }
+  .rw__col { background: var(--paper); border-radius: var(--radius-s); padding: 1.2cqw; display: grid; grid-template-rows: auto 1fr; gap: 1.2cqw; }
+  .rw__dh { font-size: 2.5cqw; color: var(--muted); margin: 0; }
+  .rw__dh b { color: var(--navy); font-size: 2.9cqw; margin-right: 0.6cqw; }
+  .rw__body { display: grid; gap: 1.2cqw; align-content: start; }
+  .rw__slot { position: relative; min-height: 11cqw; border: 2px dashed var(--line); border-radius: var(--radius-s); }
+  .rw__slot .rw__chip { border-color: var(--navy); height: 100%; box-sizing: border-box; }
+  .rw__slot[data-state="gone"] .rw__chip, .rw__slot[data-state="empty"] .rw__chip { display: none; }
+  .rw__slot[data-state="lifted"] .rw__chip { visibility: hidden; }
+  .rw__slot[data-state="lifted"] { border-color: var(--orange); }
+  .rw__hint { display: none; margin: 0; padding: 1.2cqw; font-size: 2.4cqw; color: var(--muted); line-height: 1.3; }
+  .rw[data-phase] .rw__slot[data-state="empty"] .rw__hint { display: block; }
+  .rw__slot.is-pop { animation: rw-pop 450ms var(--ease-out); }
+  @keyframes rw-pop { from { transform: scale(0.85); } to { transform: scale(1); } }
+  .rw__held { position: absolute; left: 0; top: 0; z-index: 4; visibility: hidden; pointer-events: none; box-shadow: var(--shadow); transform-origin: 0 0; }
+  .rw__held.is-on { visibility: visible; }
+  .rw__mailcard {
+    display: flex; gap: 2cqw; align-items: flex-start; margin-top: 2.6cqw; padding: 1.8cqw 2.4cqw;
+    background: var(--navy); color: var(--tape); border-radius: var(--radius-s); box-shadow: 2px 2px 0 var(--orange);
+    font-size: 2.5cqw; line-height: 1.35; transition: transform 500ms var(--ease-out), opacity 500ms var(--ease-out);
+  }
+  .rw__mailcard div { display: grid; gap: 0.3cqw; min-width: 0; }
+  .rw__mailcard b { font-size: 2.9cqw; color: var(--paper); }
+  .rw__mailcard[data-off] { opacity: 0; transform: translateY(30%); }
+  .rw__mailicon { width: 4.4cqw; height: auto; flex: none; margin-top: 0.4cqw; }
+  .rw__mail { position: absolute; left: 0; top: 0; width: 4.6cqw; height: auto; z-index: 5; visibility: hidden; pointer-events: none; }
+  .rw__mail.is-on { visibility: visible; }
+  .rw__cur { position: absolute; left: 0; top: 0; z-index: 6; width: 4.8cqw; pointer-events: none; opacity: 0; }
+  .rw[data-phase="reach"] .rw__cur, .rw[data-phase="carry"] .rw__cur, .rw[data-phase="drop"] .rw__cur, .rw[data-phase="mail"] .rw__cur { opacity: 1; }
+  .rw__cur svg { display: block; width: 100%; height: auto; filter: drop-shadow(2px 2px 0 var(--navy)); }
+  .rw__ring { position: absolute; left: -2cqw; top: -2cqw; width: 4.4cqw; height: 4.4cqw; border: 2px solid var(--orange); border-radius: 50%; visibility: hidden; }
+  .rw__ring.is-tap { animation: rw-tap 500ms var(--ease-out); }
+  @keyframes rw-tap { 0% { visibility: visible; opacity: 1; transform: scale(0.4); } 100% { visibility: visible; opacity: 0; transform: scale(1.5); } }
+
+  /* dag */
+  .rw__dayh { margin: 0 0 2cqw; font-size: 3.6cqw; color: var(--muted); }
+  .rw__dayh b { color: var(--navy); font-family: var(--font-display); font-size: 4.4cqw; margin-right: 1cqw; }
+  .rw__people { list-style: none; padding: 0; margin: 0 0 3cqw; display: grid; gap: 1.8cqw; }
+  .rw__person {
+    display: flex; justify-content: space-between; align-items: center; gap: 2cqw; width: 100%; box-sizing: border-box;
+    padding: 2.2cqw 3cqw; border: 2px solid var(--navy); border-radius: var(--radius-s); font: inherit; font-size: 3.4cqw; color: var(--navy); background: var(--white); text-align: left;
+  }
+  .rw__pn { font-weight: 700; font-size: 3.8cqw; }
+  .rw__ps { display: inline-flex; align-items: center; gap: 1cqw; font-size: 3cqw; }
+  .rw__ps svg { width: 3.4cqw; height: 3.4cqw; color: var(--green-dark); }
+  .rw__person--free { background: var(--green-soft); border-color: var(--green); cursor: pointer; transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out), background 300ms var(--ease-out); }
+  .rw__person--free:hover, .rw__person--free:focus-visible { transform: translate(2px, 2px); box-shadow: 0 0 0 2px var(--navy) inset; }
+  .rw__person--free.is-on { background: var(--green); border-color: var(--navy); }
+  .rw__chip--wide { font-size: 3.2cqw; padding: 2.4cqw 3cqw; position: relative; }
+  .rw__chip--wide b { font-size: 3.8cqw; }
+  .rw__chip--open[data-filled="1"] { animation: none; background: var(--green-soft); border: 2px solid var(--navy); }
+  .rw__fill { position: absolute; right: 3cqw; top: 50%; transform: translateY(-50%); font-weight: 700; font-size: 3.8cqw; }
+  .rw__fill:empty { display: none; }
+  .rw__chip--open { transition: background 350ms var(--ease-out); }
+
+  /* assistent */
+  .rw__aday { margin-bottom: 3cqw; }
+  .rw__arow { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 2cqw; align-items: center; padding: 1.6cqw 0; border-top: 2px dotted var(--line); }
+  .rw__atype { font-size: 3.2cqw; font-weight: 600; }
+  .rw__awho { display: flex; flex-wrap: wrap; gap: 1.4cqw; align-items: center; }
+  .rw__pill {
+    display: inline-flex; align-items: center; gap: 1cqw; padding: 1cqw 2.2cqw; font-size: 3.2cqw; font-weight: 600;
+    border: 2px dashed var(--orange); border-radius: var(--radius-s); background: var(--orange-soft);
+  }
+  .rw__pok { display: none; }
+  .rw__pok :global(svg) { width: 3cqw; height: 3cqw; color: var(--green-dark); }
+  .rw__pill[data-done] { border: 2px solid var(--navy); background: var(--white); animation: rw-pop 450ms var(--ease-out); }
+  .rw__pill[data-done] .rw__pok { display: inline-flex; }
+  .rw__anote { font-size: 2.8cqw; color: var(--muted); }
+  .rw__abtns { display: flex; gap: 2cqw; justify-content: flex-end; margin-top: 1cqw; }
+  .rw__btn {
+    font: inherit; font-weight: 600; font-size: 3.2cqw; color: var(--navy); border: 2px solid var(--navy); border-radius: var(--radius-s);
+    background: var(--white); padding: 1.4cqw 3cqw; box-shadow: var(--shadow-s);
+  }
+  .rw__btn--go { background: var(--orange); cursor: pointer; }
+  .rw__btn.is-pressed { transform: translate(2px, 2px); box-shadow: none; }
+  .rw__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+
+  @container (max-width: 30rem) { .rw__arow { grid-template-columns: 1fr; gap: 1cqw; } }
+  /* Smal (week): twee kolommen van twee dagen, grotere letters */
+  @container (max-width: 32rem) {
+    .rw__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.4cqw; }
+    .rw__col { padding: 2cqw; gap: 2cqw; }
+    .rw__dh { font-size: 3.4cqw; }
+    .rw__dh b { font-size: 3.8cqw; }
+    .rw__body { gap: 2cqw; }
+    .rw__chip { font-size: 3.2cqw; padding: 1.8cqw; }
+    .rw__chip b { font-size: 3.6cqw; }
+    .rw__slot { min-height: 16cqw; }
+    .rw__hint { font-size: 3.2cqw; padding: 1.8cqw; }
+    .rw__mailcard { font-size: 3.4cqw; padding: 2.4cqw 3cqw; gap: 2.4cqw; }
+    .rw__mailcard b { font-size: 3.8cqw; }
+    .rw__mailicon { width: 6cqw; }
+    .rw__mail { width: 6.4cqw; }
+    .rw__cur { width: 6cqw; }
+    .rw__week { font-size: 4cqw; }
+    .rw__abtns { flex-wrap: wrap; }
+  }
+  @media (prefers-reduced-motion: reduce) { .rw__chip--open { animation: none; } }
+</style>

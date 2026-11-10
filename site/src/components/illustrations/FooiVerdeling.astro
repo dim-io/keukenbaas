@@ -1,0 +1,287 @@
+---
+/*
+ * FooiVerdeling: drie bonnetjes tellen op tot een totaal, dat naar rato van goedgekeurde uren over de
+ * medewerkers wordt verdeeld. Stijl: zie STIJLREGELS in DymoLabel.astro.
+ *
+ * Props: title (standaard 'Fooi oktober'), eigenaar (boolean): voegt de rij 'Eigenaar' toe, uitgezet bij 'Wie deelt mee?'.
+ *
+ * Alle bedragen worden hier in centen berekend (grootste-restmethode, zodat de delen exact optellen tot het
+ * totaal) en als data-attributen aan het script doorgegeven; de HTML-eindstaat en de animatie gebruiken dezelfde getallen.
+ *
+ * Lus (data-phase): idle, bon1, bon2, bon3, split, calc, hold, exit.
+ * Standaardstijl zonder data-phase is de eindstaat (alles geteld en verdeeld), ook zonder JS en bij
+ * prefers-reduced-motion. Hover, focus of klik op een medewerker toont de berekening.
+ */
+const { title = 'Fooi oktober', eigenaar = false } = Astro.props;
+const receipts = [
+  { id: 'sumup', label: 'SumUp', cents: 128450 },
+  { id: 'orderbuddy', label: 'OrderBuddy', cents: 31200 },
+  { id: 'contant', label: 'Contant', cents: 40350 },
+];
+const total = receipts.reduce((s, r) => s + r.cents, 0); // 200000
+
+const people = [
+  { id: 'mehmet', name: 'Mehmet', hours: 104, shares: true },
+  { id: 'sanne', name: 'Sanne', hours: 92, shares: true },
+  { id: 'fatima', name: 'Fatima', hours: 76, shares: true },
+  { id: 'lotte', name: 'Lotte', hours: 68, shares: true },
+  { id: 'joris', name: 'Joris', hours: 60, shares: true },
+  ...(eigenaar ? [{ id: 'eigenaar', name: 'Eigenaar', hours: 0, shares: false }] : []),
+];
+const sumHours = people.filter((p) => p.shares).reduce((s, p) => s + p.hours, 0); // 400
+
+// verdeling in centen met grootste restmethode
+const raw = people.map((p) => (p.shares ? (total * p.hours) / sumHours : 0));
+const cents = raw.map(Math.floor);
+let left = total - cents.reduce((a, b) => a + b, 0);
+raw
+  .map((v, i) => ({ i, r: v - Math.floor(v) }))
+  .sort((a, b) => b.r - a.r)
+  .forEach(({ i }) => { if (left > 0 && people[i].shares) { cents[i] += 1; left -= 1; } });
+const maxCents = Math.max(...cents);
+
+const eur = (c) => '€ ' + (c / 100).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const rows = people.map((p, i) => ({
+  ...p,
+  cents: cents[i],
+  width: p.shares ? Math.round((cents[i] / maxCents) * 100) : 0,
+  calc: p.shares
+    ? `${p.hours} u / ${sumHours} u × ${eur(total)} = ${eur(cents[i])}`
+    : 'Deelt niet mee: € 0,00',
+  aria: p.shares
+    ? `${p.name}: ${p.hours} uur van ${sumHours}, ${eur(cents[i])}. Toon berekening.`
+    : `${p.name} deelt niet mee, € 0,00. Toon berekening.`,
+}));
+const defaultCalc = `Verdeeld naar rato van ${sumHours} goedgekeurde uren`;
+---
+<figure class="fv" data-fv data-animate data-total={total} style="margin:0">
+  <div class="fv__card">
+    <p class="fv__title">{title}</p>
+
+    <div class="fv__bons" data-bons>
+      {receipts.map((r, i) => (
+        <div class="fv__bon" data-bon={r.id} data-cents={r.cents} style={`--n:${i}`}>
+          <span class="fv__bonl">{r.label}</span>
+          <span class="fv__bonv" data-val>{eur(r.cents)}</span>
+        </div>
+      ))}
+    </div>
+
+    <div class="fv__total">
+      <span>Totaal</span>
+      <span class="fv__totv" data-total-val>{eur(total)}</span>
+    </div>
+
+    <p class="fv__who">Wie deelt mee?</p>
+    <div class="fv__list" data-list>
+      {rows.map((p) => (
+        <div
+          class="fv__row"
+          data-row={p.id}
+          data-cents={p.cents}
+          data-calc={p.calc}
+          data-shares={p.shares ? '1' : '0'}
+          role="button"
+          tabindex="0"
+          aria-label={p.aria}
+        >
+          <span class="fv__name">{p.name}</span>
+          <span class="fv__hours">{p.shares ? `${p.hours} u` : 'uit'}</span>
+          <span class="fv__sw" data-on={p.shares ? 'yes' : 'no'} aria-hidden="true"><span class="fv__knob"></span></span>
+          <span class="fv__track" aria-hidden="true"><span class="fv__bar" style={`--w:${p.width}%`}></span></span>
+          <span class="fv__amt" data-amt>{eur(p.cents)}</span>
+        </div>
+      ))}
+    </div>
+    <span class="fv__save" data-save>Opslaan en berekenen</span>
+    <p class="fv__calc" data-calc-line aria-live="polite" data-default={defaultCalc}>{defaultCalc}</p>
+  </div>
+  <figcaption class="fv__cap mono">Ga met de muis op een medewerker staan voor de berekening.</figcaption>
+  <p class="visually-hidden">
+    Drie bonnetjes, SumUp 1.284 euro 50, OrderBuddy 312 euro en Contant 403 euro 50, tellen op tot 2.000 euro fooi.
+    Dat wordt verdeeld naar goedgekeurde uren: Mehmet 104 uur 520 euro, Sanne 92 uur 460 euro, Fatima 76 uur 380 euro,
+    Lotte 68 uur 340 euro en Joris 60 uur 300 euro.{eigenaar && ' De eigenaar staat bij Wie deelt mee op uit.'}
+  </p>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-fv]').forEach((el) => init(el));
+
+  function init(el) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // statische eindstaat blijft
+
+    const q = (s) => el.querySelector(s);
+    const bons = [...el.querySelectorAll('[data-bon]')];
+    const totalVal = q('[data-total-val]');
+    const rows = [...el.querySelectorAll('[data-row]')];
+    const calcLine = q('[data-calc-line]');
+
+    const eur = (c) => '€ ' + (c / 100).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const cs = getComputedStyle(el);
+    const ms = (n) => parseFloat(cs.getPropertyValue(n)) || 0;
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+
+    let started = false;
+    const later = (fn, t) => setTimeout(fn, t);
+
+    // telt vloeiend met ease-out van from naar to
+    function tween(from, to, d, onTick) {
+      const t0 = performance.now();
+      (function frame(now) {
+        const t = Math.min(1, (now - t0) / d);
+        onTick(Math.round(from + (to - from) * ease(t)));
+        if (t < 1) requestAnimationFrame(frame);
+      })(t0);
+    }
+    const setCalc = (t) => { calcLine.textContent = t; };
+    const showDefault = () => setCalc(calcLine.dataset.default);
+    const clearHot = () => rows.forEach((r) => r.classList.remove('is-hot'));
+    const amt = (r) => r.querySelector('[data-amt]');
+    const val = (b) => b.querySelector('[data-val]');
+    const cents = (r) => Number(r.dataset.cents);
+
+    // Begin: nog niets geteld. Eindstaat staat in de HTML en komt terug na het afspelen.
+    el.setAttribute('data-phase', 'idle');
+    bons.forEach((b) => { val(b).textContent = eur(0); });
+    totalVal.textContent = eur(0);
+    rows.forEach((r) => { amt(r).textContent = eur(0); });
+
+    function play() {
+      if (started) return;
+      started = true;
+      el.setAttribute('data-phase', 'run');
+      const gap = ms('--fv-gap'), d = ms('--fv-bon'), split = ms('--fv-split');
+      let run = 0;
+      bons.forEach((b, i) => {
+        const v = cents(b), from = run;
+        run += v;
+        const to = run;
+        later(() => {
+          b.classList.add('is-in');
+          tween(0, v, d, (x) => { val(b).textContent = eur(x); });
+          tween(from, to, d, (x) => { totalVal.textContent = eur(x); });
+        }, i * gap);
+      });
+      const tSplit = (bons.length - 1) * gap + d + 100;
+      later(() => {
+        el.setAttribute('data-split', '');
+        rows.forEach((r) => { if (cents(r)) tween(0, cents(r), split, (x) => { amt(r).textContent = eur(x); }); });
+      }, tSplit);
+      later(() => {
+        // exacte eindbedragen, dan de rustige eindstaat
+        bons.forEach((b) => { val(b).textContent = eur(Number(b.dataset.cents)); });
+        totalVal.textContent = eur(Number(el.dataset.total));
+        rows.forEach((r) => { amt(r).textContent = eur(cents(r)); });
+        el.setAttribute('data-phase', 'done');
+      }, tSplit + split + 60);
+    }
+
+    // Hover, focus of klik op een medewerker toont de berekening (pas als alles verdeeld is)
+    rows.forEach((r) => {
+      const on = () => {
+        if (el.getAttribute('data-phase') !== 'done') return;
+        clearHot();
+        r.classList.add('is-hot');
+        setCalc(r.dataset.calc);
+      };
+      const off = () => { clearHot(); showDefault(); };
+      r.addEventListener('mouseenter', on);
+      r.addEventListener('focus', on);
+      r.addEventListener('click', on);
+      r.addEventListener('mouseleave', off);
+      r.addEventListener('blur', off);
+      r.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); on(); } });
+    });
+
+    el.addEventListener('inviewchange', (e) => { if (e.target === el) play(); });
+    if (el.hasAttribute('data-inview')) play();
+  }
+</script>
+
+<style>
+  .fv {
+    --fv-bon: 700ms;
+    --fv-gap: 450ms;
+    --fv-split: 1100ms;
+    width: min(100%, 36rem);
+  }
+  .fv__card {
+    container-type: inline-size;
+    background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 14px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--navy);
+  }
+  .fv__title { margin: 0 0 2.4cqw; font-family: var(--font-display); font-weight: 800; font-size: 4.4cqw; }
+
+  .fv__bons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4cqw; }
+  .fv__bon {
+    background: var(--paper); border: 2px solid var(--navy); border-bottom-style: dashed; border-radius: var(--radius-s);
+    padding: 2cqw 2cqw 2.2cqw; display: flex; flex-direction: column; gap: 1cqw; box-shadow: var(--shadow-s);
+  }
+  .fv__bonl { font-size: 2.7cqw; font-weight: 600; }
+  .fv__bonv { font-size: 3.2cqw; font-weight: 600; white-space: nowrap; }
+  .fv__bon.is-in { animation: fv-in 500ms var(--ease-out) both; }
+  .fv[data-phase="idle"] .fv__bon, .fv[data-phase="run"] .fv__bon:not(.is-in) { visibility: hidden; }
+  @keyframes fv-in { from { opacity: 0; transform: translateY(-35%) rotate(-2deg); } to { opacity: 1; transform: none; } }
+
+  .fv__total {
+    display: flex; align-items: center; justify-content: space-between; gap: 2cqw; margin: 2.6cqw 0 2.4cqw;
+    background: var(--navy); color: var(--tape); border-radius: var(--radius-s); padding: 2cqw 2.6cqw; box-shadow: 2px 2px 0 var(--orange);
+  }
+  .fv__total > span:first-child { font-size: 2.9cqw; font-weight: 600; }
+  .fv__totv { font-size: 4.6cqw; font-weight: 600; }
+
+  .fv__who { margin: 0 0 1.4cqw; font-weight: 600; font-size: 2.8cqw; }
+  .fv__list { display: flex; flex-direction: column; gap: 1.2cqw; }
+  .fv__row {
+    display: grid; grid-template-columns: 16cqw 11cqw 8cqw 1fr 18cqw; align-items: center; column-gap: 2cqw;
+    padding: 1.2cqw 1.6cqw; border: 2px solid transparent; border-radius: var(--radius-s); cursor: default;
+    font-size: 2.8cqw; outline-offset: 2px;
+  }
+  .fv__row.is-hot, .fv__row:hover, .fv__row:focus-visible { border-color: var(--navy); background: var(--orange-soft); }
+  .fv__name { font-weight: 600; }
+  .fv__hours { color: var(--ink); text-align: right; white-space: nowrap; }
+  .fv__sw { display: inline-flex; align-items: center; }
+  .fv__knob { position: relative; flex: none; width: 6cqw; height: 3.2cqw; border: 2px solid var(--navy); border-radius: 2cqw; background: var(--orange); }
+  .fv__knob::after { content: ""; position: absolute; top: 0.3cqw; right: 0.3cqw; width: 2cqw; height: 2cqw; border-radius: 50%; background: var(--white); border: 2px solid var(--navy); box-sizing: content-box; margin: -2px 0; }
+  .fv__sw[data-on="no"] .fv__knob { background: var(--line); }
+  .fv__sw[data-on="no"] .fv__knob::after { right: auto; left: 0.3cqw; }
+  .fv__sw[data-on="no"] { color: var(--muted); }
+  .fv__track { display: block; height: 3.4cqw; background: var(--paper); border: 2px solid var(--navy); border-radius: var(--radius-s); overflow: hidden; }
+  .fv__bar { display: block; height: 100%; width: var(--w); background: var(--orange); border-right: 2px solid var(--navy); }
+  .fv__row[data-shares="0"] .fv__bar { border-right: 0; }
+  .fv__amt { text-align: right; font-weight: 600; white-space: nowrap; }
+  .fv__row[data-shares="0"] .fv__amt, .fv__row[data-shares="0"] .fv__name { color: var(--muted); }
+
+  .fv[data-phase="idle"] .fv__bar, .fv[data-phase="run"]:not([data-split]) .fv__bar { width: 0; }
+  .fv[data-phase="run"] .fv__bar { transition: width var(--fv-split) var(--ease-out); }
+
+  .fv__save {
+    display: block; width: max-content; margin: 2.4cqw 0 0 auto; padding: 1.4cqw 2.8cqw; font-weight: 600; font-size: 2.9cqw;
+    background: var(--orange); border: 2px solid var(--navy); border-radius: var(--radius-s); box-shadow: var(--shadow-s);
+  }
+  .fv__save { transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+  .fv[data-phase="run"][data-split] .fv__save { transform: translate(2px, 2px); box-shadow: none; }
+  .fv__calc {
+    margin: 2.4cqw 0 0; padding: 1.8cqw 2.4cqw; min-height: 5.4cqw; background: var(--tape); border: 2px solid var(--navy);
+    border-radius: var(--radius-s); font-size: 2.7cqw; font-weight: 600; line-height: 1.3;
+  }
+
+  /* Smal: grotere letters, bonnetjes onder elkaar, schakelaar weg (staat in de beschrijving) */
+  @container (max-width: 26rem) {
+    .fv__title { font-size: 5.6cqw; }
+    .fv__bons { grid-template-columns: 1fr; gap: 2cqw; }
+    .fv__bon { flex-direction: row; justify-content: space-between; align-items: center; padding: 1.8cqw 2.6cqw; }
+    .fv__bonl { font-size: 3.8cqw; }
+    .fv__bonv { font-size: 4.2cqw; }
+    .fv__total > span:first-child { font-size: 4cqw; }
+    .fv__totv { font-size: 6cqw; }
+    .fv__who { font-size: 4cqw; }
+    .fv__row { grid-template-columns: 20cqw 13cqw 1fr 24cqw; font-size: 4cqw; column-gap: 2cqw; padding: 1.4cqw 1cqw; }
+    .fv__sw { display: none; }
+    .fv__track { height: 4cqw; }
+    .fv__save { font-size: 4cqw; padding: 2cqw 3.4cqw; }
+    .fv__calc { font-size: 3.7cqw; min-height: 10cqw; padding: 2cqw 2.6cqw; }
+  }
+
+  .fv__cap { margin-top: var(--space-3); font-size: var(--step--1); color: var(--muted); }
+</style>

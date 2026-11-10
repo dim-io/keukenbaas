@@ -1,0 +1,129 @@
+@import "./tokens.css";
+
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+main { flex: 1; }
+img, svg, video { display: block; max-width: 100%; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--navy);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 1.02;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+h1 { font-size: var(--step-5); font-weight: 900; font-stretch: 68%; }
+h2 { font-size: var(--step-4); }
+h3 { font-size: var(--step-2); font-stretch: 85%; }
+p { text-wrap: pretty; max-width: 62ch; }
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.marker { font-family: var(--font-marker); }
+
+/* Links: onderstreept; bij hover wordt de tekst doorgestreept als een afgevinkte bon */
+a {
+  color: var(--navy);
+  text-decoration: underline;
+  text-decoration-color: var(--orange);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  background: linear-gradient(var(--navy), var(--navy)) no-repeat 0 58% / 0% 2px;
+  transition: background-size var(--dur-3) var(--ease-out);
+}
+a:hover { background-size: 100% 2px; }
+/* Componenten die zelf een vorm hebben (knoppen, nav, logo) zetten dit uit met .bare */
+a.bare { text-decoration: none; background: none; transition: none; }
+
+/* Focus: altijd goed zichtbaar */
+:focus-visible {
+  outline: 3px solid var(--navy);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--tape);
+  border-radius: var(--radius-s);
+}
+.on-dark :focus-visible { outline-color: var(--tape); box-shadow: 0 0 0 6px var(--navy); }
+
+::selection { background: var(--tape); color: var(--navy); }
+
+.container { width: min(100% - 2 * var(--gutter), var(--maxw)); margin-inline: auto; }
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+.skip-link {
+  position: absolute; left: var(--space-3); top: -4rem; z-index: 100;
+  background: var(--tape); color: var(--navy); padding: var(--space-2) var(--space-4);
+  font-family: var(--font-mono); box-shadow: var(--shadow); text-decoration: none; background-image: none;
+}
+.skip-link:focus { top: var(--space-3); }
+
+/* Rasterpapier */
+.grid-paper {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Bon: gekartelde onderrand via mask. De harde schaduw komt van de wrapper (.receipt-shadow),
+   want een mask knipt een box-shadow weg. */
+.receipt-shadow { filter: drop-shadow(3px 3px 0 var(--navy)); }
+.receipt {
+  background: var(--white);
+  padding: var(--space-5) var(--space-5) calc(var(--space-5) + 8px);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Inschuiven bij in beeld komen. data-animate="once" staat op de wrapper; alleen de kinderen zijn verborgen. */
+.reveal > * {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 450ms var(--ease-out), transform 450ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+.reveal[data-inview] > * { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal > * { opacity: 1; transform: none; }
+}
+
+/* Grote illustratie op mobiel: de figuur houdt zijn leesbare breedte en scrolt zijdelings binnen zijn eigen vak */
+.figscroll { max-width: 100%; min-width: 0; }
+:has(> .figscroll) { min-width: 0; }
+@media (max-width: 40rem) {
+  .figscroll { overflow-x: visible; }
+  .figscroll > * { min-width: 0; }
+}
+
+/* Sectiekop: kop met optioneel label erboven */
+.sec-head { display: grid; gap: var(--space-4); justify-items: start; margin-bottom: var(--space-7); }
+.sec-head--center { justify-items: center; text-align: center; }
+.sec-head--center p { margin-inline: auto; }

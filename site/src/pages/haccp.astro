@@ -1,0 +1,121 @@
+---
+// HACCP en labels. Copy letterlijk uit docs/copy/haccp.md; markeringen ([TE CONTROLEREN] enz.) staan als HTML-commentaar.
+import Base from '../layouts/Base.astro';
+import HeroSplit from '../components/sections/HeroSplit.astro';
+import FixCards from '../components/sections/FixCards.astro';
+import FeatureBlock from '../components/sections/FeatureBlock.astro';
+import MoreTiles from '../components/sections/MoreTiles.astro';
+import RelatedStrip from '../components/sections/RelatedStrip.astro';
+import FaqAccordion from '../components/sections/FaqAccordion.astro';
+import ClosingBand from '../components/sections/ClosingBand.astro';
+import KoelcelMeting from '../components/illustrations/KoelcelMeting.astro';
+import DymoLabel from '../components/illustrations/DymoLabel.astro';
+import HoudbaarheidLijst from '../components/illustrations/HoudbaarheidLijst.astro';
+import NvwaExport from '../components/illustrations/NvwaExport.astro';
+import { href } from '../lib/url.js';
+
+const fix = [
+  { problem: 'De temperatuurlijst hangt aan de koelcel en woensdag is leeg.', fix: 'Een meting per meetpunt, met een melding als het te warm is.' },
+  { problem: 'Op de bak staat "aioli 6/11" in een handschrift dat niemand kan lezen.', fix: 'Een label uit de DYMO met THT, naam, datum en batch.' },
+  { problem: 'De inspecteur staat binnen en jij zoekt de map.', fix: 'Eén rapport over de periode die de inspecteur wil zien, als PDF.' },
+];
+const tiles = [
+  { title: 'Schoonmaaktaken afvinken' },
+  { title: 'Takenlijst met categorie' },
+  { title: 'Taken die terugkomen, van dagelijks tot maandelijks' },
+  { title: 'Productiearchief met filters' },
+];
+const related = [
+  { href: href('/keuken'), label: 'Keuken en prep', text: 'Het label komt uit de productie die je afvinkt op het scherm Vandaag.' , go: 'Naar de keuken' },
+  { href: href('/inkoop'), label: 'Recepten en inkoop', text: 'De THT en de productietijd horen bij het product, en het product bij het recept.' , go: 'Naar recepten en inkoop' },
+];
+const faq = [
+  { q: 'Welke labelprinter heb ik nodig?', a: 'Een DYMO LabelWriter met labels van 89 bij 28 mm (type 99010). Het printen loopt via de DYMO-software op de computer waar de printer aan hangt. Met "DYMO testen" zie je of hij het doet.', note: 'TE BEVESTIGEN: welke DYMO-modellen zijn getest, en kun je vanaf een telefoon printen' },
+  { q: 'Is dit goed genoeg voor de NVWA?', a: 'Keukenbaas keurt niets goed namens de NVWA. Het legt je metingen, controles, labels en schoonmaak vast met datum en naam, en zet ze in één rapport dat je de inspecteur kunt geven. Welke controles je moet doen, staat in je hygiënecode.' },
+  { q: 'Kan ik mijn eigen meetpunten toevoegen?', a: 'Ja. In de instellingen zet je zoveel koelingen, vriezers en andere meetpunten neer als je hebt.' },
+  { q: 'Wat als de wifi in de keuken wegvalt?', a: 'Keukenbaas is een webapp en heeft internet nodig. Valt de wifi weg, dan werkt hij via het mobiele netwerk van je telefoon. Voor het printen naar de DYMO heb je de computer nodig waar de printer aan hangt.' },
+  { q: 'Staan de allergenen op het label?', a: 'Nee. Op het label staan de productnaam, de THT, wie het maakte en wanneer, en de batch.' },
+  { q: 'Kan ik zien wie wat gemaakt heeft?', a: 'Ja. In het productiearchief filter je op periode, product of medewerker. Je ziet per productie de datum, de batch, wie hem maakte, de THT en of er een label is geprint.' },
+];
+const label = [{ title: 'AIOLI', tht: 'THT: 11-11', made: 'Gemaakt door: Mehmet op 09-11 (11:45u)', batch: 'Batch: 2 l' }];
+---
+<Base title="HACCP-app en THT-labels uit je DYMO · Keukenbaas" titleRaw description="Temperaturen per koelcel met melding bij een afwijking, THT-labels uit je DYMO en een rapport voor de NVWA als PDF. Op de telefoon, in je eigen keuken.">
+  <!-- C2 · Hero -->
+  <HeroSplit
+    eyebrow="HACCP en labels"
+    title="De NVWA staat aan de deur, en jij pakt je telefoon."
+    lead={'Metingen, schoonmaak en labels staan er met datum en naam. Komt er een inspecteur, dan kies je de periode en druk je op "Print / PDF".'}
+    placeholder="je@jouwzaak.nl"
+    button="Zet me op de wachtlijst"
+    figMin="30rem"
+    figLabel="Thermometer en het scherm Nieuwe metingen"
+  >
+    <KoelcelMeting variant="hero" />
+  </HeroSplit>
+
+  <!-- C3 · Zo los je het op -->
+  <FixCards id="fix" title="Zo los je het op" cards={fix} problemLabel="Nu" fixLabel="Met Keukenbaas" />
+
+  <!-- C4 · Koelingen en vriezers -->
+  <FeatureBlock
+    id="koeling"
+    tone="white"
+    title="Meten, en meteen weten of het goed is"
+    text={'Per meetpunt vul je de temperatuur in bij "Nieuwe metingen". Keukenbaas legt de waarde naast de norm en zet de status op Goed of Afwijking. Hij toetst aan: koelkast maximaal 7 °C, vriezer maximaal -18 °C, vaatwasser wassen minimaal 60 °C en naspoelen minimaal 80 °C. Je eigen meetpunten zet je er zelf bij: de koelcel achter, de saladebar, de vriezer in de kelder.'}
+    items={['Nieuwe metingen per meetpunt', 'Laatste metingen in één overzicht', 'Status vanzelf beoordeeld tegen de norm', 'Eigen meetpunten toevoegen']}
+  >
+    <KoelcelMeting variant="full" />
+  </FeatureBlock>
+  <Fragment set:html="<!-- TE CONTROLEREN: zijn de normen per zaak aan te passen -->" />
+
+  <!-- C5 · THT-labels uit de DYMO -->
+  <FeatureBlock
+    id="labels"
+    tone="paper"
+    reverse
+    title="Eén druk, en het label rolt uit je DYMO"
+    text={'Is een productie af, dan staat het label klaar. Daarop staat de productnaam groot, de THT-datum, wie het gemaakt heeft en wanneer, en de batch. De THT rekent Keukenbaas uit met het aantal dagen dat bij het product hoort. Je drukt op "Direct naar DYMO" en het label rolt eruit. Aan het begin van de dag kan het ook met "Alles direct naar DYMO" in één keer.'}
+    items={['Labels voor DYMO 99010 (89 bij 28 mm)', 'THT, gemaakt door, datum en tijd, batch', 'Eén label of alle labels van de dag', '"Label is geprint" houdt bij wat al op de bak zit']}
+    figMin="20rem"
+  >
+    <DymoLabel items={label} buttons={['Afdrukken', 'Direct naar DYMO', 'DYMO testen']} />
+  </FeatureBlock>
+
+  <!-- C6 · Houdbaarheid -->
+  <FeatureBlock
+    id="houdbaarheid"
+    tone="white"
+    title="Wat moet er eerst op, en wat ging de bak in?"
+    text="Elke productie met een label staat in het overzicht houdbaarheid, gesorteerd op THT. Wat op is, markeer je als opgemaakt. Wat over de datum is, als weggegooid. Keukenbaas rekent uit welk deel van je productie je de afgelopen 30 dagen hebt weggegooid. Dan weet je ook waar je minder van moet maken."
+    items={['Product, batch, gemaakt, THT, medewerker en status', 'Markeren als opgemaakt of weggegooid', 'Percentage weggegooid over de laatste 30 dagen']}
+    figMin="22rem"
+  >
+    <HoudbaarheidLijst />
+  </FeatureBlock>
+
+  <!-- C7 · Rapport voor de NVWA -->
+  <FeatureBlock
+    id="rapport"
+    tone="paper"
+    reverse
+    title="Alles bij elkaar, in één PDF"
+    text={'Je kiest de periode: deze week, deze maand, vorige maand of een eigen periode. Je kiest welke onderdelen erin moeten: het HACCP-logboek, de productie, de labels, de taken en de schoonmaak. Druk op "Print / PDF" en je hebt een rapport om aan de inspecteur of de auditor te geven.'}
+    items={['Periode naar keuze', 'HACCP-logboek, productie, labels, taken en schoonmaak', 'Afdrukken of opslaan als PDF']}
+  >
+    <NvwaExport />
+  </FeatureBlock>
+
+  <!-- C8 · En verder -->
+  <MoreTiles id="verder" title="En verder" tiles={tiles} />
+
+  <!-- C9 · Vergelijking: vervalt -->
+
+  <!-- C10 · Hoort bij -->
+  <RelatedStrip id="verwant" title="Dit werkt samen met" links={related} />
+
+  <!-- C11 · Veelgestelde vragen -->
+  <FaqAccordion id="faq" title="Vragen over HACCP en labels" items={faq} />
+
+  <!-- C12 · Afsluitende band -->
+  <ClosingBand title="Klaar met de map aan de koelcel?" placeholder="je@jouwzaak.nl" button="Zet me op de wachtlijst" />
+</Base>
